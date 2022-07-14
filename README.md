@@ -18,8 +18,8 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 ## FEATURES
 
 * wraps the Custom Element Registry usage: just create your class extending from a Wuse HTML Element class, register it and then instantiate it as you need (class names are converted into valid custom elements, ex: 'My_Element' is converted into my-element)
-* stablishes an functional structure over the Shadow DOM: a root element, a style element and a main element
-* does not block or interfere with direct DOM access (good when dealing with legacy webs, allowing progressive migrations)
+* creates a functional structure over the Shadow DOM: a root element, a style element and a main element
+* does not block nor interfere with direct DOM access (good when dealing with legacy webs, allowing progressive migrations)
 * allows all-in-one markup, styles and scripting definitions: you can define your custom element in a single es6 class file
 * allows to retain control on the Element lifecycle: you can hook 14 different events
 * allows optional field reactivity with full control on the behaviour
@@ -27,6 +27,12 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 
 ## HiSTORY
 
+* [0.3.2] 2022-jul-14
+  - extracted `WebHelpers` class to an external file
+  - added `WebHelpers` class unit test
+  - extracted `RuntimeErrors` class to an external file
+  - added `RuntimeErrors` class unit test
+  - added custom browser tester
 * [0.3.1] 2022-jul-13
   - added `appendCSSNestedRule` and `prependCSSNestedRule` to support flat nested css rules
   - now appended/prepended css rules are joined up to the last/first rule in the list respectively if the selector is the same

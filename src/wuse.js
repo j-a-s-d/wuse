@@ -1,8 +1,14 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
+import WuseWebHelpers from './wuse.web-helpers.js';
+import WuseRuntimeErrors from './wuse.runtime-errors.js';
+
 class Wuse {
 
-  static get VERSION() { return "0.3.1"; }
+  static get VERSION() { return "0.3.2"; }
+
+  static #RuntimeErrors = WuseRuntimeErrors;
+  static WebHelpers = WuseWebHelpers;
 
   static tmp = new window.Object(); // convenience temporary object
 
@@ -30,7 +36,7 @@ class Wuse {
   }
 
   static debug(msg) {
-    window.console.log(Wuse.#StringConstants.DEBUG_TAG, msg);
+    window.console.log("[WUSE:DEBUG]", msg);
   }
 
   static isOf(instance, cls) {
@@ -62,34 +68,7 @@ class Wuse {
     return Wuse.#instanceBuilder(new window.Object(), initializer);
   }
 
-  static EMPTY_ARRAY = new window.Array();
-
-  static WebHelpers = class {
-
-    static onDOMContentLoaded(callback) {
-      if (Wuse.isOf(callback, window.Function)) {
-        const loader = () => {
-          callback();
-          setTimeout(() => window.removeEventListener("DOMContentLoaded", loader), 100);
-        }
-        window.addEventListener("DOMContentLoaded", loader);
-      }
-    }
-
-    static getUniqueId(prefix = "WUSE") {
-      var result, p = "_" + (prefix ? prefix : "") + "_";
-      while (window.document.getElementById(result = p + ("" + window.Math.random()).substring(2)) !== null);
-      return result;
-    }
-
-    static getCSSVendorPrefix() {
-      const computedStyle = window.getComputedStyle(window.document.body, '');
-      const csPropertyNames = Array.prototype.slice.call(computedStyle);
-      const cspnDashPrefixed = csPropertyNames.filter(x => x.charAt(0) === '-');
-      return !!cspnDashPrefixed.length ? "-" + cspnDashPrefixed[0].split('-')[1] + "-" : "";
-    }
-
-  }
+  static #EMPTY_ARRAY = new window.Array();
 
   static register(classes) {
     return Wuse.#ElementClasses.registerClasses(Wuse.isOf(classes, window.Array) ? classes : new window.Array(classes));
@@ -146,7 +125,7 @@ class Wuse {
         const tmp = input.replaceAll("!", " ").split(" ");
         tmp.slice(1).map(item => {
           const [event, ...rest] = item.toLowerCase().split("+");
-          const capture = (rest || Wuse.EMPTY_ARRAY).indexOf("capture") > -1;
+          const capture = (rest || Wuse.#EMPTY_ARRAY).indexOf("capture") > -1;
           result.events.push(Wuse.#PartsMakers.newEvent(event, capture))
         });
         return tmp[0];
@@ -553,8 +532,6 @@ class Wuse {
 
   static #StringConstants = class {
 
-    static ERROR_TAG = "[WUSE:ERROR]";
-    static DEBUG_TAG = "[WUSE:DEBUG]";
     static TEMPLATES_KIND = "%templates%";
     static SLOTS_KIND = "%slots%";
     static DEFAULT_KIND = "";
@@ -563,68 +540,6 @@ class Wuse {
     static DEFAULT_STYLE_TYPE = "text/css";
     static DEFAULT_REPLACEMENT_OPEN = "~{";
     static DEFAULT_REPLACEMENT_CLOSE = "}~";
-
-  }
-
-  static #RuntimeErrors = class {
-
-    static #makeError = (code, writer) => { return { code, emit: (arg) => {
-      const msg = `${Wuse.#StringConstants.ERROR_TAG} ${code} | ${writer(arg)}`;
-      if (Wuse.FATALS || code < 10) {
-        throw new window.Error(msg);
-      } else {
-        window.console.error(msg);
-      }
-      return null;
-    }}}
-
-    static get UNKNOWN_ERROR() {
-      return this.#makeError(0, arg => `Unknown error.`);
-    }
-
-    static get UNSUPPORTED_FEATURE() {
-      return this.#makeError(1, arg => `Unsupported feature: ${arg}.`);
-    }
-
-    static get UNREGISTERED_CLASS() {
-      return this.#makeError(2, arg => `Unregistered class: ${arg}.`);
-    }
-
-    static get INVALID_CLASS() {
-      return this.#makeError(3, arg => `Invalid class: ${arg}.`);
-    }
-
-    static get MISNAMED_CLASS() {
-      return this.#makeError(4, arg => `Misnamed class: ${arg}.`);
-    }
-
-    static get INVALID_DEFINITION() {
-      return this.#makeError(10, arg => `Invalid definition: ${arg}.`);
-    }
-
-    static get INVALID_ID() {
-      return this.#makeError(11, arg => `Invalid id: ${arg}.`);
-    }
-
-    static get INVALID_KEY() {
-      return this.#makeError(12, arg => `Call first: this.setElementsStoreKey(<your-valid-key>).`);
-    }
-
-    static get ALLOW_HTML() {
-      return this.#makeError(13, arg => `Call first: this.allowRawContent(true).`);
-    }
-
-    static get INEXISTENT_TEMPLATE() {
-      return this.#makeError(20, arg => `Inexistent template: #${arg}.`);
-    }
-
-    static get EXTINCT_TEMPLATE() {
-      return this.#makeError(21, arg => `Extinct template: #${arg}.`);
-    }
-
-    static get UNESPECIFIED_SLOT() {
-      return this.#makeError(22, arg => `Unespecified slot: #${arg}.`);
-    }
 
   }
 
@@ -760,7 +675,7 @@ class Wuse {
         at, find: Wuse.ReactiveFields.ReplacementMarkers.enclose(match), field: match.trim()
       });
 
-      static #includeMatches = (hits, at, str) => Wuse.isNonEmptyString(str) && (this.#performMatch(str) || Wuse.EMPTY_ARRAY).forEach(
+      static #includeMatches = (hits, at, str) => Wuse.isNonEmptyString(str) && (this.#performMatch(str) || Wuse.#EMPTY_ARRAY).forEach(
         match => this.#addReplacement(hits, at, match)
       );
 
@@ -897,7 +812,7 @@ class Wuse {
       // those related to: children (click, mouseoout, etc), slots (change), document, etc.
       return [
         "on_create", // after element creation and root node definition (after `this` availability and where handled events had been detected for the first time and the shadow attachment performed -basically when isShadowElement(this) is true-, also mention that after on_create returns the attribute keys will be added -if applies-)
-        "on_construct", // after the element state has been created for the first time (if it has a store key, otherwise it's called always)
+        "on_construct", // after the element state has been created for the first time (if it has a store key, otherwise it's called every time the element is recreated)
         "on_reconstruct", // after the element state has been loaded from a previous existence (if it has a store key, otherwise it's never called)
         "on_connect", // on connectedCallback (this event is called right after handled events had been redetected)
         "on_inject", // right after the elements insertion and before content generation (it's fired both, before on_load and before on_reload)
@@ -1095,13 +1010,14 @@ class Wuse {
           const template = window.document.getElementById(child.id);
           return template !== null ? template.innerHTML : Wuse.#RuntimeErrors.EXTINCT_TEMPLATE.emit(child.id);
         }
+        const replacer = (str, rep) => str.replace(rep.find, this[rep.field] !== undefined ? this[rep.field] : "")
         var result = "<" + child.tag;
         if (Wuse.isNonEmptyString(child.id)) {
           result += " id='" + child.id + "'";
         }
         if (!!child.classes.length) {
           var c = child.classes.join(" ");
-          child.replacements["classes"].forEach(r => c = c.replace(r.find, this[r.field] !== undefined ? this[r.field] : ""));
+          child.replacements["classes"].forEach(r => c = replacer(c, r));
           result += " class='" + c + "'";
         }
         if (Wuse.hasObjectKeys(child.style)) {
@@ -1110,7 +1026,7 @@ class Wuse {
             c += property + ": " + child.style[property] + "; ";
           }
           c += "'";
-          child.replacements["styles"].forEach(r => c = c.replace(r.find, this[r.field] !== undefined ? this[r.field] : ""));
+          child.replacements["styles"].forEach(r => c = replacer(c, r));
           result += c;
         }
         if (Wuse.hasObjectKeys(child.attributes)) {
@@ -1118,12 +1034,12 @@ class Wuse {
           for (const property in child.attributes) {
             c += " " + property + "=" + child.attributes[property];
           }
-          child.replacements["attributes"].forEach(r => c = c.replace(r.find, this[r.field] !== undefined ? this[r.field] : ""));
+          child.replacements["attributes"].forEach(r => c = replacer(c, r));
           result += c;
         }
         if (typeof child.content === "string") {
           var c = child.content;
-          child.replacements["contents"].forEach(r => c = c.replace(r.find, this[r.field] !== undefined ? this[r.field] : ""));
+          child.replacements["contents"].forEach(r => c = replacer(c, r));
           result += ">" + c + "</" + child.tag + ">";
         } else {
           result += "/>"
@@ -1700,10 +1616,12 @@ class Wuse {
       detectFeature(Wuse.isOf(window.document, window.HTMLDocument), "HTML Document");
       detectFeature(Wuse.isOf(window.customElements, window.CustomElementRegistry), "Custom Elements");
       Wuse.WebHelpers.onDOMContentLoaded(() => detectFeature(Wuse.isOf(window.document.body.attachShadow, window.Function), "Shadow DOM"));
-    } catch {
+    } catch (e) {
       Wuse.#RuntimeErrors.UNKNOWN_ERROR.emit();
     }
   }
 
 }
+
+window.Wuse = Wuse;
 

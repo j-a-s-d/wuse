@@ -1,0 +1,20 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wuse | BrowserTester tests</title>
+  <link rel="icon" href="data:;base64,=">
+  <script type="module">
+    import * as tester from "/wuse.browser-tester.js";
+
+    import RuntimeErrorsTests from "/wuse.runtime-errors.tests.js";
+    tester.testModule(RuntimeErrorsTests);
+
+    import WebHelpersTests from "/wuse.web-helpers.tests.js";
+    tester.testModule(WebHelpersTests);
+
+    tester.publishResults();
+  </script>
+</head>
+</html>
+
