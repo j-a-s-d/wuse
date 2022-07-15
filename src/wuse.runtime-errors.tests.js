@@ -14,6 +14,7 @@ const RuntimeErrorsTests = {
     tester.testModuleProperty(module, "ALLOW_HTML", ["existence", "type:object"], RuntimeErrorsTests.ALLOW_HTML);
     tester.testModuleProperty(module, "INEXISTENT_TEMPLATE", ["existence", "type:object"], RuntimeErrorsTests.INEXISTENT_TEMPLATE);
     tester.testModuleProperty(module, "EXTINCT_TEMPLATE", ["existence", "type:object"], RuntimeErrorsTests.EXTINCT_TEMPLATE);
+    tester.testModuleProperty(module, "INVALID_TEMPLATE", ["existence", "type:object"], RuntimeErrorsTests.INVALID_TEMPLATE);
     tester.testModuleProperty(module, "UNESPECIFIED_SLOT", ["existence", "type:object"], RuntimeErrorsTests.UNESPECIFIED_SLOT);
   },
   UNKNOWN_ERROR: (tester, module, mb) => {
@@ -49,8 +50,11 @@ const RuntimeErrorsTests = {
   EXTINCT_TEMPLATE: (tester, module, mb) => {
     tester.testResult(module[mb].code === 21, `<u>${mb}</u> code is: <i>21</i>`);
   },
-  UNESPECIFIED_SLOT: (tester, module, mb) => {
+  INVALID_TEMPLATE: (tester, module, mb) => {
     tester.testResult(module[mb].code === 22, `<u>${mb}</u> code is: <i>22</i>`);
+  },
+  UNESPECIFIED_SLOT: (tester, module, mb) => {
+    tester.testResult(module[mb].code === 30, `<u>${mb}</u> code is: <i>30</i>`);
   }
 }
 

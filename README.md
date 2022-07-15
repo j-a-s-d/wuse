@@ -27,6 +27,11 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 
 ## HiSTORY
 
+* [0.3.3] 2022-jul-15
+  - added support for text nodes in the shorthand notation via `^text^` pseudo-node type (ex. '^text^=this is a text node'; note that this, of course, does not combine with named slots)
+  - added support for html encoded text in the shorthand notation via the `&` content prefix (ex. 'label=&<b>this tags will be read as plain text</b>', note if you need start a content with '&' use double '&&')
+  - added `removeChildren` and `htmlEncode` routines to `WebHelpers` class
+  - added `INVALID_TEMPLATE` runtime error
 * [0.3.2] 2022-jul-14
   - extracted `WebHelpers` class to an external file
   - added `WebHelpers` class unit test

@@ -19,6 +19,14 @@ export default class WebHelpers {
     return result;
   }
 
+  static removeChildren(element) {
+    if (element) while (element.firstChild) element.removeChild(element.firstChild);
+  }
+
+  static htmlEncode(text = "") {
+    return typeof text === "string" ? text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : null;
+  }
+
   static getCSSVendorPrefix() {
     const bodyComputedStyle = window.getComputedStyle(window.document.body, "");
     const csPropertyNames = window.Array.prototype.slice.call(bodyComputedStyle);

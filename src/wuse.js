@@ -5,7 +5,7 @@ import WuseRuntimeErrors from './wuse.runtime-errors.js';
 
 class Wuse {
 
-  static get VERSION() { return "0.3.2"; }
+  static get VERSION() { return "0.3.3"; }
 
   static #RuntimeErrors = WuseRuntimeErrors;
   static WebHelpers = WuseWebHelpers;
@@ -116,6 +116,10 @@ class Wuse {
         const index = input.indexOf("=");
         if (index > -1) {
           result.content = input.slice(index + 1);
+          if (!!result.content.length && result.content.charAt(0) === '&') {
+            result.content = result.content.slice(1);
+            result.encode = !!result.content.length && result.content.charAt(0) !== '&';
+          }
           return input.slice(0, index);
         }
         return input;
@@ -328,7 +332,7 @@ class Wuse {
         tag: Wuse.#StringConstants.DEFAULT_TAG, id: "", classes: new window.Array(),
         attributes: new window.Object(), style: new window.Object(), events: new window.Array(),
         // =
-        content: ""
+        content: "", encode: false
       }
     }
 
@@ -504,28 +508,33 @@ class Wuse {
 
   }
 
-  static WasteAnalyzer = class {
+  static hashRoutine = (s) => {
+    // NOTE: Java's classic String.hashCode()
+    // style, multiplying by the odd prime 31
+    // ('(h << 5) - h' was faster originally)
+    var h = 0;
+    for (let x = 0; x < s.length; x++) {
+      h = (h = ((h << 5) - h) + s.charCodeAt(x)) & h;
+    }
+    return h;
+  }
 
-    static hashRoutine = (s) => {
-      // NOTE: Java's classic String.hashCode()
-      // style, multiplying by the odd prime 31
-      // ('(h << 5) - h' was faster originally)
-      var h = 0;
-      for (let x = 0; x < s.length; x++) {
-        h = (h = ((h << 5) - h) + s.charCodeAt(x)) & h;
-      }
-      return h;
+  static EqualityAnalyzer = class {
+
+    rounds = 0; // EQUAL ROUNDS
+    #last = 0; // LAST VALUE
+    #current = null; // CURRENT VALUE
+    #equal = false; // EQUAL ROUND
+    #analyzer = null; // VALUE ANALYZER
+
+    constructor(analyzer) {
+      this.#analyzer = analyzer;
     }
 
-    rounds = 0; // WASTED RENDERS
-    last = 0; // LAST HASH
-    hash = 0; // CURRENT HASH
-    wasted = false; // ROUND WASTED
-
-    compute(content) {
-      this.rounds += +(this.wasted = (this.last === (this.hash = Wuse.WasteAnalyzer.hashRoutine(content))));
-      this.last = this.hash;
-      return this.wasted;
+    compute(value) {
+      this.rounds += +(this.#equal = (this.#last == (this.#current = this.#analyzer(value))));
+      this.#last = this.#current;
+      return this.#equal;
     }
 
   }
@@ -986,6 +995,16 @@ class Wuse {
         event: "removeEventListener"
       }
     }
+    #templateImporter = id => {
+      const template = window.document.getElementById(id);
+      if (template === null) {
+        return Wuse.#RuntimeErrors.EXTINCT_TEMPLATE.emit(id)
+      } else if (template.tagName !== "TEMPLATE") {
+        return Wuse.#RuntimeErrors.INVALID_TEMPLATE.emit(id)
+      } else {
+        return template.innerHTML
+      }
+    }
     #cacheInvalidator = item => item.cache = null;
     #renderingIncluder = item => item.rendering = true;
     #renderingExcluder = item => item.rendering = false;
@@ -1007,10 +1026,14 @@ class Wuse {
       },
       child: (child) => {
         if (child.kind === Wuse.#StringConstants.TEMPLATES_KIND) {
-          const template = window.document.getElementById(child.id);
-          return template !== null ? template.innerHTML : Wuse.#RuntimeErrors.EXTINCT_TEMPLATE.emit(child.id);
+          return this.#templateImporter(child.id);
         }
-        const replacer = (str, rep) => str.replace(rep.find, this[rep.field] !== undefined ? this[rep.field] : "")
+        const replacer = (str, rep) => str.replace(rep.find, this[rep.field] !== undefined ? this[rep.field] : "");
+        if (child.tag === "^text^") {
+          var c = child.content;
+          child.replacements["contents"].forEach(r => c = replacer(c, r));
+          return child.encode ? Wuse.WebHelpers.htmlEncode(c) : c;
+        }
         var result = "<" + child.tag;
         if (Wuse.isNonEmptyString(child.id)) {
           result += " id='" + child.id + "'";
@@ -1040,7 +1063,7 @@ class Wuse {
         if (typeof child.content === "string") {
           var c = child.content;
           child.replacements["contents"].forEach(r => c = replacer(c, r));
-          result += ">" + c + "</" + child.tag + ">";
+          result += ">" + (child.encode ? Wuse.WebHelpers.htmlEncode(c) : c) + "</" + child.tag + ">";
         } else {
           result += "/>"
         }
@@ -1050,8 +1073,8 @@ class Wuse {
 
     // RENDERING PERFORMANCE
     #waste = {
-      main: new Wuse.WasteAnalyzer(),
-      style: new Wuse.WasteAnalyzer()
+      main: new Wuse.EqualityAnalyzer(Wuse.hashRoutine),
+      style: new Wuse.EqualityAnalyzer(Wuse.hashRoutine)
     }
 
     // PERFORMANCE MEASUREMENT
@@ -1094,7 +1117,7 @@ class Wuse {
       if (this.#inserted) {
         this.#main.disaffiliate();
         if (this.#style) this.#style.disaffiliate();
-        if (this.#slotted && this.#shadowed) this.innerHTML = "";
+        if (this.#slotted && this.#shadowed) Wuse.WebHelpers.removeChildren(this);
       }
       this.#inserted = false;
     }

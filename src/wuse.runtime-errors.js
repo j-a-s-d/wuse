@@ -58,8 +58,12 @@ export default class RuntimeErrors {
       return this.#makeError(21, arg => `Extinct template: #${arg}.`);
     }
 
+    static get INVALID_TEMPLATE() {
+      return this.#makeError(22, arg => `Invalid template: #${arg}.`);
+    }
+
     static get UNESPECIFIED_SLOT() {
-      return this.#makeError(22, arg => `Unespecified slot: #${arg}.`);
+      return this.#makeError(30, arg => `Unespecified slot: #${arg}.`);
     }
 
 }

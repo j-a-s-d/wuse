@@ -79,7 +79,7 @@ export function testModuleFunction(module, fn, checks, more) {
       testResult(false, `<u>${fn}</u> unknown check: ${check}`);
     }
   });
-  if (typeof more === "function") more(this, module, fn);
+  if (typeof more === "function") try { more(this, module, fn); } catch (e) { present(e.stack) }
   addMemberDivision();
 }
 
@@ -94,7 +94,7 @@ export function testModuleProperty(module, p, checks, more) {
       testResult(false, `<u>${p}</u> unknown check: ${check}`);
     }
   });
-  if (typeof more === "function") more(this, module, p);
+  if (typeof more === "function") try { more(this, module, p); } catch (e) { present(e.stack) }
   addMemberDivision();
 }
 
