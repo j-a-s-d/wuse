@@ -2,10 +2,12 @@
 
 import WuseWebHelpers from './wuse.web-helpers.js';
 import WuseRuntimeErrors from './wuse.runtime-errors.js';
+import WuseEqualityAnalyzer from './wuse.equality-analyzer.js';
+import WuseSimpleStorage from './wuse.simple-storage.js';
 
 class Wuse {
 
-  static get VERSION() { return "0.3.3"; }
+  static get VERSION() { return "0.3.4"; }
 
   static #RuntimeErrors = WuseRuntimeErrors;
   static WebHelpers = WuseWebHelpers;
@@ -338,49 +340,7 @@ class Wuse {
 
   }
 
-  static SimpleStorage = class {
-
-    // NOTE: this class implements the Web Storage API
-    // well enough to operate without problems, plus
-    // offering the addendum of the method has().
-
-    #items = new window.Object();
-
-    #getKeys() {
-      return window.Object.keys(this.#items);
-    }
-
-    get length() {
-      return this.#getKeys().length;
-    }
-
-    key(value) {
-      return this.#getKeys()[value] || null;
-    }
-
-    getItem(key) {
-      return this.#items[key];
-    }
-
-    setItem(key, state) {
-      this.#items[key] = state;
-    }
-
-    removeItem(key) {
-      delete this.#items[key];
-    }
-
-    clear() {
-      this.#items = new window.Object();
-    }
-
-    has(key) {
-      return this.#items.hasOwnProperty(key);
-    }
-
-  }
-
-  static #elementsStorage = new Wuse.SimpleStorage();
+  static #elementsStorage = new WuseSimpleStorage();
 
   static #formatPerformance = time => time > 1000 ? (time / 1000).toFixed(2) + "s" : time.toFixed(2) + "ms";
 
@@ -519,30 +479,11 @@ class Wuse {
     return h;
   }
 
-  static EqualityAnalyzer = class {
-
-    rounds = 0; // EQUAL ROUNDS
-    #last = 0; // LAST VALUE
-    #current = null; // CURRENT VALUE
-    #equal = false; // EQUAL ROUND
-    #analyzer = null; // VALUE ANALYZER
-
-    constructor(analyzer) {
-      this.#analyzer = analyzer;
-    }
-
-    compute(value) {
-      this.rounds += +(this.#equal = (this.#last == (this.#current = this.#analyzer(value))));
-      this.#last = this.#current;
-      return this.#equal;
-    }
-
-  }
-
   static #StringConstants = class {
 
     static TEMPLATES_KIND = "%templates%";
     static SLOTS_KIND = "%slots%";
+    static TEXTNODE_TAG = "^text^";
     static DEFAULT_KIND = "";
     static DEFAULT_TAG = "div";
     static DEFAULT_STYLE_MEDIA = "screen";
@@ -1029,19 +970,16 @@ class Wuse {
           return this.#templateImporter(child.id);
         }
         const replacer = (str, rep) => str.replace(rep.find, this[rep.field] !== undefined ? this[rep.field] : "");
-        if (child.tag === "^text^") {
+        if (child.tag === Wuse.#StringConstants.TEXTNODE_TAG) {
           var c = child.content;
           child.replacements["contents"].forEach(r => c = replacer(c, r));
           return child.encode ? Wuse.WebHelpers.htmlEncode(c) : c;
         }
-        var result = "<" + child.tag;
-        if (Wuse.isNonEmptyString(child.id)) {
-          result += " id='" + child.id + "'";
-        }
+        var result = Wuse.isNonEmptyString(child.id) ? `<${child.tag} id='${child.id}'` : "<" + child.tag;
         if (!!child.classes.length) {
           var c = child.classes.join(" ");
           child.replacements["classes"].forEach(r => c = replacer(c, r));
-          result += " class='" + c + "'";
+          result += ` class='${c}'`;
         }
         if (Wuse.hasObjectKeys(child.style)) {
           var c = " style='";
@@ -1050,6 +988,7 @@ class Wuse {
           }
           c += "'";
           child.replacements["styles"].forEach(r => c = replacer(c, r));
+          
           result += c;
         }
         if (Wuse.hasObjectKeys(child.attributes)) {
@@ -1063,7 +1002,7 @@ class Wuse {
         if (typeof child.content === "string") {
           var c = child.content;
           child.replacements["contents"].forEach(r => c = replacer(c, r));
-          result += ">" + (child.encode ? Wuse.WebHelpers.htmlEncode(c) : c) + "</" + child.tag + ">";
+          result += `>${child.encode ? Wuse.WebHelpers.htmlEncode(c) : c}</${child.tag}>`;
         } else {
           result += "/>"
         }
@@ -1073,8 +1012,8 @@ class Wuse {
 
     // RENDERING PERFORMANCE
     #waste = {
-      main: new Wuse.EqualityAnalyzer(Wuse.hashRoutine),
-      style: new Wuse.EqualityAnalyzer(Wuse.hashRoutine)
+      main: new WuseEqualityAnalyzer(Wuse.hashRoutine),
+      style: new WuseEqualityAnalyzer(Wuse.hashRoutine)
     }
 
     // PERFORMANCE MEASUREMENT
@@ -1086,6 +1025,8 @@ class Wuse {
     }
 
     // ROUTINES
+
+    #noop() {}
 
     #debug(msg) {
       if (this.#identified) Wuse.debug(
@@ -1266,7 +1207,7 @@ class Wuse {
     // ELEMENT STATE
     #initializeElementState() {
       if (this.#keyed) {
-        this.#elementState = this.#elementsStore.has(this.#key) ?
+        this.#elementState = this.#elementsStore.hasItem(this.#key) ?
           this.#elementsStore.getItem(this.#key) : { generation: 0, persisted: false };
         this.#elementState.generation++;
         this.#persistElementState();
@@ -1326,6 +1267,8 @@ class Wuse {
     disconnectedCallback() {
       if (Wuse.MEASURE) this.#measurement.dettachment.start();
       this.#bind(false);
+      this.#republishField("render", this.#noop);
+      this.#republishField("redraw", this.#noop);
       this.#trigger("on_disconnect");
       if (Wuse.MEASURE) this.#measurement.dettachment.stop();
     }

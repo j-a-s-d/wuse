@@ -11,13 +11,13 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 ## CHARACTERISTICS
 
 * no external dependencies
-* self-documenting api (descriptive long proc names)
+* self-documenting api (descriptive "long" function names)
 * full unit testing [TODO]
 * markdown documentation [TODO]
 
 ## FEATURES
 
-* wraps the Custom Element Registry usage: just create your class extending from a Wuse HTML Element class, register it and then instantiate it as you need (class names are converted into valid custom elements, ex: 'My_Element' is converted into my-element)
+* wraps the Custom Element Registry usage: just create your class extending from a Wuse HTML Element class, register it and then instantiate it as you need (class names are converted into valid custom elements, ex: 'My_Element' class is converted into 'my-element' tag)
 * creates a functional structure over the Shadow DOM: a root element, a style element and a main element
 * does not block nor interfere with direct DOM access (good when dealing with legacy webs, allowing progressive migrations)
 * allows all-in-one markup, styles and scripting definitions: you can define your custom element in a single es6 class file
@@ -27,6 +27,11 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 
 ## HiSTORY
 
+* [0.3.4] 2022-jul-18
+  - extracted `EqualityAnalyzer` class to an external file
+  - added `EqualityAnalyzer` class unit test
+  - extracted `SimpleStorage` class to an external file
+  - added `SimpleStorage` class unit test
 * [0.3.3] 2022-jul-15
   - added support for text nodes in the shorthand notation via `^text^` pseudo-node type (ex. '^text^=this is a text node'; note that this, of course, does not combine with named slots)
   - added support for html encoded text in the shorthand notation via the `&` content prefix (ex. 'label=&<b>this tags will be read as plain text</b>', note if you need start a content with '&' use double '&&')

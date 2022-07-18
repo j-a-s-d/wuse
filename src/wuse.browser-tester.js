@@ -15,13 +15,19 @@ const present = (element =>
       .ok { background-color: green }
       .error { background-color: red }
       .total { background-color: navy }
+      .top { float: right }
     </style>
   `);
 }();
 
+const GLYPHS = { ok: '\u2713', error: 'x', top: '\u2191' };
+
+window.fileList = new window.Array();
+
 const openModule = (file, result) => {
+  window.fileList.push(file);
   addModuleDivision();
-  present(`<h1>${file}</h1>`);
+  present(`<h1 id="${file}" style="border-bottom: 2px dotted silver">${file}<a class="top" href="#">${GLYPHS.top}</a></h1>`);
   testResult(result, `module loaded @ ${new Date(Date.now()).toLocaleString()}`);
   addModuleDivision();
 }
@@ -30,7 +36,6 @@ const addModuleDivision = () => present("<hr style='border: 2px solid black'/>")
 const addMemberDivision = () => present("<hr style='border: 1px dashed black'/>");
 const addCaseResult = (value, glyph, text) => present(`<h3 class='test'><b class='${value}'>${glyph}</b> ${text}</h3>`);
 
-const testGlyph = { ok: '\u2713', error: 'x' };
 let testCount = { ok: 0, error: 0 };
 export let pendingTests = 0;
 export let totals = { ok: 0, error: 0 };
@@ -38,7 +43,12 @@ export let totals = { ok: 0, error: 0 };
 export function publishResults() {
   var interval = setInterval(() => {
     if (pendingTests == 0) {
-      present(`<h1><b class='total'>[WUSE:TESTS] Total: ${totals.ok + totals.error} (ok: ${totals.ok}, error: ${totals.error})</b></h1>`, true);
+      var links = "";
+      window.fileList.forEach(file => links += ` ${!!links.length ? "|" : ""} <a href="#${file}">${file}</a>`);
+      present(`
+        <h1><b class='total'>[WUSE:TESTS] Total: ${totals.ok + totals.error} (ok: ${totals.ok}, error: ${totals.error})</b></h1>
+        ${links}
+      `, true);
       clearInterval(interval);
     }
   }, 250);
@@ -47,22 +57,44 @@ export function publishResults() {
 export function testResult(result, text) {
   const value = result ? "ok" : "error";
   testCount[value]++;
-  addCaseResult(value, testGlyph[value], text);
+  addCaseResult(value, GLYPHS[value], text);
+}
+
+export function testModules(modules) {
+  pendingTests = modules.length;
+  modules.forEach(info => {
+    testModule.call(this, info);
+    pendingTests--;
+  });
 }
 
 export function testModule(info) {
   if (typeof info === "object" && typeof info.file === "string" && typeof info.suite === "function") (
-    async () => await import(info.file).then(module => {
-      pendingTests++;
-      testCount = { ok: 0, error: 0 };
-      openModule(info.file, typeof module !== "undefined");
-      info.suite(this, typeof module.default !== "undefined" ? module.default : module);
-      closeModule(info.file);
-      totals.ok += testCount.ok;
-      totals.error += testCount.error;
-      pendingTests--;
-    }).catch(err => console.error(err.message))
+    async () => await import(info.file)
+      .then(module => performTests.call(this, module, info.file, info.suite))
+      .catch(err => console.error(err.message))
   )();
+}
+
+function performTests(module, file, suite) {
+  testCount = { ok: 0, error: 0 };
+  openModule(file, typeof module !== "undefined");
+  suite(this, typeof module.default !== "undefined" ? module.default : module);
+  closeModule(file);
+  totals.ok += testCount.ok;
+  totals.error += testCount.error;
+}
+
+export function testClassModule(module, mn, checks, more) {
+  (checks || new window.Array()).forEach(check => {
+    if (check == "existence") {
+      testClassModuleExistence(module, mn);
+    } else if (check.startsWith("type:function")) {
+      testIsResult(module, mn, `has type (function)`, result => typeof result === "function");
+    }
+  });
+  if (typeof more === "function") try { more(this, module, mn); } catch (e) { present(e.stack) }
+  addMemberDivision();
 }
 
 export function testModuleFunction(module, fn, checks, more) {
@@ -98,6 +130,11 @@ export function testModuleProperty(module, p, checks, more) {
   addMemberDivision();
 }
 
+export function testClassModuleExistence(module, p) {
+  const r = typeof module !== "undefined";
+  testResult(r, `<u>${p}</u> class exists: <i>${r}</i>`);
+}
+
 export function testMemberExistence(module, p) {
   const r = typeof module[p] !== "undefined";
   testResult(r, `<u>${p}</u> member exists: <i>${r}</i>`);
@@ -106,6 +143,12 @@ export function testMemberExistence(module, p) {
 export function testFunctionExistence(module, fn) {
   const r = typeof module[fn] === "function";
   testResult(r, `<u>${fn}</u> function exists: <i>${r}</i>`);
+}
+
+export function testIsResult(module, p, text, cb) {
+  if (typeof cb === "function") {
+    testResult(cb(module), `<u>${p}</u> ${text}: <i>${typeof module}</i>`);
+  }
 }
 
 export function testReadResult(module, p, text, cb) {
