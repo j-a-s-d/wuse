@@ -1,5 +1,7 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
+const waitForImport = (file, success, failure) => (async () => await import(file).then(success).catch(failure))();
+
 const present = (element =>
   (content, prepend) => prepend ? element.innerHTML = content + element.innerHTML : element.innerHTML += content
 )(window.document.body);
@@ -40,15 +42,19 @@ let testCount = { ok: 0, error: 0 };
 export let pendingTests = 0;
 export let totals = { ok: 0, error: 0 };
 
+const presentResults = () => {
+  var links = "";
+  window.fileList.forEach(file => links += ` ${!!links.length ? "|" : ""} <a href="#${file}">${file}</a>`);
+  present(`
+    <h1><b class='total'>[WUSE:TESTS] Total: ${totals.ok + totals.error} (ok: ${totals.ok}, error: ${totals.error})</b></h1>
+    ${links}
+  `, true);
+};
+
 export function publishResults() {
-  var interval = setInterval(() => {
-    if (pendingTests == 0) {
-      var links = "";
-      window.fileList.forEach(file => links += ` ${!!links.length ? "|" : ""} <a href="#${file}">${file}</a>`);
-      present(`
-        <h1><b class='total'>[WUSE:TESTS] Total: ${totals.ok + totals.error} (ok: ${totals.ok}, error: ${totals.error})</b></h1>
-        ${links}
-      `, true);
+  const interval = setInterval(() => {
+    if (!pendingTests) {
+      setTimeout(presentResults);
       clearInterval(interval);
     }
   }, 250);
@@ -62,23 +68,24 @@ export function testResult(result, text) {
 
 export function testModules(modules) {
   pendingTests = modules.length;
-  modules.forEach(info => {
-    testModule.call(this, info);
+  modules.forEach(obj => {
+    testModule.call(this, obj);
     pendingTests--;
   });
 }
 
-export function testModule(info) {
-  if (typeof info === "object" && typeof info.file === "string" && typeof info.suite === "function") (
-    async () => await import(info.file)
-      .then(module => performTests.call(this, module, info.file, info.suite))
-      .catch(err => console.error(err.message))
-  )();
+export function testModule(obj) {
+  if (typeof obj === "object") {
+    const info = typeof obj.default !== "undefined" ? obj.default : obj;
+    if (typeof info === "object" && typeof info.file === "string" && typeof info.suite === "function") {
+      waitForImport(info.file, module => performTests.call(this, module, info.file, info.suite), console.error);
+    }
+  }
 }
 
 function performTests(module, file, suite) {
   testCount = { ok: 0, error: 0 };
-  openModule(file, typeof module !== "undefined");
+  openModule(file, typeof module === "object");
   suite(this, typeof module.default !== "undefined" ? module.default : module);
   closeModule(file);
   totals.ok += testCount.ok;

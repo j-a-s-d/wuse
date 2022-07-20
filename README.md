@@ -27,6 +27,12 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 
 ## HiSTORY
 
+* [0.3.5] 2022-jul-20
+  - extracted `NodeManager` class to an external file
+  - added `NodeManager` class unit test
+  - extracted `ContentManager` class to an external file
+  - added `ContentManager` class unit test
+  - improved custom browser tester
 * [0.3.4] 2022-jul-18
   - extracted `EqualityAnalyzer` class to an external file
   - added `EqualityAnalyzer` class unit test

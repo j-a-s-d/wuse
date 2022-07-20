@@ -4,10 +4,12 @@ import WuseWebHelpers from './wuse.web-helpers.js';
 import WuseRuntimeErrors from './wuse.runtime-errors.js';
 import WuseEqualityAnalyzer from './wuse.equality-analyzer.js';
 import WuseSimpleStorage from './wuse.simple-storage.js';
+import WuseNodeManager from './wuse.node-manager.js';
+import WuseContentManager from './wuse.content-manager.js';
 
 class Wuse {
 
-  static get VERSION() { return "0.3.4"; }
+  static get VERSION() { return "0.3.5"; }
 
   static #RuntimeErrors = WuseRuntimeErrors;
   static WebHelpers = WuseWebHelpers;
@@ -85,7 +87,90 @@ class Wuse {
     return p === Wuse.OpenShadowElement || p === Wuse.ClosedShadowElement;
   }
 
-  static #PartsMakers = class {
+  static #ElementParts = class {
+
+    static PartsHolder = class extends window.Array {
+
+      owner = null;
+      last = null;
+      version = 0;
+
+      constructor(owner) {
+        super();
+        this.owner = owner;
+      }
+
+      #roll(item)  {
+        this.last = item;
+        this.version++;
+        this.on_version_change();
+      }
+
+      append(item) {
+        if (Wuse.isOf(item, window.Object)) {
+          this.push(item);
+          this.#roll(item);
+        }
+      }
+
+      prepend(item) {
+        if (Wuse.isOf(item, window.Object)) {
+          this.unshift(item);
+          this.#roll(item);
+        }
+      }
+
+      replace(index, item) {
+        if ((index > -1) && Wuse.isOf(item, window.Object)) {
+          this.#roll(this[index] = item);
+        }
+      }
+
+      on_version_change() {}
+
+      persist() {
+        let result = new window.Array();
+        window.Object.getOwnPropertyNames(this).forEach(key => {
+          switch (key) {
+            case "owner":
+            case "last":
+            case "length":
+              break;
+            case "version":
+              result[key] = this[key];
+              break;
+            default:
+              if (window.Number.isInteger(Number(key))) {
+                const item = window.Object.assign(new window.Object(), this[key]);
+                if (item.cache) item.cache = null;
+                result.push(item);
+              }
+              break;
+          }
+        });
+        return result;
+      }
+
+      restore(instance) {
+        window.Object.getOwnPropertyNames(instance).forEach(key => {
+          switch (key) {
+            case "length":
+              break;
+            case "version":
+              this[key] = instance[key];
+              break;
+            default:
+              if (window.Number.isInteger(Number(key))) {
+                const item = window.Object.assign(new window.Object(), instance[key]);
+                if (item.cache) item.cache = null;
+                this.push(item);
+              }
+              break;
+          }
+        });
+      }
+
+    }
 
     static #ShorthandNotationParser = class {
 
@@ -132,7 +217,7 @@ class Wuse {
         tmp.slice(1).map(item => {
           const [event, ...rest] = item.toLowerCase().split("+");
           const capture = (rest || Wuse.#EMPTY_ARRAY).indexOf("capture") > -1;
-          result.events.push(Wuse.#PartsMakers.newEvent(event, capture))
+          result.events.push(Wuse.#ElementParts.newEvent(event, capture))
         });
         return tmp[0];
       }
@@ -172,7 +257,7 @@ class Wuse {
 
       static parse(value) {
         if (Wuse.isNonEmptyString(value)) {
-          var def = Wuse.#PartsMakers.newDefinition();
+          var def = Wuse.#ElementParts.newDefinition();
           if (value.charAt(0) === '%') {
             if (value.startsWith(Wuse.#StringConstants.TEMPLATES_KIND)) {
               return this.#extractData(def, value.replace(def.kind = Wuse.#StringConstants.TEMPLATES_KIND, ""));
@@ -342,61 +427,120 @@ class Wuse {
 
   static #elementsStorage = new WuseSimpleStorage();
 
-  static #formatPerformance = time => time > 1000 ? (time / 1000).toFixed(2) + "s" : time.toFixed(2) + "ms";
+  static get elementCount() { return Wuse.#BaseElement.instancesCount; }
 
-  static #MeasureRound = class {
+  static PerformanceMeasurement = class {
 
-    round = 0;
-    domTime = window.Number.MAX_SAFE_INTEGER;
-    renderTime = window.Number.MAX_SAFE_INTEGER;
-  
-    getDebugInfo() {
-      var result = new window.Object();
-      result.round = this.round;
-      result.domTime = Wuse.#formatPerformance(this.domTime);
-      if (this.renderTime !== window.Number.MAX_SAFE_INTEGER) {
-        result.renderTime = Wuse.#formatPerformance(this.renderTime);
+    static #formatPerformance = time => time > 1000 ? (time / 1000).toFixed(2) + "s" : time.toFixed(2) + "ms";
+
+    static #MeasureRound = class {
+
+      round = 0;
+      domTime = window.Number.MAX_SAFE_INTEGER;
+      renderTime = window.Number.MAX_SAFE_INTEGER;
+
+      getDebugInfo() {
+        var result = new window.Object();
+        result.round = this.round;
+        result.domTime = Wuse.PerformanceMeasurement.#formatPerformance(this.domTime);
+        if (this.renderTime !== window.Number.MAX_SAFE_INTEGER) {
+          result.renderTime = Wuse.PerformanceMeasurement.#formatPerformance(this.renderTime);
+        }
+        return result;
       }
-      return result;
+
     }
 
-  }
+    static #MeasureOverall = class {
 
-  static #MeasureOverall = class {
+      name = "";
+      rounds = 0;
+      time = 0;
+      average = 0;
 
-    name = "";
-    rounds = 0;
-    time = 0;
-    average = 0;
+      constructor(name) {
+        this.name = name;
+      }
 
-    constructor(name) {
-      this.name = name;
+      compute(last) {
+        this.rounds++;
+        this.time += last;
+        this.average = this.time / this.rounds;
+      }
+
+      getDebugInfo() {
+        const spent = Wuse.PerformanceMeasurement.#formatPerformance(this.time);
+        const average = Wuse.PerformanceMeasurement.#formatPerformance(this.average);
+        return { name: this.name, rounds: this.rounds, spent, average };
+      }
+
     }
 
-    compute(last) {
-      this.rounds++;
-      this.time += last;
-      this.average = this.time / this.rounds;
+    static StopWatch = class {
+
+      // NOTE: remember this metrics are element-based.
+
+      _begin = 0;
+      _end = {
+        dom: 0,
+        render: 0
+      }
+      rounds = 0;
+      last = new Wuse.PerformanceMeasurement.#MeasureRound();
+      best = new Wuse.PerformanceMeasurement.#MeasureRound();
+      averages = {
+        dom: 0,
+        render: 0
+      }
+
+      start() {
+        if (Wuse.PerformanceMeasurement.DOMUpdate.check || Wuse.PerformanceMeasurement.BrowserRender.check) {
+          this.last.round = ++this.rounds;
+          this._begin = performance.now();
+        }
+      }
+
+      stop() {
+        if (Wuse.PerformanceMeasurement.DOMUpdate.check) {
+          if (this.best.domTime > (this.last.domTime = (this._end.dom = performance.now()) - this._begin)) {
+            this.best.round = this.last.round;
+            this.best.domTime = this.last.domTime;
+          }
+          this.averages.dom = ((this.averages.dom * (this.rounds - 1)) + this.last.domTime) / this.rounds;
+          Wuse.PerformanceMeasurement.DOMUpdate.overall.compute(this.last.domTime);
+        }
+        Wuse.PerformanceMeasurement.BrowserRender.check ? setTimeout(this.finish.bind(this)) : Wuse.DEBUG && Wuse.debug(
+          JSON.stringify(this.getDebugInfo()), JSON.stringify(Wuse.PerformanceMeasurement.DOMUpdate.overall.getDebugInfo())
+        );
+      }
+
+      finish() {
+        if (this.best.renderTime > (this.last.renderTime = (this._end.render = performance.now()) - this._begin)) {
+          this.best.round = this.last.round;
+          this.best.renderTime = this.last.renderTime;
+        }
+        this.averages.render = ((this.averages.render * (this.rounds - 1)) + this.last.renderTime) / this.rounds;
+        Wuse.PerformanceMeasurement.BrowserRender.overall.compute(this.last.renderTime);
+        if (Wuse.DEBUG) Wuse.debug(
+          JSON.stringify(this.getDebugInfo()), JSON.stringify(Wuse.PerformanceMeasurement.BrowserRender.overall.getDebugInfo())
+        );
+      }
+
+      getDebugInfo() {
+        return {
+          rounds: this.rounds, last: this.last.getDebugInfo(), best: this.best.getDebugInfo(),
+          averages: this.averages, instances: Wuse.elementCount
+        }
+      }
+
     }
-
-    getDebugInfo() {
-      const spent = Wuse.#formatPerformance(this.time);
-      const average = Wuse.#formatPerformance(this.average);
-      return { name: this.name, rounds: this.rounds, spent, average };
-    }
-
-  }
-
-  static StopWatch = class {
-
-    // NOTE: remember this metrics are element-based.
 
     static DOMUpdate = class {
 
       // NOTE: this checks how much time was spent updating the
       // dom with the necessary changes.
       static check = true;
-      static overall = new Wuse.#MeasureOverall("overall-dom-update");
+      static overall = null;
 
     }
 
@@ -409,63 +553,15 @@ class Wuse {
       // to capture the moment when the script execution is
       // resumed after all the dom changes were processed.
       static check = false;
-      static overall = new Wuse.#MeasureOverall("overall-browser-render");
+      static overall = null;
 
     }
 
-    _begin = 0;
-    _end = {
-      dom: 0,
-      render: 0
+    static initialize() {
+      Wuse.PerformanceMeasurement.DOMUpdate.overall = new Wuse.PerformanceMeasurement.#MeasureOverall("overall-dom-update");
+      Wuse.PerformanceMeasurement.BrowserRender.overall = new Wuse.PerformanceMeasurement.#MeasureOverall("overall-browser-render");
     }
-    rounds = 0;
-    last = new Wuse.#MeasureRound();
-    best = new Wuse.#MeasureRound();
-    averages = {
-      dom: 0,
-      render: 0
-    }
-
-    start() {
-      if (Wuse.StopWatch.DOMUpdate.check || Wuse.StopWatch.BrowserRender.check) {
-        this.last.round = ++this.rounds;
-        this._begin = performance.now();
-      }
-    }
-
-    stop() {
-      if (Wuse.StopWatch.DOMUpdate.check) {
-        if (this.best.domTime > (this.last.domTime = (this._end.dom = performance.now()) - this._begin)) {
-          this.best.round = this.last.round;
-          this.best.domTime = this.last.domTime;
-        }
-        this.averages.dom = ((this.averages.dom * (this.rounds - 1)) + this.last.domTime) / this.rounds;
-        Wuse.StopWatch.DOMUpdate.overall.compute(this.last.domTime);
-      }
-      Wuse.StopWatch.BrowserRender.check ? setTimeout(this.finish.bind(this)) : Wuse.DEBUG && Wuse.debug(
-        JSON.stringify(this.getDebugInfo()), JSON.stringify(Wuse.StopWatch.DOMUpdate.overall.getDebugInfo())
-      );
-    }
-
-    finish() {
-      if (this.best.renderTime > (this.last.renderTime = (this._end.render = performance.now()) - this._begin)) {
-        this.best.round = this.last.round;
-        this.best.renderTime = this.last.renderTime;
-      }
-      this.averages.render = ((this.averages.render * (this.rounds - 1)) + this.last.renderTime) / this.rounds;
-      Wuse.StopWatch.BrowserRender.overall.compute(this.last.renderTime);
-      if (Wuse.DEBUG) Wuse.debug(
-        JSON.stringify(this.getDebugInfo()), JSON.stringify(Wuse.StopWatch.BrowserRender.overall.getDebugInfo())
-      );
-    }
-
-    getDebugInfo() {
-      return {
-        rounds: this.rounds, last: this.last.getDebugInfo(), best: this.best.getDebugInfo(),
-        averages: this.averages, instances: Wuse.#BaseElement.instancesCount
-      }
-    }
-
+  
   }
 
   static hashRoutine = (s) => {
@@ -490,89 +586,6 @@ class Wuse {
     static DEFAULT_STYLE_TYPE = "text/css";
     static DEFAULT_REPLACEMENT_OPEN = "~{";
     static DEFAULT_REPLACEMENT_CLOSE = "}~";
-
-  }
-
-  static ObjectsArray = class extends window.Array {
-
-    owner = null;
-    last = null;
-    version = 0;
-
-    constructor(owner) {
-      super();
-      this.owner = owner;
-    }
-
-    #roll(item)  {
-      this.last = item;
-      this.version++;
-      this.on_version_change();
-    }
-
-    append(item) {
-      if (Wuse.isOf(item, window.Object)) {
-        this.push(item);
-        this.#roll(item);
-      }
-    }
-
-    prepend(item) {
-      if (Wuse.isOf(item, window.Object)) {
-        this.unshift(item);
-        this.#roll(item);
-      }
-    }
-
-    replace(index, item) {
-      if ((index > -1) && Wuse.isOf(item, window.Object)) {
-        this.#roll(this[index] = item);
-      }
-    }
-
-    on_version_change() {}
-
-    persist() {
-      let result = new window.Array();
-      window.Object.getOwnPropertyNames(this).forEach(key => {
-        switch (key) {
-          case "owner":
-          case "last":
-          case "length":
-            break;
-          case "version":
-            result[key] = this[key];
-            break;
-          default:
-            if (window.Number.isInteger(Number(key))) {
-              const item = window.Object.assign(new window.Object(), this[key]);
-              if (item.cache) item.cache = null;
-              result.push(item);
-            }
-            break;
-        }
-      });
-      return result;
-    }
-
-    restore(instance) {
-      window.Object.getOwnPropertyNames(instance).forEach(key => {
-        switch (key) {
-          case "length":
-            break;
-          case "version":
-            this[key] = instance[key];
-            break;
-          default:
-            if (window.Number.isInteger(Number(key))) {
-              const item = window.Object.assign(new window.Object(), instance[key]);
-              if (item.cache) item.cache = null;
-              this.push(item);
-            }
-            break;
-        }
-      });
-    }
 
   }
 
@@ -684,74 +697,82 @@ class Wuse {
 
   }
 
-  static #NodeManager = class {
-
-    #parent = null;
-    #actual = null;
-    #clone = null;
-
-    constructor(parent, original) {
-      this.#parent = parent;
-      this.#actual = original;
-      this.#clone = original.cloneNode(false);
+  static #templateImporter = id => {
+    const template = window.document.getElementById(id);
+    if (template === null) {
+      return Wuse.#RuntimeErrors.EXTINCT_TEMPLATE.emit(id);
+    } else if (template.tagName !== "TEMPLATE") {
+      return Wuse.#RuntimeErrors.INVALID_TEMPLATE.emit(id);
+    } else {
+      return template.innerHTML;
     }
-
-    get element() { return this.#actual; }
-
-    affiliate() {
-      this.#parent.appendChild(this.#actual);
-    }
-
-    disaffiliate(parent) {
-      this.#parent.removeChild(this.#actual);
-    }
-
-    #roll() {
-      const tmp = this.#clone;
-      this.#clone = this.#actual.cloneNode(false);
-      this.#actual = tmp;
-    }
-
-    promote(content) {
-      this.#clone.innerHTML = content;
-      this.#parent.replaceChild(this.#clone, this.#actual);
-      this.#roll();
-    }
-
   }
 
-  static #ContentManager = class {
+  static #RenderingRoutines = class {
 
-    owner = null;
-    #invalidated = false;
-    #content = "";
+    static cacheInvalidator = item => item.cache = null;
 
-    constructor(owner) {
-      this.owner = owner;
+    static renderingIncluder = item => item.rendering = true;
+
+    static renderingExcluder = item => item.rendering = false;
+
+    static renderRule = (replacer, rule) => {
+      if (Wuse.isOf(rule.nested, window.Array)) {
+        return rule.selector + "{" + rule.nested.map(r => Wuse.#RenderingRoutines.renderRule(replacer, r)).join("\n") + "}";
+      } else if (rule.selector !== "") {
+        var c = "";
+        for (const property in rule.properties) {
+          c += property + ":" + rule.properties[property] + ";";
+        }
+        if (Wuse.isOf(rule.replacements, window.Array) && !!rule.replacements.length) {
+          rule.replacements.forEach(r => c = replacer(c, r));
+        }
+        return rule.selector + "{" + c + "}";
+      }
+      return null;
     }
 
-    reset(content) {
-      this.#invalidated = false;
-      this.#content = content;
+    static renderChild = (replacer, child) => {
+      if (child.kind === Wuse.#StringConstants.TEMPLATES_KIND) {
+        return Wuse.#templateImporter(child.id);
+      }
+      if (child.tag === Wuse.#StringConstants.TEXTNODE_TAG) {
+        var c = child.content;
+        child.replacements["contents"].forEach(r => c = replacer(c, r));
+        return child.encode ? Wuse.WebHelpers.htmlEncode(c) : c;
+      }
+      var result = Wuse.isNonEmptyString(child.id) ? `<${child.tag} id='${child.id}'` : "<" + child.tag;
+      if (!!child.classes.length) {
+        var c = child.classes.join(" ");
+        child.replacements["classes"].forEach(r => c = replacer(c, r));
+        result += ` class='${c}'`;
+      }
+      if (Wuse.hasObjectKeys(child.style)) {
+        var c = " style='";
+        for (const property in child.style) {
+          c += property + ": " + child.style[property] + "; ";
+        }
+        c += "'";
+        child.replacements["styles"].forEach(r => c = replacer(c, r));
+        result += c;
+      }
+      if (Wuse.hasObjectKeys(child.attributes)) {
+        var c = "";
+        for (const property in child.attributes) {
+          c += " " + property + "=" + child.attributes[property];
+        }
+        child.replacements["attributes"].forEach(r => c = replacer(c, r));
+        result += c;
+      }
+      if (typeof child.content === "string") {
+        var c = child.content;
+        child.replacements["contents"].forEach(r => c = replacer(c, r));
+        result += `>${child.encode ? Wuse.WebHelpers.htmlEncode(c) : c}</${child.tag}>`;
+      } else {
+        result += "/>"
+      }
+      return result;
     }
-
-    append(more) {
-      this.#content += more;
-    }
-
-    verify(verifier) {
-      if (Wuse.isOf(verifier, window.Function)) this.#invalidated = verifier(this.#content);
-    }
-
-    process() {
-      if (this.#invalidated) this.on_content_invalidation(this.#content);
-    }
-
-    get invalidated() {
-      return this.#invalidated;
-    }
-
-    on_content_invalidation(content) {}
 
   }
 
@@ -802,7 +823,7 @@ class Wuse {
 
     // CONTENT HOLDERS
     #html = "" // RAW HTML
-    #rules = new (class extends Wuse.ObjectsArray {
+    #rules = new (class extends Wuse.#ElementParts.PartsHolder {
 
       on_version_change() {
         this.last.version = this.version;
@@ -811,7 +832,7 @@ class Wuse {
       }
 
     })(this) // CSS RULES
-    #children = new (class extends Wuse.ObjectsArray {
+    #children = new (class extends Wuse.#ElementParts.PartsHolder {
 
       on_version_change() {
         this.last.version = this.version;
@@ -821,7 +842,7 @@ class Wuse {
       }
 
     })(this) // HTML ELEMENTS
-    #fields = new (class extends Wuse.ObjectsArray {
+    #fields = new (class extends Wuse.#ElementParts.PartsHolder {
 
       on_version_change() {
         if (Wuse.DEBUG) this.owner.#debug(`fields list version change: ${this.version}`);
@@ -835,11 +856,11 @@ class Wuse {
         this.forEach(x => this.owner[x.name] = x.value);
       }
 
-    })(this) // REACTIVE FIELDS
+    })(this) // INSTANCE FIELDS
 
     // USER CUSTOMIZATION
     #options = {
-      mainDefinition: Wuse.#PartsMakers.newDefinition(),
+      mainDefinition: Wuse.#ElementParts.newDefinition(),
       styleMedia: Wuse.#StringConstants.DEFAULT_STYLE_MEDIA,
       styleType: Wuse.#StringConstants.DEFAULT_STYLE_TYPE,
       rawContent: false,
@@ -870,21 +891,21 @@ class Wuse {
 
     // RENDERING STATE
     #contents = {
-      root: new (class extends Wuse.#ContentManager {
+      root: new (class extends WuseContentManager {
 
         on_content_invalidation(content) {
           this.owner.innerHTML = content; // slot change
         }
 
       })(this),
-      style: new (class extends Wuse.#ContentManager {
+      style: new (class extends WuseContentManager {
 
         on_content_invalidation(content) {
           this.owner.#style.promote(content); // rule change
         }
 
       })(this),
-      main: new (class extends Wuse.#ContentManager {
+      main: new (class extends WuseContentManager {
 
         on_content_invalidation(content) {
           this.owner.#main.promote(content); // child change
@@ -892,17 +913,17 @@ class Wuse {
 
       })(this),
       renderizers: {
-        rule: rule => this.#contents.style.append(rule.cache ? rule.cache : rule.cache = this.#renderingPerformers.rule(rule)),
+        rule: rule => this.#contents.style.append(rule.cache ? rule.cache : rule.cache = Wuse.#RenderingRoutines.renderRule(this.#renderingReplacer, rule)),
         children: {
           mixed: child => this.#shadowed && child.kind === Wuse.#StringConstants.SLOTS_KIND ? this.#contents.renderizers.children.slot(child) : this.#contents.renderizers.children.normal(child),
           slot: child => {
             if (!child.cache) {
               this.#contents.root.verify(content => true);
-              this.#contents.root.append(child.cache = this.#renderingPerformers.child(child));
+              this.#contents.root.append(child.cache = Wuse.#RenderingRoutines.renderChild(this.#renderingReplacer, child));
             }
           },
           normal: child => {
-            this.#contents.main.append(child.cache ? child.cache : child.cache = this.#renderingPerformers.child(child));
+            this.#contents.main.append(child.cache ? child.cache : child.cache = Wuse.#RenderingRoutines.renderChild(this.#renderingReplacer, child));
             child.rules.forEach(this.#contents.renderizers.rule);
           }
         }
@@ -912,8 +933,9 @@ class Wuse {
     }
 
     // FIXED CALLBACKS
+    #renderingReplacer = (str, rep) => str.replace(rep.find, this[rep.field] !== undefined ? this[rep.field] : "");
     /*#ruleInserters = {
-      rule: rule => this.#style.sheet.insertRule(rule.cache ? rule.cache : rule.cache = this.#renderingPerformers.rule(rule)),
+      rule: rule => this.#style.sheet.insertRule(rule.cache ? rule.cache : rule.cache = Wuse.#RenderingRoutines.renderRule(this.#renderingReplacer, rule)),
       childRule: child => child.rendering && child.rules.forEach(this.#ruleInserters.rule)
     }*/
     #bindingPerformers = {
@@ -936,81 +958,8 @@ class Wuse {
         event: "removeEventListener"
       }
     }
-    #templateImporter = id => {
-      const template = window.document.getElementById(id);
-      if (template === null) {
-        return Wuse.#RuntimeErrors.EXTINCT_TEMPLATE.emit(id)
-      } else if (template.tagName !== "TEMPLATE") {
-        return Wuse.#RuntimeErrors.INVALID_TEMPLATE.emit(id)
-      } else {
-        return template.innerHTML
-      }
-    }
-    #cacheInvalidator = item => item.cache = null;
-    #renderingIncluder = item => item.rendering = true;
-    #renderingExcluder = item => item.rendering = false;
-    #renderingPerformers = {
-      rule: (rule) => {
-        if (Wuse.isOf(rule.nested, window.Array)) {
-          return rule.selector + "{" + rule.nested.map(r => this.#renderingPerformers.rule(r)).join("\n") + "}";
-        } else if (rule.selector !== "") {
-          var c = "";
-          for (const property in rule.properties) {
-            c += property + ":" + rule.properties[property] + ";";
-          }
-          if (Wuse.isOf(rule.replacements, window.Array)) {
-            rule.replacements.forEach(r => c = c.replace(r.find, this[r.field] !== undefined ? this[r.field] : ""));
-          }
-          return rule.selector + "{" + c + "}";
-        }
-        return null;
-      },
-      child: (child) => {
-        if (child.kind === Wuse.#StringConstants.TEMPLATES_KIND) {
-          return this.#templateImporter(child.id);
-        }
-        const replacer = (str, rep) => str.replace(rep.find, this[rep.field] !== undefined ? this[rep.field] : "");
-        if (child.tag === Wuse.#StringConstants.TEXTNODE_TAG) {
-          var c = child.content;
-          child.replacements["contents"].forEach(r => c = replacer(c, r));
-          return child.encode ? Wuse.WebHelpers.htmlEncode(c) : c;
-        }
-        var result = Wuse.isNonEmptyString(child.id) ? `<${child.tag} id='${child.id}'` : "<" + child.tag;
-        if (!!child.classes.length) {
-          var c = child.classes.join(" ");
-          child.replacements["classes"].forEach(r => c = replacer(c, r));
-          result += ` class='${c}'`;
-        }
-        if (Wuse.hasObjectKeys(child.style)) {
-          var c = " style='";
-          for (const property in child.style) {
-            c += property + ": " + child.style[property] + "; ";
-          }
-          c += "'";
-          child.replacements["styles"].forEach(r => c = replacer(c, r));
-          
-          result += c;
-        }
-        if (Wuse.hasObjectKeys(child.attributes)) {
-          var c = "";
-          for (const property in child.attributes) {
-            c += " " + property + "=" + child.attributes[property];
-          }
-          child.replacements["attributes"].forEach(r => c = replacer(c, r));
-          result += c;
-        }
-        if (typeof child.content === "string") {
-          var c = child.content;
-          child.replacements["contents"].forEach(r => c = replacer(c, r));
-          result += `>${child.encode ? Wuse.WebHelpers.htmlEncode(c) : c}</${child.tag}>`;
-        } else {
-          result += "/>"
-        }
-        return result;
-      }
-    }
 
-    // RENDERING PERFORMANCE
+    // CONTENT ANALYSIS
     #waste = {
       main: new WuseEqualityAnalyzer(Wuse.hashRoutine),
       style: new WuseEqualityAnalyzer(Wuse.hashRoutine)
@@ -1018,10 +967,10 @@ class Wuse {
 
     // PERFORMANCE MEASUREMENT
     #measurement = {
-      attachment: new Wuse.StopWatch(),
-      partial: new Wuse.StopWatch(),
-      full: new Wuse.StopWatch(),
-      dettachment: new Wuse.StopWatch()
+      attachment: new Wuse.PerformanceMeasurement.StopWatch(),
+      partial: new Wuse.PerformanceMeasurement.StopWatch(),
+      full: new Wuse.PerformanceMeasurement.StopWatch(),
+      dettachment: new Wuse.PerformanceMeasurement.StopWatch()
     }
 
     // ROUTINES
@@ -1044,14 +993,14 @@ class Wuse {
     }
 
     #prepareElements() {
-      this.#style = !!this.#rules.length ? new Wuse.#NodeManager(
-        this.#root, Wuse.#PartsMakers.makeStyleNode(this.#options.styleMedia, this.#options.styleType)
+      this.#style = !!this.#rules.length ? new WuseNodeManager(
+        this.#root, Wuse.#ElementParts.makeStyleNode(this.#options.styleMedia, this.#options.styleType)
       ) : null;
-      this.#main = new Wuse.#NodeManager(
-        this.#root, Wuse.#PartsMakers.makeMainNode(this.#options.mainDefinition)
+      this.#main = new WuseNodeManager(
+        this.#root, Wuse.#ElementParts.makeMainNode(this.#options.mainDefinition)
       );
-      this.#children.forEach(this.#cacheInvalidator);
-      this.#rules.forEach(this.#cacheInvalidator);
+      this.#children.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
+      this.#rules.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
     }
 
     #extirpateElements() {
@@ -1165,15 +1114,15 @@ class Wuse {
     #fieldRender(name, label = "$none") {
       if (this.#binded) {
         const rulesHits = Wuse.ReactiveFields.ReplacementsScanners.rules(this.#rules, name);
-        rulesHits.forEach(this.#cacheInvalidator);
+        rulesHits.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
         const childrenHits = Wuse.ReactiveFields.ReplacementsScanners.children(this.#children, name);
-        childrenHits.forEach(this.#cacheInvalidator);
+        childrenHits.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
         if (Wuse.DEBUG) this.#debug(`reactive render (label: ${label}, field: ${name}, children: ${childrenHits.length}, rules: ${rulesHits.length})`);
         if (!!rulesHits.length || !!childrenHits.length) {
           if (childrenHits.some(x => !!x.kind.length)) {
             // NOTE: when a slot gets invalidated the replaceChild will drop all other slots,
             // so to avoid a full redraw, all other slots are required to be invalidated too.
-            this.#children.forEach(x => x.kind === Wuse.#StringConstants.SLOTS_KIND ? this.#cacheInvalidator(x) : undefined);
+            this.#children.forEach(x => x.kind === Wuse.#StringConstants.SLOTS_KIND ? Wuse.#RenderingRoutines.cacheInvalidator(x) : undefined);
           }
           this.render();
         }
@@ -1182,12 +1131,9 @@ class Wuse {
 
     #makeReactiveField(name, value, handler, initial = true) {
       Wuse.ReactiveFields.make(this, name, value, handler, (name, label) => this.#fieldRender(name, label || "$auto"));
+      this.#fields.append({ name, value });
       if (initial) this.#fieldRender(name, "$init");
-    }
-
-    #republishField(name, value) {
-      delete this[name];
-      window.Object.defineProperty(this, name, { value });
+      return this;
     }
 
     // EVENT ROUTINES
@@ -1249,16 +1195,14 @@ class Wuse {
         this.#trigger("on_construct");
     }
 
-    render() {}
+    get render() { return this.#binded ? this.#render : this.#noop }
 
-    redraw() {}
+    get redraw() { return this.#binded ? this.#redraw : this.#noop }
 
     connectedCallback() {
       if (Wuse.MEASURE) this.#measurement.attachment.start();
       this.#detectHandledEvents();
       this.#trigger("on_connect");
-      this.#republishField("render", this.#render);
-      this.#republishField("redraw", this.#redraw);
       this.#inject("on_load");
       if (this.#keyed) this.persistToElementsStore();
       if (Wuse.MEASURE) this.#measurement.attachment.stop();
@@ -1267,8 +1211,6 @@ class Wuse {
     disconnectedCallback() {
       if (Wuse.MEASURE) this.#measurement.dettachment.start();
       this.#bind(false);
-      this.#republishField("render", this.#noop);
-      this.#republishField("redraw", this.#noop);
       this.#trigger("on_disconnect");
       if (Wuse.MEASURE) this.#measurement.dettachment.stop();
     }
@@ -1349,8 +1291,8 @@ class Wuse {
     }
 
     setMainElement(shorthandNotation) {
-      const tmp = Wuse.#PartsMakers.newChild(shorthandNotation);
-      if (Wuse.#PartsMakers.performValidations(tmp)) {
+      const tmp = Wuse.#ElementParts.newChild(shorthandNotation);
+      if (Wuse.#ElementParts.performValidations(tmp)) {
         if (tmp.content !== "" || !!tmp.events.length) {
           return Wuse.#RuntimeErrors.INVALID_DEFINITION.emit(shorthandNotation);
         }
@@ -1412,8 +1354,8 @@ class Wuse {
     appendCSSRule(selector, properties, nesting) {
       if (nesting) return this.appendCSSNestedRule(selector, properties, nesting);
       const sliced = this.#rules.slice(-1);
-      const rule = Wuse.#PartsMakers.newRule(selector, properties);
-      if (!sliced.length || !Wuse.#PartsMakers.tryToJoinRules(sliced[0], rule)) {
+      const rule = Wuse.#ElementParts.newRule(selector, properties);
+      if (!sliced.length || !Wuse.#ElementParts.tryToJoinRules(sliced[0], rule)) {
         this.#rules.append(rule);
       }
       return this;
@@ -1422,8 +1364,8 @@ class Wuse {
     prependCSSRule(selector, properties, nesting) {
       if (nesting) return this.prependCSSNestedRule(selector, properties, nesting);
       const sliced = this.#rules.slice(0, 1);
-      const rule = Wuse.#PartsMakers.newRule(selector, properties);
-      if (!sliced.length || !Wuse.#PartsMakers.tryToJoinRules(sliced[0], rule)) {
+      const rule = Wuse.#ElementParts.newRule(selector, properties);
+      if (!sliced.length || !Wuse.#ElementParts.tryToJoinRules(sliced[0], rule)) {
         this.#rules.prepend(rule);
       }
       return this;
@@ -1431,8 +1373,8 @@ class Wuse {
 
     appendCSSNestedRule(selector, subselector, properties) {
       const sliced = this.#rules.slice(-1);
-      const rule = Wuse.#PartsMakers.newNestedRule(selector, subselector, properties);
-      if (!sliced.length || !Wuse.#PartsMakers.tryToJoinNestedRules(sliced[0], rule)) {
+      const rule = Wuse.#ElementParts.newNestedRule(selector, subselector, properties);
+      if (!sliced.length || !Wuse.#ElementParts.tryToJoinNestedRules(sliced[0], rule)) {
         this.#rules.append(rule);
       }
       return this;
@@ -1440,8 +1382,8 @@ class Wuse {
 
     prependCSSNestedRule(selector, subselector, properties) {
       const sliced = this.#rules.slice(0, 1);
-      const rule = Wuse.#PartsMakers.newNestedRule(selector, subselector, properties);
-      if (!sliced.length || !Wuse.#PartsMakers.tryToJoinNestedRules(sliced[0], rule)) {
+      const rule = Wuse.#ElementParts.newNestedRule(selector, subselector, properties);
+      if (!sliced.length || !Wuse.#ElementParts.tryToJoinNestedRules(sliced[0], rule)) {
         this.#rules.prepend(rule);
       }
       return this;
@@ -1449,8 +1391,8 @@ class Wuse {
 
     appendChildElement(shorthandNotation, rules) {
       this.#children.append(
-        Wuse.#PartsMakers.performValidations(
-          Wuse.#PartsMakers.newChild(shorthandNotation, rules)
+        Wuse.#ElementParts.performValidations(
+          Wuse.#ElementParts.newChild(shorthandNotation, rules)
         )
       );
       return this;
@@ -1458,8 +1400,8 @@ class Wuse {
 
     prependChildElement(shorthandNotation, rules) {
       this.#children.prepend(
-        Wuse.#PartsMakers.performValidations(
-          Wuse.#PartsMakers.newChild(shorthandNotation, rules)
+        Wuse.#ElementParts.performValidations(
+          Wuse.#ElementParts.newChild(shorthandNotation, rules)
         )
       );
       return this;
@@ -1468,7 +1410,7 @@ class Wuse {
     replaceChildElement(id, shorthandNotation) {
       this.#children.replace(
         this.#children.findIndex(child => child.id === id),
-        Wuse.#PartsMakers.newChild(shorthandNotation)
+        Wuse.#ElementParts.newChild(shorthandNotation)
       );
       return this;
     }
@@ -1494,22 +1436,22 @@ class Wuse {
     }
 
     includeChildElementById(id) {
-      this.#children.forEach(child => (child.id === id) && this.#renderingIncluder(child));
+      this.#children.forEach(child => (child.id === id) && Wuse.#RenderingRoutines.renderingIncluder(child));
       return this;
     }
 
     excludeChildElementById(id) {
-      this.#children.forEach(child => (child.id === id) && this.#renderingExcluder(child));
+      this.#children.forEach(child => (child.id === id) && Wuse.#RenderingRoutines.renderingExcluder(child));
       return this;
     }
 
     invalidateChildElementsById(ids) {
-      this.#children.forEach(child => (ids.indexOf(child.id) > -1) && this.#cacheInvalidator(child));
+      this.#children.forEach(child => (ids.indexOf(child.id) > -1) && Wuse.#RenderingRoutines.cacheInvalidator(child));
       return this;
     }
 
     invalidateChildElements(childs) {
-      if (Wuse.isOf(childs, window.Array)) childs.forEach(this.#cacheInvalidator);
+      if (Wuse.isOf(childs, window.Array)) childs.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
       return this;
     }
 
@@ -1520,14 +1462,11 @@ class Wuse {
     }
 
     makeReactiveField(name, value, handler, initial = true) {
-      this.#makeReactiveField(name, value, handler, initial);
-      this.#fields.append({ name, value });
-      return this;
+      return this.#makeReactiveField(name, value, handler, initial);
     }
 
     makeExternalReactiveField(mirror, name, value, handler, initial = true) {
-      this.makeReactiveField(name, mirror[name] || value, actions => { mirror[name] = this[name]; handler(actions) }, initial);
-      return this;
+      return this.makeReactiveField(name, mirror[name] || value, actions => { mirror[name] = this[name]; handler(actions) }, initial);
     }
 
   }
@@ -1585,6 +1524,7 @@ class Wuse {
     } catch (e) {
       Wuse.#RuntimeErrors.UNKNOWN_ERROR.emit();
     }
+    Wuse.PerformanceMeasurement.initialize();
   }
 
 }

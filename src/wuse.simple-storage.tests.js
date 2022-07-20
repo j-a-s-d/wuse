@@ -1,11 +1,14 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
-const SimpleStorageTests = {
-  file: "./wuse.simple-storage.js",
-  suite: (tester, module) => {
-    tester.testClassModule(module, "SimpleStorage", ["existence", "type:function"], SimpleStorageTests.SimpleStorage);
-  },
-  SimpleStorage: (tester, module, name) => {
+export default new class {
+
+  file = "./wuse.simple-storage.js"
+
+  suite = (tester, module) => {
+    tester.testClassModule(module, "SimpleStorage", ["existence", "type:function"], this.SimpleStorage);
+  }
+
+  SimpleStorage = (tester, module, name) => {
     const instance = new module();
     var r = instance !== undefined;
     tester.testResult(r, `<u>${name}</u> got instantiated: <i>${r}</i>`);
@@ -48,7 +51,6 @@ const SimpleStorageTests = {
     r = instance.length;
     tester.testResult(r === 0, `<u>${name}</u> has zero items: <i>${r}</i>`);
   }
-}
 
-export default SimpleStorageTests;
+}
 
