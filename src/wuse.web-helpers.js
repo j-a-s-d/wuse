@@ -24,7 +24,8 @@ export default class WebHelpers {
   }
 
   static htmlEncode(text = "") {
-    return typeof text === "string" ? text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : null;
+    return typeof text !== "string" ? null :
+      text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
   static getCSSVendorPrefix() {

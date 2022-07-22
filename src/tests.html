@@ -8,17 +8,21 @@
     import * as tester from "/wuse.browser-tester.js";
     import RuntimeErrorsTests from "/wuse.runtime-errors.tests.js";
     import WebHelpersTests from "/wuse.web-helpers.tests.js";
+    import JsHelpersTests from "/wuse.javascript-helpers.tests.js";
     import EqualityAnalyzerTests from "/wuse.equality-analyzer.tests.js";
     import SimpleStorageTests from "/wuse.simple-storage.tests.js";
     import NodeManagerTests from "/wuse.node-manager.tests.js";
     import ContentManagerTests from "/wuse.content-manager.tests.js";
+    import PerformanceMeasurementTests from "/wuse.performance-measurement.tests.js";
     tester.testModules([
       RuntimeErrorsTests,
       WebHelpersTests,
+      JsHelpersTests,
       EqualityAnalyzerTests,
       SimpleStorageTests,
       NodeManagerTests,
-      ContentManagerTests
+      ContentManagerTests,
+      PerformanceMeasurementTests
     ]);
     tester.publishResults();
   </script>

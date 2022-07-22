@@ -13,6 +13,7 @@ const present = (element =>
       b { padding: 4px 8px; border-radius: 4px; color: white }
       i { color: orange }
       u { color: purple }
+      a { color: teal }
       .test { margin-left: 16px }
       .ok { background-color: green }
       .error { background-color: red }
@@ -44,7 +45,7 @@ export let totals = { ok: 0, error: 0 };
 
 const presentResults = () => {
   var links = "";
-  window.fileList.forEach(file => links += ` ${!!links.length ? "|" : ""} <a href="#${file}">${file}</a>`);
+  window.fileList.forEach(file => links += ` ${!!links.length ? "|" : ""} <a href="#${file}">${file.replace("./wuse.", "").replace(".js", "")}</a>`);
   present(`
     <h1><b class='total'>[WUSE:TESTS] Total: ${totals.ok + totals.error} (ok: ${totals.ok}, error: ${totals.error})</b></h1>
     ${links}
@@ -104,6 +105,18 @@ export function testClassModule(module, mn, checks, more) {
   addMemberDivision();
 }
 
+export function testModuleClass(module, cn, checks, more) {
+  (checks || new window.Array()).forEach(check => {
+    if (check == "existence") {
+      testClassExistence(module, cn);
+    } else {
+      testResult(false, `<u>${cn}</u> unknown check: ${check}`);
+    }
+  });
+  if (typeof more === "function") try { more(this, module, cn); } catch (e) { present(e.stack) }
+  addMemberDivision();
+}
+
 export function testModuleFunction(module, fn, checks, more) {
   (checks || new window.Array()).forEach(check => {
     if (check == "existence") {
@@ -137,6 +150,20 @@ export function testModuleProperty(module, p, checks, more) {
   addMemberDivision();
 }
 
+export function testClassProperty(module, c, p, checks, more) {
+  (checks || []).forEach(check => {
+    if (check == "existence") {
+      testMemberExistence(module[c], p,`${c}.${p}`);
+    } else if (check.startsWith("type:")) {
+      const x = check.replace("type:", "");
+      testReadResult(module[c], p, `result has type (${x})`, result => typeof result === x);
+    } else {
+      testResult(false, `<u>${c}.${p}</u> unknown check: ${check}`);
+    }
+  });
+  if (typeof more === "function") try { more(this, module[c], p); } catch (e) { present(e.stack) }
+}
+
 export function testClassModuleExistence(module, p) {
   const r = typeof module !== "undefined";
   testResult(r, `<u>${p}</u> class exists: <i>${r}</i>`);
@@ -150,6 +177,11 @@ export function testMemberExistence(module, p) {
 export function testFunctionExistence(module, fn) {
   const r = typeof module[fn] === "function";
   testResult(r, `<u>${fn}</u> function exists: <i>${r}</i>`);
+}
+
+export function testClassExistence(module, cn) {
+  const r = typeof module[cn] === "function" && /^\s*class\s+/.test(module[cn].toString());
+  testResult(r, `<u>${cn}</u> class exists: <i>${r}</i>`);
 }
 
 export function testIsResult(module, p, text, cb) {

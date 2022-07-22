@@ -1,18 +1,24 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
+import WuseStringConstants from './wuse.string-constants.js';
 import WuseWebHelpers from './wuse.web-helpers.js';
+import WuseJsHelpers from './wuse.javascript-helpers.js';
 import WuseRuntimeErrors from './wuse.runtime-errors.js';
 import WuseEqualityAnalyzer from './wuse.equality-analyzer.js';
 import WuseSimpleStorage from './wuse.simple-storage.js';
 import WuseNodeManager from './wuse.node-manager.js';
 import WuseContentManager from './wuse.content-manager.js';
+import WusePerformanceMeasurement from './wuse.performance-measurement.js';
 
 class Wuse {
 
-  static get VERSION() { return "0.3.5"; }
+  static get VERSION() { return "0.3.6"; }
 
-  static #RuntimeErrors = WuseRuntimeErrors;
   static WebHelpers = WuseWebHelpers;
+
+  static JsHelpers = WuseJsHelpers;
+
+  static PerformanceMeasurement = WusePerformanceMeasurement;
 
   static tmp = new window.Object(); // convenience temporary object
 
@@ -25,7 +31,7 @@ class Wuse {
   static RENDERING = true; // global rendering flag
 
   static blockUpdate(task, arg) {
-    if (Wuse.isOf(task, Function)) {
+    if (WuseJsHelpers.isOf(task, Function)) {
       if (Wuse.DEBUG) Wuse.debug("blocking");
       Wuse.RENDERING = false;
       try {
@@ -43,43 +49,12 @@ class Wuse {
     window.console.log("[WUSE:DEBUG]", msg);
   }
 
-  static isOf(instance, cls) {
-    return !!(instance && instance.constructor === cls);
-  }
-
-  static isNonEmptyString(str) {
-    return typeof str === "string" && !!str.length;
-  }
-
-  static forcedStringSplit(str, by) {
-    return typeof str === "string" ? str.split(by) : new window.Array();
-  }
-
-  static hasObjectKeys(obj) {
-    return !!window.Object.keys(obj).length;
-  }
-
-  static #instanceBuilder(instance, initializer) {
-    if (Wuse.isOf(initializer, window.Function)) initializer(instance);
-    return instance;
-  }
-
-  static buildArray(initializer) {
-    return Wuse.#instanceBuilder(new window.Array(), initializer);
-  }
-
-  static buildObject(initializer) {
-    return Wuse.#instanceBuilder(new window.Object(), initializer);
-  }
-
-  static #EMPTY_ARRAY = new window.Array();
-
   static register(classes) {
-    return Wuse.#ElementClasses.registerClasses(Wuse.isOf(classes, window.Array) ? classes : new window.Array(classes));
+    return Wuse.#ElementClasses.registerClasses(WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes));
   }
 
   static instantiate(classes, target) {
-    return Wuse.#ElementClasses.instantiateClasses(Wuse.isOf(classes, window.Array) ? classes : new window.Array(classes), target);
+    return Wuse.#ElementClasses.instantiateClasses(WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes), target);
   }
 
   static isShadowElement(instance) {
@@ -107,21 +82,21 @@ class Wuse {
       }
 
       append(item) {
-        if (Wuse.isOf(item, window.Object)) {
+        if (WuseJsHelpers.isOf(item, window.Object)) {
           this.push(item);
           this.#roll(item);
         }
       }
 
       prepend(item) {
-        if (Wuse.isOf(item, window.Object)) {
+        if (WuseJsHelpers.isOf(item, window.Object)) {
           this.unshift(item);
           this.#roll(item);
         }
       }
 
       replace(index, item) {
-        if ((index > -1) && Wuse.isOf(item, window.Object)) {
+        if ((index > -1) && WuseJsHelpers.isOf(item, window.Object)) {
           this.#roll(this[index] = item);
         }
       }
@@ -216,7 +191,7 @@ class Wuse {
         const tmp = input.replaceAll("!", " ").split(" ");
         tmp.slice(1).map(item => {
           const [event, ...rest] = item.toLowerCase().split("+");
-          const capture = (rest || Wuse.#EMPTY_ARRAY).indexOf("capture") > -1;
+          const capture = (rest || WuseJsHelpers.EMPTY_ARRAY).indexOf("capture") > -1;
           result.events.push(Wuse.#ElementParts.newEvent(event, capture))
         });
         return tmp[0];
@@ -256,13 +231,13 @@ class Wuse {
       }
 
       static parse(value) {
-        if (Wuse.isNonEmptyString(value)) {
+        if (WuseJsHelpers.isNonEmptyString(value)) {
           var def = Wuse.#ElementParts.newDefinition();
           if (value.charAt(0) === '%') {
-            if (value.startsWith(Wuse.#StringConstants.TEMPLATES_KIND)) {
-              return this.#extractData(def, value.replace(def.kind = Wuse.#StringConstants.TEMPLATES_KIND, ""));
-            } else if (value.startsWith(Wuse.#StringConstants.SLOTS_KIND)) {
-              return this.#extractData(def, value.replace(def.kind = Wuse.#StringConstants.SLOTS_KIND, ""));
+            if (value.startsWith(WuseStringConstants.TEMPLATES_KIND)) {
+              return this.#extractData(def, value.replace(def.kind = WuseStringConstants.TEMPLATES_KIND, ""));
+            } else if (value.startsWith(WuseStringConstants.SLOTS_KIND)) {
+              return this.#extractData(def, value.replace(def.kind = WuseStringConstants.SLOTS_KIND, ""));
             } else {
               return null;
             }
@@ -290,8 +265,8 @@ class Wuse {
 
       static parse(content) {
         let result = new window.Object();
-        (Wuse.isOf(content, window.Array) ? content : Wuse.forcedStringSplit(content, "\n").map(x => x.trim()).join("").split(";")).forEach(
-          item => Wuse.isNonEmptyString(item) && this.#process(result, item.trim())
+        (WuseJsHelpers.isOf(content, window.Array) ? content : WuseJsHelpers.forcedStringSplit(content, "\n").map(x => x.trim()).join("").split(";")).forEach(
+          item => WuseJsHelpers.isNonEmptyString(item) && this.#process(result, item.trim())
         );
         return result;
       }
@@ -300,10 +275,10 @@ class Wuse {
 
     static makeStyleNode(media, type) {
       var result = window.document.createElement("style");
-      if (Wuse.isNonEmptyString(media)) {
+      if (WuseJsHelpers.isNonEmptyString(media)) {
         result.setAttribute("media", media);
       }
-      if (Wuse.isNonEmptyString(type)) {
+      if (WuseJsHelpers.isNonEmptyString(type)) {
         result.setAttribute("type", type);
       }
       result.appendChild(window.document.createTextNode("")); // NOTE: check if this webkit hack is still required
@@ -311,16 +286,25 @@ class Wuse {
     }
 
     static newRule(selector, properties) {
-      const s = Wuse.isOf(selector, window.Array) ? selector.join(",") : "" + selector;
-      const p = Wuse.isOf(properties, window.Object) ? properties : this.#CSSPropertiesParser.parse(properties);
-      return !s.length ? null : { selector: s, properties: p, cache: null };
+      const s = WuseJsHelpers.isOf(selector, window.Array) ? selector.join(",") : "" + selector;
+      return !s.length ? null : {
+        selector: s,
+        properties: WuseJsHelpers.isOf(properties, window.Object) ? properties : this.#CSSPropertiesParser.parse(properties),
+        cache: null
+      };
     }
 
-    static newNestedRule(selector, subselector, properties) {
-      const s = Wuse.isOf(selector, window.Array) ? selector.join(",") : "" + selector;
-      const b = Wuse.isOf(subselector, window.Array) ? subselector.join(",") : "" + subselector;
-      const p = Wuse.isOf(properties, window.Object) ? properties : this.#CSSPropertiesParser.parse(properties);
-      return !s.length || !b.length ? null : { selector: s, nested: [{ selector: b, properties: p }], cache: null };
+    static newNestedRule(selector, sub, properties) {
+      const s = WuseJsHelpers.isOf(selector, window.Array) ? selector.join(",") : "" + selector;
+      const b = WuseJsHelpers.isOf(sub, window.Array) ? sub.join(",") : "" + sub;
+      return !s.length || !b.length ? null : {
+        selector: s,
+        nested: [{
+          selector: b,
+          properties: WuseJsHelpers.isOf(properties, window.Object) ? properties : this.#CSSPropertiesParser.parse(properties)
+        }],
+        cache: null
+      };
     }
 
     static tryToJoinRules(lr, rule) {
@@ -335,7 +319,7 @@ class Wuse {
     }
 
     static tryToJoinNestedRules(lr, rule) {
-      if (Wuse.isOf(lr.nested, window.Array) && lr.selector === rule.selector) {
+      if (WuseJsHelpers.isOf(lr.nested, window.Array) && lr.selector === rule.selector) {
         rule.nested.forEach(n => {
           var found = false;
           for (const x in lr.nested) {
@@ -364,7 +348,7 @@ class Wuse {
       if (!!mainDefinition.classes.length) {
         result.setAttribute("class", mainDefinition.classes.join(" "));
       }
-      if (Wuse.hasObjectKeys(mainDefinition.style)) {
+      if (WuseJsHelpers.hasObjectKeys(mainDefinition.style)) {
         var style = "";
         for (const property in mainDefinition.style) {
           style += property + ": " + mainDefinition.style[property] + "; ";
@@ -374,7 +358,7 @@ class Wuse {
           result.setAttribute("style", v.endsWith(";") ? v.slice(0, -1) : v);
         }
       }
-      if (Wuse.hasObjectKeys(mainDefinition.attributes)) {
+      if (WuseJsHelpers.hasObjectKeys(mainDefinition.attributes)) {
         for (const property in mainDefinition.attributes) {
           result.setAttribute(property, mainDefinition.attributes[property]);
         }
@@ -387,16 +371,16 @@ class Wuse {
     }
 
     static performValidations(child) {
-      if (child.kind === Wuse.#StringConstants.TEMPLATES_KIND) {
+      if (child.kind === WuseStringConstants.TEMPLATES_KIND) {
         if (!window.document.getElementById(child.id)) {
-          return Wuse.#RuntimeErrors.INEXISTENT_TEMPLATE.emit(child.id);
+          return WuseRuntimeErrors.INEXISTENT_TEMPLATE.emit(child.id);
         }
-      } else if (child.kind === Wuse.#StringConstants.SLOTS_KIND) {
+      } else if (child.kind === WuseStringConstants.SLOTS_KIND) {
         if (new String(child.attributes["slot"]).replaceAll("\"", "").replaceAll("\'", "").length === 0) {
-          return Wuse.#RuntimeErrors.UNESPECIFIED_SLOT.emit(child.id);
+          return WuseRuntimeErrors.UNESPECIFIED_SLOT.emit(child.id);
         }
       } else if (typeof child.id !== "string" || (child.id !== "" && window.document.getElementById(child.id) !== null)) {
-        return Wuse.#RuntimeErrors.INVALID_ID.emit(child.id);
+        return WuseRuntimeErrors.INVALID_ID.emit(child.id);
       }
       return child;
     }
@@ -404,9 +388,9 @@ class Wuse {
     static newChild(shorthandNotation, rules) {
       var result = this.#ShorthandNotationParser.parse(shorthandNotation.trimLeft());
       if (!result) {
-        return Wuse.#RuntimeErrors.INVALID_DEFINITION.emit(shorthandNotation);
+        return WuseRuntimeErrors.INVALID_DEFINITION.emit(shorthandNotation);
       }
-      result.rules = Wuse.isOf(rules, window.Array) ? rules : new window.Array();
+      result.rules = WuseJsHelpers.isOf(rules, window.Array) ? rules : new window.Array();
       result.rendering = true;
       result.cache = null;
       return result;
@@ -414,9 +398,9 @@ class Wuse {
 
     static newDefinition() {
       return {
-        kind: Wuse.#StringConstants.DEFAULT_KIND,
+        kind: WuseStringConstants.DEFAULT_KIND,
         // =
-        tag: Wuse.#StringConstants.DEFAULT_TAG, id: "", classes: new window.Array(),
+        tag: WuseStringConstants.DEFAULT_TAG, id: "", classes: new window.Array(),
         attributes: new window.Object(), style: new window.Object(), events: new window.Array(),
         // =
         content: "", encode: false
@@ -429,141 +413,6 @@ class Wuse {
 
   static get elementCount() { return Wuse.#BaseElement.instancesCount; }
 
-  static PerformanceMeasurement = class {
-
-    static #formatPerformance = time => time > 1000 ? (time / 1000).toFixed(2) + "s" : time.toFixed(2) + "ms";
-
-    static #MeasureRound = class {
-
-      round = 0;
-      domTime = window.Number.MAX_SAFE_INTEGER;
-      renderTime = window.Number.MAX_SAFE_INTEGER;
-
-      getDebugInfo() {
-        var result = new window.Object();
-        result.round = this.round;
-        result.domTime = Wuse.PerformanceMeasurement.#formatPerformance(this.domTime);
-        if (this.renderTime !== window.Number.MAX_SAFE_INTEGER) {
-          result.renderTime = Wuse.PerformanceMeasurement.#formatPerformance(this.renderTime);
-        }
-        return result;
-      }
-
-    }
-
-    static #MeasureOverall = class {
-
-      name = "";
-      rounds = 0;
-      time = 0;
-      average = 0;
-
-      constructor(name) {
-        this.name = name;
-      }
-
-      compute(last) {
-        this.rounds++;
-        this.time += last;
-        this.average = this.time / this.rounds;
-      }
-
-      getDebugInfo() {
-        const spent = Wuse.PerformanceMeasurement.#formatPerformance(this.time);
-        const average = Wuse.PerformanceMeasurement.#formatPerformance(this.average);
-        return { name: this.name, rounds: this.rounds, spent, average };
-      }
-
-    }
-
-    static StopWatch = class {
-
-      // NOTE: remember this metrics are element-based.
-
-      _begin = 0;
-      _end = {
-        dom: 0,
-        render: 0
-      }
-      rounds = 0;
-      last = new Wuse.PerformanceMeasurement.#MeasureRound();
-      best = new Wuse.PerformanceMeasurement.#MeasureRound();
-      averages = {
-        dom: 0,
-        render: 0
-      }
-
-      start() {
-        if (Wuse.PerformanceMeasurement.DOMUpdate.check || Wuse.PerformanceMeasurement.BrowserRender.check) {
-          this.last.round = ++this.rounds;
-          this._begin = performance.now();
-        }
-      }
-
-      stop() {
-        if (Wuse.PerformanceMeasurement.DOMUpdate.check) {
-          if (this.best.domTime > (this.last.domTime = (this._end.dom = performance.now()) - this._begin)) {
-            this.best.round = this.last.round;
-            this.best.domTime = this.last.domTime;
-          }
-          this.averages.dom = ((this.averages.dom * (this.rounds - 1)) + this.last.domTime) / this.rounds;
-          Wuse.PerformanceMeasurement.DOMUpdate.overall.compute(this.last.domTime);
-        }
-        Wuse.PerformanceMeasurement.BrowserRender.check ? setTimeout(this.finish.bind(this)) : Wuse.DEBUG && Wuse.debug(
-          JSON.stringify(this.getDebugInfo()), JSON.stringify(Wuse.PerformanceMeasurement.DOMUpdate.overall.getDebugInfo())
-        );
-      }
-
-      finish() {
-        if (this.best.renderTime > (this.last.renderTime = (this._end.render = performance.now()) - this._begin)) {
-          this.best.round = this.last.round;
-          this.best.renderTime = this.last.renderTime;
-        }
-        this.averages.render = ((this.averages.render * (this.rounds - 1)) + this.last.renderTime) / this.rounds;
-        Wuse.PerformanceMeasurement.BrowserRender.overall.compute(this.last.renderTime);
-        if (Wuse.DEBUG) Wuse.debug(
-          JSON.stringify(this.getDebugInfo()), JSON.stringify(Wuse.PerformanceMeasurement.BrowserRender.overall.getDebugInfo())
-        );
-      }
-
-      getDebugInfo() {
-        return {
-          rounds: this.rounds, last: this.last.getDebugInfo(), best: this.best.getDebugInfo(),
-          averages: this.averages, instances: Wuse.elementCount
-        }
-      }
-
-    }
-
-    static DOMUpdate = class {
-
-      // NOTE: this checks how much time was spent updating the
-      // dom with the necessary changes.
-      static check = true;
-      static overall = null;
-
-    }
-
-    static BrowserRender = class {
-
-      // NOTE: this checks how much time was spent processing
-      // all the requested changes to the dom, and it's
-      // disabled by default since the only way to check that
-      // (when the browser render finishes) is via a setTimeout
-      // to capture the moment when the script execution is
-      // resumed after all the dom changes were processed.
-      static check = false;
-      static overall = null;
-
-    }
-
-    static initialize() {
-      Wuse.PerformanceMeasurement.DOMUpdate.overall = new Wuse.PerformanceMeasurement.#MeasureOverall("overall-dom-update");
-      Wuse.PerformanceMeasurement.BrowserRender.overall = new Wuse.PerformanceMeasurement.#MeasureOverall("overall-browser-render");
-    }
-  
-  }
-
   static hashRoutine = (s) => {
     // NOTE: Java's classic String.hashCode()
     // style, multiplying by the odd prime 31
@@ -575,41 +424,32 @@ class Wuse {
     return h;
   }
 
-  static #StringConstants = class {
-
-    static TEMPLATES_KIND = "%templates%";
-    static SLOTS_KIND = "%slots%";
-    static TEXTNODE_TAG = "^text^";
-    static DEFAULT_KIND = "";
-    static DEFAULT_TAG = "div";
-    static DEFAULT_STYLE_MEDIA = "screen";
-    static DEFAULT_STYLE_TYPE = "text/css";
-    static DEFAULT_REPLACEMENT_OPEN = "~{";
-    static DEFAULT_REPLACEMENT_CLOSE = "}~";
-
-  }
-
-  static ReactiveFields = class {
+  static TextReplacements = class {
 
     static ReplacementMarkers = class {
 
-      static begin = Wuse.#StringConstants.DEFAULT_REPLACEMENT_OPEN;
+      static begin = null;
 
-      static end = Wuse.#StringConstants.DEFAULT_REPLACEMENT_CLOSE;
+      static end = null;
 
       static enclose = match => this.begin + match + this.end;
 
-      static makeRegExp = () => new RegExp("(?<=" + this.begin + ").*?(?=" + this.end + ")", "gs");
+      static makeRegExp = () => new window.RegExp("(?<=" + this.begin + ").*?(?=" + this.end + ")", "gs");
+
+      static initialize(begin, end) {
+        this.begin = begin;
+        this.end = end;
+      }
 
     }
 
     static ReplacementsScanners = class {
 
-      static rules = (rules, name) => Wuse.buildArray(hits => rules.forEach(
+      static rules = (rules, name) => WuseJsHelpers.buildArray(hits => rules.forEach(
         rule => rule.replacements.forEach(x => (x.field === name) && hits.push(rule))
       ));
 
-      static children = (children, name) => Wuse.buildArray(hits => {
+      static children = (children, name) => WuseJsHelpers.buildArray(hits => {
         const processAll = child => {
           const process = collection => collection.forEach(
             x => (x.field === name) && hits.push(child)
@@ -628,17 +468,13 @@ class Wuse {
 
     static ReplacementsExtractors = class {
 
-      static #regExpCache = null;
-
-      static #performMatch = str => str.match(
-        this.#regExpCache ? this.#regExpCache : this.#regExpCache = Wuse.ReactiveFields.ReplacementMarkers.makeRegExp()
-      );
+      static #regExp = null;
 
       static #addReplacement = (hits, at, match) => hits.push({
-        at, find: Wuse.ReactiveFields.ReplacementMarkers.enclose(match), field: match.trim()
+        at, field: match.trim(), find: Wuse.TextReplacements.ReplacementMarkers.enclose(match)
       });
 
-      static #includeMatches = (hits, at, str) => Wuse.isNonEmptyString(str) && (this.#performMatch(str) || Wuse.#EMPTY_ARRAY).forEach(
+      static #includeMatches = (hits, at, str) => WuseJsHelpers.isNonEmptyString(str) && (str.match(this.#regExp) || WuseJsHelpers.EMPTY_ARRAY).forEach(
         match => this.#addReplacement(hits, at, match)
       );
 
@@ -650,22 +486,22 @@ class Wuse {
       static #includeKeysMatches = (result, key, obj) => {
         result[key] = new window.Array();
         window.Object.keys(obj).forEach(k => {
-          Wuse.ReactiveFields.ReplacementsExtractors.#includeMatches(result[key], key, k);
-          Wuse.ReactiveFields.ReplacementsExtractors.#includeMatches(result[key], key, obj[k]);
+          this.#includeMatches(result[key], key, k);
+          this.#includeMatches(result[key], key, obj[k]);
         });
       }
 
-      static child = child => Wuse.buildObject(result => {
+      static child = child => WuseJsHelpers.buildObject(result => {
         this.#includeStringMatches(result, "contents", child.content);
         this.#includeStringMatches(result, "classes", child.classes.join(" "));
         this.#includeKeysMatches(result, "styles", child.style);
         this.#includeKeysMatches(result, "attributes", child.attributes);
-        child.rules.forEach(r => r.replacements = Wuse.ReactiveFields.ReplacementsExtractors.rule(r));
+        child.rules.forEach(r => r.replacements = this.rule(r));
       });
 
-      static rule = rule => Wuse.buildArray(result => {
-        if (Wuse.isOf(rule.nested, window.Array)) {
-          return rule.nested.map(r => Wuse.ReactiveFields.ReplacementsExtractors.rule(r));
+      static rule = rule => WuseJsHelpers.buildArray(result => {
+        if (WuseJsHelpers.isOf(rule.nested, window.Array)) {
+          return rule.nested.map(r => this.rule(r));
         }
         var c = "";
         for (const property in rule.properties) {
@@ -674,35 +510,39 @@ class Wuse {
         this.#includeMatches(result, "rules", c);
       });
 
+      static initialize(regExp) {
+        this.#regExp = regExp;
+      }
+
     }
 
-    static make(obj, name, value, handler, renderizer) {
-      const redefiner = (get, set) => window.Object.defineProperty(obj, name, {
-        get, set, enumerable: true, configurable: true
-      });
-      const remover = () => delete obj[name];
-      const recreator = (v, maneuverer) => this.make(obj, name, v, maneuverer, renderizer);
-      redefiner(() => value, (v) => {
-        recreator(v, handler);
-        !Wuse.isOf(handler, window.Function) ? renderizer(name) : handler({
-          renderize: (label) => renderizer(name, label), // manual render
-          automate: () => recreator(v, null), // converts the field into an automatic reactive field (autorenders)
-          freeze: () => redefiner(() => v, (v) => {}), // freeze the field value until calling defreeze()
-          defreeze: () => recreator(v, handler), // defreezes the field after the freeze action
-          dereact: () => redefiner(() => v, (v) => { remover(); obj[name] = v }), // disable reactiveness (convert into a simple field)
-          remove: () => remover() // removes the field enterely
-        });
-      });
-    }
+  }
 
+  static makeReactiveField(obj, name, value, handler, renderizer) {
+    const redefiner = (get, set) => window.Object.defineProperty(obj, name, {
+      get, set, enumerable: true, configurable: true
+    });
+    const remover = () => delete obj[name];
+    const recreator = (v, maneuverer) => Wuse.makeReactiveField(obj, name, v, maneuverer, renderizer);
+    redefiner(() => value, (v) => {
+      recreator(v, handler);
+      !WuseJsHelpers.isOf(handler, window.Function) ? renderizer(name) : handler({
+        renderize: (label) => renderizer(name, label), // manual render
+        automate: () => recreator(v, null), // converts the field into an automatic reactive field (autorenders)
+        freeze: () => redefiner(() => v, (v) => {}), // freeze the field value until calling defreeze()
+        defreeze: () => recreator(v, handler), // defreezes the field after the freeze action
+        dereact: () => redefiner(() => v, (v) => { remover(); obj[name] = v }), // disable reactiveness (convert into a simple field)
+        remove: () => remover() // removes the field enterely
+      });
+    });
   }
 
   static #templateImporter = id => {
     const template = window.document.getElementById(id);
     if (template === null) {
-      return Wuse.#RuntimeErrors.EXTINCT_TEMPLATE.emit(id);
+      return WuseRuntimeErrors.EXTINCT_TEMPLATE.emit(id);
     } else if (template.tagName !== "TEMPLATE") {
-      return Wuse.#RuntimeErrors.INVALID_TEMPLATE.emit(id);
+      return WuseRuntimeErrors.INVALID_TEMPLATE.emit(id);
     } else {
       return template.innerHTML;
     }
@@ -717,14 +557,14 @@ class Wuse {
     static renderingExcluder = item => item.rendering = false;
 
     static renderRule = (replacer, rule) => {
-      if (Wuse.isOf(rule.nested, window.Array)) {
+      if (WuseJsHelpers.isOf(rule.nested, window.Array)) {
         return rule.selector + "{" + rule.nested.map(r => Wuse.#RenderingRoutines.renderRule(replacer, r)).join("\n") + "}";
       } else if (rule.selector !== "") {
         var c = "";
         for (const property in rule.properties) {
           c += property + ":" + rule.properties[property] + ";";
         }
-        if (Wuse.isOf(rule.replacements, window.Array) && !!rule.replacements.length) {
+        if (WuseJsHelpers.isOf(rule.replacements, window.Array) && !!rule.replacements.length) {
           rule.replacements.forEach(r => c = replacer(c, r));
         }
         return rule.selector + "{" + c + "}";
@@ -733,21 +573,21 @@ class Wuse {
     }
 
     static renderChild = (replacer, child) => {
-      if (child.kind === Wuse.#StringConstants.TEMPLATES_KIND) {
+      if (child.kind === WuseStringConstants.TEMPLATES_KIND) {
         return Wuse.#templateImporter(child.id);
       }
-      if (child.tag === Wuse.#StringConstants.TEXTNODE_TAG) {
+      if (child.tag === WuseStringConstants.TEXTNODE_TAG) {
         var c = child.content;
         child.replacements["contents"].forEach(r => c = replacer(c, r));
-        return child.encode ? Wuse.WebHelpers.htmlEncode(c) : c;
+        return child.encode ? WuseWebHelpers.htmlEncode(c) : c;
       }
-      var result = Wuse.isNonEmptyString(child.id) ? `<${child.tag} id='${child.id}'` : "<" + child.tag;
+      var result = WuseJsHelpers.isNonEmptyString(child.id) ? `<${child.tag} id='${child.id}'` : "<" + child.tag;
       if (!!child.classes.length) {
         var c = child.classes.join(" ");
         child.replacements["classes"].forEach(r => c = replacer(c, r));
         result += ` class='${c}'`;
       }
-      if (Wuse.hasObjectKeys(child.style)) {
+      if (WuseJsHelpers.hasObjectKeys(child.style)) {
         var c = " style='";
         for (const property in child.style) {
           c += property + ": " + child.style[property] + "; ";
@@ -756,7 +596,7 @@ class Wuse {
         child.replacements["styles"].forEach(r => c = replacer(c, r));
         result += c;
       }
-      if (Wuse.hasObjectKeys(child.attributes)) {
+      if (WuseJsHelpers.hasObjectKeys(child.attributes)) {
         var c = "";
         for (const property in child.attributes) {
           c += " " + property + "=" + child.attributes[property];
@@ -767,7 +607,7 @@ class Wuse {
       if (typeof child.content === "string") {
         var c = child.content;
         child.replacements["contents"].forEach(r => c = replacer(c, r));
-        result += `>${child.encode ? Wuse.WebHelpers.htmlEncode(c) : c}</${child.tag}>`;
+        result += `>${child.encode ? WuseWebHelpers.htmlEncode(c) : c}</${child.tag}>`;
       } else {
         result += "/>"
       }
@@ -827,7 +667,7 @@ class Wuse {
 
       on_version_change() {
         this.last.version = this.version;
-        this.last.replacements = Wuse.ReactiveFields.ReplacementsExtractors.rule(this.last);
+        this.last.replacements = Wuse.TextReplacements.ReplacementsExtractors.rule(this.last);
         if (Wuse.DEBUG) this.owner.#debug(`rules list version change: ${this.version}`);
       }
 
@@ -836,8 +676,8 @@ class Wuse {
 
       on_version_change() {
         this.last.version = this.version;
-        this.last.replacements = Wuse.ReactiveFields.ReplacementsExtractors.child(this.last);
-        this.owner.#slotted |= (this.last.kind === Wuse.#StringConstants.SLOTS_KIND);
+        this.last.replacements = Wuse.TextReplacements.ReplacementsExtractors.child(this.last);
+        this.owner.#slotted |= (this.last.kind === WuseStringConstants.SLOTS_KIND);
         if (Wuse.DEBUG) this.owner.#debug(`children list version change: ${this.version}`);
       }
 
@@ -861,8 +701,8 @@ class Wuse {
     // USER CUSTOMIZATION
     #options = {
       mainDefinition: Wuse.#ElementParts.newDefinition(),
-      styleMedia: Wuse.#StringConstants.DEFAULT_STYLE_MEDIA,
-      styleType: Wuse.#StringConstants.DEFAULT_STYLE_TYPE,
+      styleMedia: WuseStringConstants.DEFAULT_STYLE_MEDIA,
+      styleType: WuseStringConstants.DEFAULT_STYLE_TYPE,
       rawContent: false,
       attributeKeys: false,
       elementKeys: true
@@ -915,7 +755,7 @@ class Wuse {
       renderizers: {
         rule: rule => this.#contents.style.append(rule.cache ? rule.cache : rule.cache = Wuse.#RenderingRoutines.renderRule(this.#renderingReplacer, rule)),
         children: {
-          mixed: child => this.#shadowed && child.kind === Wuse.#StringConstants.SLOTS_KIND ? this.#contents.renderizers.children.slot(child) : this.#contents.renderizers.children.normal(child),
+          mixed: child => this.#shadowed && child.kind === WuseStringConstants.SLOTS_KIND ? this.#contents.renderizers.children.slot(child) : this.#contents.renderizers.children.normal(child),
           slot: child => {
             if (!child.cache) {
               this.#contents.root.verify(content => true);
@@ -942,7 +782,7 @@ class Wuse {
       bind: {
         key: () => {
           const performer = (id) => {
-            if (Wuse.isNonEmptyString(id)) this[id] = this.#getElementByIdFromRoot(id);
+            if (WuseJsHelpers.isNonEmptyString(id)) this[id] = this.#getElementByIdFromRoot(id);
           }
           if (this.#identified) performer(this.#options.mainDefinition.id);
           return child => performer(child.id);
@@ -967,10 +807,10 @@ class Wuse {
 
     // PERFORMANCE MEASUREMENT
     #measurement = {
-      attachment: new Wuse.PerformanceMeasurement.StopWatch(),
-      partial: new Wuse.PerformanceMeasurement.StopWatch(),
-      full: new Wuse.PerformanceMeasurement.StopWatch(),
-      dettachment: new Wuse.PerformanceMeasurement.StopWatch()
+      attachment: new WusePerformanceMeasurement.StopWatch(),
+      partial: new WusePerformanceMeasurement.StopWatch(),
+      full: new WusePerformanceMeasurement.StopWatch(),
+      dettachment: new WusePerformanceMeasurement.StopWatch()
     }
 
     // ROUTINES
@@ -1007,7 +847,7 @@ class Wuse {
       if (this.#inserted) {
         this.#main.disaffiliate();
         if (this.#style) this.#style.disaffiliate();
-        if (this.#slotted && this.#shadowed) Wuse.WebHelpers.removeChildren(this);
+        if (this.#slotted && this.#shadowed) WuseWebHelpers.removeChildren(this);
       }
       this.#inserted = false;
     }
@@ -1044,7 +884,7 @@ class Wuse {
     }
 
     #getElementByIdFromRoot(id) {
-      return Wuse.isNonEmptyString(id) ? this.#root.querySelector(`#${id}`) : undefined;
+      return WuseJsHelpers.isNonEmptyString(id) ? this.#root.querySelector(`#${id}`) : undefined;
     }
 
     #prepareContents() {
@@ -1084,7 +924,7 @@ class Wuse {
         `unmodified: ${this.info.unmodifiedRounds} (main: ${this.#waste.main.rounds}, style: ${this.#waste.style.rounds}) | updated: ${this.info.updatedRounds}`
       );
       this.#trigger("on_postrender");
-      if (Wuse.MEASURE) this.#measurement.partial.stop();
+      if (Wuse.MEASURE) this.#measurement.partial.stop(Wuse.DEBUG);
     }
 
     #inject(event) {
@@ -1107,22 +947,22 @@ class Wuse {
       this.#detectHandledEvents();
       this.#inject("on_reload");
       this.#committedTrigger("on_repaint");
-      if (Wuse.MEASURE) this.#measurement.full.stop();
+      if (Wuse.MEASURE) this.#measurement.full.stop(Wuse.DEBUG);
     }
 
     // FIELD ROUTINES
     #fieldRender(name, label = "$none") {
       if (this.#binded) {
-        const rulesHits = Wuse.ReactiveFields.ReplacementsScanners.rules(this.#rules, name);
+        const rulesHits = Wuse.TextReplacements.ReplacementsScanners.rules(this.#rules, name);
         rulesHits.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
-        const childrenHits = Wuse.ReactiveFields.ReplacementsScanners.children(this.#children, name);
+        const childrenHits = Wuse.TextReplacements.ReplacementsScanners.children(this.#children, name);
         childrenHits.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
         if (Wuse.DEBUG) this.#debug(`reactive render (label: ${label}, field: ${name}, children: ${childrenHits.length}, rules: ${rulesHits.length})`);
         if (!!rulesHits.length || !!childrenHits.length) {
           if (childrenHits.some(x => !!x.kind.length)) {
             // NOTE: when a slot gets invalidated the replaceChild will drop all other slots,
             // so to avoid a full redraw, all other slots are required to be invalidated too.
-            this.#children.forEach(x => x.kind === Wuse.#StringConstants.SLOTS_KIND ? Wuse.#RenderingRoutines.cacheInvalidator(x) : undefined);
+            this.#children.forEach(x => x.kind === WuseStringConstants.SLOTS_KIND ? Wuse.#RenderingRoutines.cacheInvalidator(x) : undefined);
           }
           this.render();
         }
@@ -1130,7 +970,7 @@ class Wuse {
     }
 
     #makeReactiveField(name, value, handler, initial = true) {
-      Wuse.ReactiveFields.make(this, name, value, handler, (name, label) => this.#fieldRender(name, label || "$auto"));
+      Wuse.makeReactiveField(this, name, value, handler, (name, label) => this.#fieldRender(name, label || "$auto"));
       this.#fields.append({ name, value });
       if (initial) this.#fieldRender(name, "$init");
       return this;
@@ -1170,7 +1010,7 @@ class Wuse {
 
     #validateElementsStoreKey() {
       if (!this.#keyed) {
-        Wuse.#RuntimeErrors.INVALID_KEY.emit();
+        WuseRuntimeErrors.INVALID_KEY.emit();
         return false;
       }
       return true;
@@ -1205,14 +1045,14 @@ class Wuse {
       this.#trigger("on_connect");
       this.#inject("on_load");
       if (this.#keyed) this.persistToElementsStore();
-      if (Wuse.MEASURE) this.#measurement.attachment.stop();
+      if (Wuse.MEASURE) this.#measurement.attachment.stop(Wuse.DEBUG);
     }
 
     disconnectedCallback() {
       if (Wuse.MEASURE) this.#measurement.dettachment.start();
       this.#bind(false);
       this.#trigger("on_disconnect");
-      if (Wuse.MEASURE) this.#measurement.dettachment.stop();
+      if (Wuse.MEASURE) this.#measurement.dettachment.stop(Wuse.DEBUG);
     }
 
     getElementsStore() {
@@ -1232,7 +1072,7 @@ class Wuse {
     }
 
     setElementsStoreKey(key) {
-      this.#keyed = Wuse.isNonEmptyString(this.#key = key);
+      this.#keyed = WuseJsHelpers.isNonEmptyString(this.#key = key);
       return this;
     }
 
@@ -1294,7 +1134,7 @@ class Wuse {
       const tmp = Wuse.#ElementParts.newChild(shorthandNotation);
       if (Wuse.#ElementParts.performValidations(tmp)) {
         if (tmp.content !== "" || !!tmp.events.length) {
-          return Wuse.#RuntimeErrors.INVALID_DEFINITION.emit(shorthandNotation);
+          return WuseRuntimeErrors.INVALID_DEFINITION.emit(shorthandNotation);
         }
         if (this.#identified = !!tmp.id.length) {
           this.#options.mainDefinition.id = tmp.id;
@@ -1337,17 +1177,17 @@ class Wuse {
     }
 
     setRawContent(html) {
-      this.#options.rawContent ? this.#html = html : Wuse.#RuntimeErrors.ALLOW_HTML.emit();
+      this.#options.rawContent ? this.#html = html : WuseRuntimeErrors.ALLOW_HTML.emit();
       return this;
     }
 
     appendRawContent(html) {
-      this.#options.rawContent ? this.#html = this.#html + html : Wuse.#RuntimeErrors.ALLOW_HTML.emit();
+      this.#options.rawContent ? this.#html = this.#html + html : WuseRuntimeErrors.ALLOW_HTML.emit();
       return this;
     }
 
     prependRawContent(html) {
-      this.#options.rawContent ? this.#html = html + this.#html : Wuse.#RuntimeErrors.ALLOW_HTML.emit();
+      this.#options.rawContent ? this.#html = html + this.#html : WuseRuntimeErrors.ALLOW_HTML.emit();
       return this;
     }
 
@@ -1416,21 +1256,21 @@ class Wuse {
     }
 
     appendChildElements(items) {
-      (Wuse.isOf(items, window.Array) ? items : Wuse.forcedStringSplit(items, "\n")).forEach(
+      (WuseJsHelpers.isOf(items, window.Array) ? items : WuseJsHelpers.forcedStringSplit(items, "\n")).forEach(
         item => typeof item === "string" && !!item.trim().length && this.appendChildElement(item)
       );
       return this;
     }
 
     prependChildElements(items) {
-      (Wuse.isOf(items, window.Array) ? items : Wuse.forcedStringSplit(items, "\n")).forEach(
+      (WuseJsHelpers.isOf(items, window.Array) ? items : WuseJsHelpers.forcedStringSplit(items, "\n")).forEach(
         item => typeof item === "string" && !!item.trim().length && this.prependChildElement(item)
       );
       return this;
     }
 
     checkChildElementIsIncludedById(id, yes, no) {
-      const fire = cb => Wuse.isOf(cb, window.Function) ? cb() : undefined;
+      const fire = cb => WuseJsHelpers.isOf(cb, window.Function) ? cb() : undefined;
       this.#children.some(child => child.id === id && child.rendering) ? fire(yes) : fire(no);
       return this;
     }
@@ -1451,7 +1291,7 @@ class Wuse {
     }
 
     invalidateChildElements(childs) {
-      if (Wuse.isOf(childs, window.Array)) childs.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
+      if (WuseJsHelpers.isOf(childs, window.Array)) childs.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
       return this;
     }
 
@@ -1478,12 +1318,12 @@ class Wuse {
     }
 
     static #classRegistrar(klass) {
-      Wuse.isNonEmptyString(klass.name) && klass.name.indexOf("_") > 0 ?
+      WuseJsHelpers.isNonEmptyString(klass.name) && klass.name.indexOf("_") > 0 ?
         klass.tag = Wuse.#ElementClasses.#convertClassNameToKebabCaseTag(klass.name) :
-        Wuse.#RuntimeErrors.MISNAMED_CLASS.emit(klass.name);
+        WuseRuntimeErrors.MISNAMED_CLASS.emit(klass.name);
       window.HTMLElement.isPrototypeOf(klass) ?
         window.customElements.define(klass.tag, klass) :
-        Wuse.#RuntimeErrors.INVALID_CLASS.emit(klass.name);
+        WuseRuntimeErrors.INVALID_CLASS.emit(klass.name);
     }
 
     static registerClasses(classes) {
@@ -1491,19 +1331,19 @@ class Wuse {
     }
 
     static #immediateClassInstantiator(klass, target) {
-      const t = Wuse.isNonEmptyString(target) ? window.document.querySelector(target) : window.document.body;
+      const t = WuseJsHelpers.isNonEmptyString(target) ? window.document.querySelector(target) : window.document.body;
       if (t) t.appendChild(window.document.createElement(klass.tag));
     }
 
     static #instantiateClass(klass, target) {
       const instantiator = () => Wuse.#ElementClasses.#immediateClassInstantiator(klass, target);
-      window.document.body ? instantiator() : Wuse.WebHelpers.onDOMContentLoaded(instantiator);
+      window.document.body ? instantiator() : WuseWebHelpers.onDOMContentLoaded(instantiator);
     }
 
     static instantiateClasses(classes, target) {
       window.Array.prototype.forEach.call(classes, (klass) => window.customElements.get(klass.tag) ?
         Wuse.#ElementClasses.#instantiateClass(klass, target) :
-        Wuse.#RuntimeErrors.UNREGISTERED_CLASS.emit(klass.name)
+        WuseRuntimeErrors.UNREGISTERED_CLASS.emit(klass.name)
       );
     }
 
@@ -1516,15 +1356,28 @@ class Wuse {
   static ClosedShadowElement = Wuse.#BaseElement.specializeClass(Wuse.#BaseElement.RootMode.CLOSED);
 
   static {
-    const detectFeature = (flag, msg) => !flag && Wuse.#RuntimeErrors.UNSUPPORTED_FEATURE.emit(msg);
+    const detectFeature = (flag, msg) => !flag && WuseRuntimeErrors.UNSUPPORTED_FEATURE.emit(msg);
     try {
-      detectFeature(Wuse.isOf(window.document, window.HTMLDocument), "HTML Document");
-      detectFeature(Wuse.isOf(window.customElements, window.CustomElementRegistry), "Custom Elements");
-      Wuse.WebHelpers.onDOMContentLoaded(() => detectFeature(Wuse.isOf(window.document.body.attachShadow, window.Function), "Shadow DOM"));
+      detectFeature(WuseJsHelpers.isOf(window.document, window.HTMLDocument), "HTML Document");
+      detectFeature(WuseJsHelpers.isOf(window.customElements, window.CustomElementRegistry), "Custom Elements");
+      WuseWebHelpers.onDOMContentLoaded(() => detectFeature(WuseJsHelpers.isOf(window.document.body.attachShadow, window.Function), "Shadow DOM"));
     } catch (e) {
-      Wuse.#RuntimeErrors.UNKNOWN_ERROR.emit();
+      WuseRuntimeErrors.UNKNOWN_ERROR.emit();
     }
-    Wuse.PerformanceMeasurement.initialize();
+    WusePerformanceMeasurement.initialize((stopWatch, event) => Wuse.debug(JSON.stringify(WuseJsHelpers.buildArray(data => {
+      data.push({ instances: Wuse.elementCount });
+      data.push(stopWatch.getDebugInfo());
+      switch (event) {
+        case "stop":
+          data.push(WusePerformanceMeasurement.DOMUpdate.overall.getDebugInfo());
+          break;
+        case "finish":
+          data.push(WusePerformanceMeasurement.BrowserRender.overall.getDebugInfo());
+          break;
+      }
+    }))));
+    Wuse.TextReplacements.ReplacementMarkers.initialize(WuseStringConstants.DEFAULT_REPLACEMENT_OPEN, WuseStringConstants.DEFAULT_REPLACEMENT_CLOSE);
+    Wuse.TextReplacements.ReplacementsExtractors.initialize(Wuse.TextReplacements.ReplacementMarkers.makeRegExp());
   }
 
 }
