@@ -26,12 +26,16 @@ export default class RuntimeErrors {
       return this.#makeError(2, arg => `Unregistered class: ${arg}.`);
     }
 
+    static get UNREGISTRABLE_CLASS() {
+      return this.#makeError(3, arg => `Unregistrable class: ${arg}.`);
+    }
+
     static get INVALID_CLASS() {
-      return this.#makeError(3, arg => `Invalid class: ${arg}.`);
+      return this.#makeError(4, arg => `Invalid class: ${arg}.`);
     }
 
     static get MISNAMED_CLASS() {
-      return this.#makeError(4, arg => `Misnamed class: ${arg}.`);
+      return this.#makeError(5, arg => `Misnamed class: ${arg}.`);
     }
 
     static get INVALID_DEFINITION() {

@@ -18,22 +18,34 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 ## FEATURES
 
 `#NATURAL-WAY`
+
 Wuse exposes a more natural way of working with the browser instead of hiding the way it works:
+
 	- wraps the Custom Element Registry usage: just create your class extending from a Wuse HTML Element class, register it and then instantiate it as you need (class names are converted into valid custom elements, ex: 'My_Element' class is converted into 'my-element' tag)
 	- creates a functional structure over the Shadow DOM: a root element, a style element and a main element
 	- does not block nor interfere with direct DOM access (for example, this is good when dealing with legacy webs, allowing progressive migrations)
 
 `#FULL-CONTROL`
+
 Wuse gives you the power to control everything in your web development:
+
 	- allows all-in-one markup, styles and scripting definitions: you can define your custom element in a single es6 class file
 	- allows to retain control on the Element lifecycle: you can hook 14 different events
 	- allows optional field reactivity with free control on the behaviour
 
 `#NO-BUILDS`
+
 Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.3.7] 2022-jul-26
+  - extracted `ElementClasses` class to an external file
+  - added `ElementClasses` class unit test
+  - added `ensureFunction`, `isAssignedObject`, `isAssignedArray`, `isNonEmptyArray` and `noop` to `JavascriptHelpers` class
+  - added `UNREGISTRABLE_CLASS` error to `RuntimeErrors` class
+  - improved custom browser tester
+  - added `package.json` file
 * [0.3.6] 2022-jul-22
   - extracted `StringConstants` class to an external file
   - extracted `JavascriptHelpers` class to an external file

@@ -5,19 +5,7 @@ export default class JavascriptHelpers {
   static #EMPTY_ARRAY = new window.Array();
   static get EMPTY_ARRAY() { return this.#EMPTY_ARRAY; }
 
-  static isOf(instance, c) {
-    return !!(
-      instance !== undefined && instance !== null && (
-        instance.constructor === c || (
-          c !== undefined && c !== null && instance.constructor.name === c.name
-        )
-      )
-    );
-  }
-
-  static hasObjectKeys(obj) {
-    return !!(obj && !!window.Object.keys(obj).length);
-  }
+  static noop() {};
 
   static isNonEmptyString(str) {
     return typeof str === "string" && !!str.length;
@@ -38,6 +26,36 @@ export default class JavascriptHelpers {
 
   static buildObject(initializer) {
     return this.#instanceBuilder(new window.Object(), initializer);
+  }
+
+  static ensureFunction(fun, def = () => {}) {
+    return typeof fun === "function" ? fun : def;
+  }
+
+  static isOf(instance, c) {
+    return !!(
+      instance !== undefined && instance !== null && (
+        instance.constructor === c || (
+          c !== undefined && c !== null && instance.constructor.name === c.name
+        )
+      )
+    );
+  }
+
+  static hasObjectKeys(obj) {
+    return !!(obj && !!window.Object.keys(obj).length);
+  }
+
+  static isAssignedObject(instance) {
+    return typeof instance === "object" && instance !== null;
+  }
+
+  static isAssignedArray(instance) {
+    return typeof instance === "object" && instance !== null && instance.constructor.name === "Array";
+  }
+
+  static isNonEmptyArray(instance) {
+    return typeof instance === "object" && instance !== null && instance.constructor.name === "Array" && !!instance.length;
   }
 
 }

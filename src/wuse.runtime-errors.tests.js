@@ -8,6 +8,7 @@ export default new class {
     tester.testModuleProperty(module, "UNKNOWN_ERROR", ["existence", "type:object"], this.UNKNOWN_ERROR);
     tester.testModuleProperty(module, "UNSUPPORTED_FEATURE", ["existence", "type:object"], this.UNSUPPORTED_FEATURE);
     tester.testModuleProperty(module, "UNREGISTERED_CLASS", ["existence", "type:object"], this.UNREGISTERED_CLASS);
+    tester.testModuleProperty(module, "UNREGISTRABLE_CLASS", ["existence", "type:object"], this.UNREGISTRABLE_CLASS);
     tester.testModuleProperty(module, "INVALID_CLASS", ["existence", "type:object"], this.INVALID_CLASS);
     tester.testModuleProperty(module, "MISNAMED_CLASS", ["existence", "type:object"], this.MISNAMED_CLASS);
     tester.testModuleProperty(module, "INVALID_DEFINITION", ["existence", "type:object"], this.INVALID_DEFINITION);
@@ -20,57 +21,35 @@ export default new class {
     tester.testModuleProperty(module, "UNESPECIFIED_SLOT", ["existence", "type:object"], this.UNESPECIFIED_SLOT);
   }
 
-  UNKNOWN_ERROR = (tester, module, mb) => {
-    tester.testResult(module[mb].code === 0, `<u>${mb}</u> code is: <i>0</i>`);
-  }
+  testError = (tester, module, mb, code) => tester.testResult(module[mb].code === code, `<u>${mb}</u> code is: <i>${module[mb].code}</i>`);
 
-  UNSUPPORTED_FEATURE = (tester, module, mb) => {
-    tester.testResult(module[mb].code === 1, `<u>${mb}</u> code is: <i>1</i>`);
-  }
+  UNKNOWN_ERROR = (tester, module, mb) => this.testError(tester, module, mb, 0);
 
-  UNREGISTERED_CLASS = (tester, module, mb) => {
-    tester.testResult(module[mb].code === 2, `<u>${mb}</u> code is: <i>2</i>`);
-  }
+  UNSUPPORTED_FEATURE = (tester, module, mb) => this.testError(tester, module, mb, 1);
 
-  INVALID_CLASS = (tester, module, mb) => {
-    tester.testResult(module[mb].code === 3, `<u>${mb}</u> code is: <i>3</i>`);
-  }
+  UNREGISTERED_CLASS = (tester, module, mb) => this.testError(tester, module, mb, 2);
 
-  MISNAMED_CLASS = (tester, module, mb) => {
-    tester.testResult(module[mb].code === 4, `<u>${mb}</u> code is: <i>4</i>`);
-  }
+  UNREGISTRABLE_CLASS = (tester, module, mb) => this.testError(tester, module, mb, 3);
 
-  INVALID_DEFINITION = (tester, module, mb) => {
-    tester.testResult(module[mb].code === 10, `<u>${mb}</u> code is: <i>10</i>`);
-  }
+  INVALID_CLASS = (tester, module, mb) => this.testError(tester, module, mb, 4);
 
-  INVALID_ID = (tester, module, mb) => {
-    tester.testResult(module[mb].code === 11, `<u>${mb}</u> code is: <i>11</i>`);
-  }
+  MISNAMED_CLASS = (tester, module, mb) => this.testError(tester, module, mb, 5);
 
-  INVALID_KEY = (tester, module, mb) => {
-    tester.testResult(module[mb].code === 12, `<u>${mb}</u> code is: <i>12</i>`);
-  }
+  INVALID_DEFINITION = (tester, module, mb) => this.testError(tester, module, mb, 10);
 
-  ALLOW_HTML = (tester, module, mb) => {
-    tester.testResult(module[mb].code === 13, `<u>${mb}</u> code is: <i>13</i>`);
-  }
+  INVALID_ID = (tester, module, mb) => this.testError(tester, module, mb, 11);
 
-  INEXISTENT_TEMPLATE = (tester, module, mb) => {
-    tester.testResult(module[mb].code === 20, `<u>${mb}</u> code is: <i>20</i>`);
-  }
+  INVALID_KEY = (tester, module, mb) => this.testError(tester, module, mb, 12);
 
-  EXTINCT_TEMPLATE = (tester, module, mb) => {
-    tester.testResult(module[mb].code === 21, `<u>${mb}</u> code is: <i>21</i>`);
-  }
+  ALLOW_HTML = (tester, module, mb) => this.testError(tester, module, mb, 13);
 
-  INVALID_TEMPLATE = (tester, module, mb) => {
-    tester.testResult(module[mb].code === 22, `<u>${mb}</u> code is: <i>22</i>`);
-  }
+  INEXISTENT_TEMPLATE = (tester, module, mb) => this.testError(tester, module, mb, 20);
 
-  UNESPECIFIED_SLOT = (tester, module, mb) => {
-    tester.testResult(module[mb].code === 30, `<u>${mb}</u> code is: <i>30</i>`);
-  }
+  EXTINCT_TEMPLATE = (tester, module, mb) => this.testError(tester, module, mb, 21);
+
+  INVALID_TEMPLATE = (tester, module, mb) => this.testError(tester, module, mb, 22);
+
+  UNESPECIFIED_SLOT = (tester, module, mb) => this.testError(tester, module, mb, 30);
 
 }
 

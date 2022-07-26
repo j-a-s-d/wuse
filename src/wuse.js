@@ -9,10 +9,11 @@ import WuseSimpleStorage from './wuse.simple-storage.js';
 import WuseNodeManager from './wuse.node-manager.js';
 import WuseContentManager from './wuse.content-manager.js';
 import WusePerformanceMeasurement from './wuse.performance-measurement.js';
+import WuseElementClasses from './wuse.element-classes.js';
 
 class Wuse {
 
-  static get VERSION() { return "0.3.6"; }
+  static get VERSION() { return "0.3.7"; }
 
   static WebHelpers = WuseWebHelpers;
 
@@ -50,11 +51,11 @@ class Wuse {
   }
 
   static register(classes) {
-    return Wuse.#ElementClasses.registerClasses(WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes));
+    return WuseElementClasses.registerClasses(WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes));
   }
 
   static instantiate(classes, target) {
-    return Wuse.#ElementClasses.instantiateClasses(WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes), target);
+    return WuseElementClasses.instantiateClasses(WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes), target);
   }
 
   static isShadowElement(instance) {
@@ -424,9 +425,9 @@ class Wuse {
     return h;
   }
 
-  static TextReplacements = class {
+  static #TextReplacements = class {
 
-    static ReplacementMarkers = class {
+    static #ReplacementMarkers = class {
 
       static begin = null;
 
@@ -443,7 +444,7 @@ class Wuse {
 
     }
 
-    static ReplacementsScanners = class {
+    static #ReplacementsScanners = class {
 
       static rules = (rules, name) => WuseJsHelpers.buildArray(hits => rules.forEach(
         rule => rule.replacements.forEach(x => (x.field === name) && hits.push(rule))
@@ -466,12 +467,12 @@ class Wuse {
 
     }
 
-    static ReplacementsExtractors = class {
+    static #ReplacementsExtractors = class {
 
       static #regExp = null;
 
       static #addReplacement = (hits, at, match) => hits.push({
-        at, field: match.trim(), find: Wuse.TextReplacements.ReplacementMarkers.enclose(match)
+        at, field: match.trim(), find: Wuse.#TextReplacements.#ReplacementMarkers.enclose(match)
       });
 
       static #includeMatches = (hits, at, str) => WuseJsHelpers.isNonEmptyString(str) && (str.match(this.#regExp) || WuseJsHelpers.EMPTY_ARRAY).forEach(
@@ -515,6 +516,19 @@ class Wuse {
       }
 
     }
+
+    static initialize(openMarker, closeMarker) {
+      this.#ReplacementMarkers.initialize(openMarker, closeMarker);
+      this.#ReplacementsExtractors.initialize(this.#ReplacementMarkers.makeRegExp());
+    }
+
+    static extractReplacementsFromRule = this.#ReplacementsExtractors.rule;
+
+    static extractReplacementsFromChild = this.#ReplacementsExtractors.child;
+
+    static scanRulesForReplacements = this.#ReplacementsScanners.rules;
+
+    static scanChildrenForReplacements = this.#ReplacementsScanners.children;
 
   }
 
@@ -667,7 +681,7 @@ class Wuse {
 
       on_version_change() {
         this.last.version = this.version;
-        this.last.replacements = Wuse.TextReplacements.ReplacementsExtractors.rule(this.last);
+        this.last.replacements = Wuse.#TextReplacements.extractReplacementsFromRule(this.last);
         if (Wuse.DEBUG) this.owner.#debug(`rules list version change: ${this.version}`);
       }
 
@@ -676,7 +690,7 @@ class Wuse {
 
       on_version_change() {
         this.last.version = this.version;
-        this.last.replacements = Wuse.TextReplacements.ReplacementsExtractors.child(this.last);
+        this.last.replacements = Wuse.#TextReplacements.extractReplacementsFromChild(this.last);
         this.owner.#slotted |= (this.last.kind === WuseStringConstants.SLOTS_KIND);
         if (Wuse.DEBUG) this.owner.#debug(`children list version change: ${this.version}`);
       }
@@ -815,8 +829,6 @@ class Wuse {
 
     // ROUTINES
 
-    #noop() {}
-
     #debug(msg) {
       if (this.#identified) Wuse.debug(
         `#${this.#options.mainDefinition.id} (${this.info.instanceNumber}) | ${(typeof msg === "string" ? msg : JSON.stringify(msg))}`
@@ -953,9 +965,9 @@ class Wuse {
     // FIELD ROUTINES
     #fieldRender(name, label = "$none") {
       if (this.#binded) {
-        const rulesHits = Wuse.TextReplacements.ReplacementsScanners.rules(this.#rules, name);
+        const rulesHits = Wuse.#TextReplacements.scanRulesForReplacements(this.#rules, name);
         rulesHits.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
-        const childrenHits = Wuse.TextReplacements.ReplacementsScanners.children(this.#children, name);
+        const childrenHits = Wuse.#TextReplacements.scanChildrenForReplacements(this.#children, name);
         childrenHits.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
         if (Wuse.DEBUG) this.#debug(`reactive render (label: ${label}, field: ${name}, children: ${childrenHits.length}, rules: ${rulesHits.length})`);
         if (!!rulesHits.length || !!childrenHits.length) {
@@ -1035,9 +1047,9 @@ class Wuse {
         this.#trigger("on_construct");
     }
 
-    get render() { return this.#binded ? this.#render : this.#noop }
+    get render() { return this.#binded ? this.#render : WuseJsHelpers.noop }
 
-    get redraw() { return this.#binded ? this.#redraw : this.#noop }
+    get redraw() { return this.#binded ? this.#redraw : WuseJsHelpers.noop }
 
     connectedCallback() {
       if (Wuse.MEASURE) this.#measurement.attachment.start();
@@ -1311,44 +1323,6 @@ class Wuse {
 
   }
 
-  static #ElementClasses = class {
-
-    static #convertClassNameToKebabCaseTag(name) {
-      return name.toLowerCase().replaceAll("_", "-");
-    }
-
-    static #classRegistrar(klass) {
-      WuseJsHelpers.isNonEmptyString(klass.name) && klass.name.indexOf("_") > 0 ?
-        klass.tag = Wuse.#ElementClasses.#convertClassNameToKebabCaseTag(klass.name) :
-        WuseRuntimeErrors.MISNAMED_CLASS.emit(klass.name);
-      window.HTMLElement.isPrototypeOf(klass) ?
-        window.customElements.define(klass.tag, klass) :
-        WuseRuntimeErrors.INVALID_CLASS.emit(klass.name);
-    }
-
-    static registerClasses(classes) {
-      window.Array.prototype.forEach.call(classes, Wuse.#ElementClasses.#classRegistrar);
-    }
-
-    static #immediateClassInstantiator(klass, target) {
-      const t = WuseJsHelpers.isNonEmptyString(target) ? window.document.querySelector(target) : window.document.body;
-      if (t) t.appendChild(window.document.createElement(klass.tag));
-    }
-
-    static #instantiateClass(klass, target) {
-      const instantiator = () => Wuse.#ElementClasses.#immediateClassInstantiator(klass, target);
-      window.document.body ? instantiator() : WuseWebHelpers.onDOMContentLoaded(instantiator);
-    }
-
-    static instantiateClasses(classes, target) {
-      window.Array.prototype.forEach.call(classes, (klass) => window.customElements.get(klass.tag) ?
-        Wuse.#ElementClasses.#instantiateClass(klass, target) :
-        WuseRuntimeErrors.UNREGISTERED_CLASS.emit(klass.name)
-      );
-    }
-
-  }
-
   static NonShadowElement = Wuse.#BaseElement.specializeClass(Wuse.#BaseElement.RootMode.REGULAR);
 
   static OpenShadowElement = Wuse.#BaseElement.specializeClass(Wuse.#BaseElement.RootMode.OPEN);
@@ -1376,8 +1350,14 @@ class Wuse {
           break;
       }
     }))));
-    Wuse.TextReplacements.ReplacementMarkers.initialize(WuseStringConstants.DEFAULT_REPLACEMENT_OPEN, WuseStringConstants.DEFAULT_REPLACEMENT_CLOSE);
-    Wuse.TextReplacements.ReplacementsExtractors.initialize(Wuse.TextReplacements.ReplacementMarkers.makeRegExp());
+    WuseElementClasses.initialize({
+      onMisnamedClass: WuseRuntimeErrors.MISNAMED_CLASS.emit,
+      onUnregistrableClass: WuseRuntimeErrors.UNREGISTRABLE_CLASS.emit,
+      onUnregisteredClass: WuseRuntimeErrors.UNREGISTERED_CLASS.emit,
+      onInvalidClass: WuseRuntimeErrors.INVALID_CLASS.emit,
+      onDeferredInstantiation: WuseWebHelpers.onDOMContentLoaded
+    });
+    Wuse.#TextReplacements.initialize(WuseStringConstants.DEFAULT_REPLACEMENT_OPEN, WuseStringConstants.DEFAULT_REPLACEMENT_CLOSE);
   }
 
 }

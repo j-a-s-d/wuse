@@ -5,12 +5,22 @@ export default new class {
   file = "./wuse.javascript-helpers.js"
 
   suite = (tester, module) => {
-    tester.testModuleFunction(module, "isOf", ["existence", "type:boolean"], this.isOf);
-    tester.testModuleFunction(module, "hasObjectKeys", ["existence", "type:boolean"], this.hasObjectKeys);
+    tester.testModuleFunction(module, "noop", ["existence", "type:undefined"], this.noop);
     tester.testModuleFunction(module, "isNonEmptyString", ["existence", "type:boolean"], this.isNonEmptyString);
     tester.testModuleFunction(module, "forcedStringSplit", ["existence"], this.forcedStringSplit);
-    tester.testModuleFunction(module, "buildArray", ["existence"], this.buildArray);
+    tester.testModuleFunction(module, "buildArray", ["existence", "type:object"], this.buildArray);
     tester.testModuleFunction(module, "buildObject", ["existence", "type:object"], this.buildObject);
+    tester.testModuleFunction(module, "ensureFunction", ["existence", "type:function"], this.ensureFunction);
+    tester.testModuleFunction(module, "isOf", ["existence", "type:boolean"], this.isOf);
+    tester.testModuleFunction(module, "hasObjectKeys", ["existence", "type:boolean"], this.hasObjectKeys);
+    tester.testModuleFunction(module, "isAssignedObject", ["existence", "type:boolean"], this.isAssignedObject);
+    tester.testModuleFunction(module, "isAssignedArray", ["existence", "type:boolean"], this.isAssignedArray);
+    tester.testModuleFunction(module, "isNonEmptyArray", ["existence", "type:boolean"], this.isNonEmptyArray);
+  }
+
+  noop = (tester, module, fn) => {
+    var r = module[fn]() === undefined;
+    tester.testResult(r, `<u>${fn}</u> called: <i>${r}</i>`);
   }
 
   isOf = (tester, module, fn) => {
@@ -68,6 +78,31 @@ export default new class {
     tester.testInvokationResult(module, fn, "without args", result => result && result.constructor.name === "Object");
     tester.testInvokationWithArgsResult(module, fn, [null], "with invalid builder", result => result && result.constructor.name === "Object");
     tester.testInvokationWithArgsResult(module, fn, [instance => instance.key = 123], "with valid builder", result => result && result.constructor.name === "Object" && result.key === 123);
+  }
+
+  ensureFunction = (tester, module, fn) => {
+    tester.testInvokationResult(module, fn, "without args", result => result && result.constructor.name === "Function");
+    tester.testInvokationWithArgsResult(module, fn, [null], "with invalid argument", result => result && result.constructor.name === "Function");
+    tester.testInvokationWithArgsResult(module, fn, [instance => 123], "with valid argument", result => result && result.constructor.name === "Function" && result() === 123);
+  }
+
+  isAssignedObject = (tester, module, fn) => {
+    tester.testInvokationResult(module, fn, "without args", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [null], "with invalid argument", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [{}], "with valid argument", result => result);
+  }
+
+  isAssignedArray = (tester, module, fn) => {
+    tester.testInvokationResult(module, fn, "without args", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [null], "with invalid argument", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [[]], "with valid argument", result => result);
+  }
+
+  isNonEmptyArray = (tester, module, fn) => {
+    tester.testInvokationResult(module, fn, "without args", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [null], "with invalid argument (null)", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [[]], "with invalid argument (empty array)", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [[1,2,3]], "with valid argument (non-empty array)", result => result);
   }
 
 }

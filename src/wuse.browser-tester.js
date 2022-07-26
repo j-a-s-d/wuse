@@ -6,22 +6,20 @@ const present = (element =>
   (content, prepend) => prepend ? element.innerHTML = content + element.innerHTML : element.innerHTML += content
 )(window.document.body);
 
-!function () {
-  present(`
-    <style>
-      body { font-family: monospace; font-size: 16px }
-      b { padding: 4px 8px; border-radius: 4px; color: white }
-      i { color: orange }
-      u { color: purple }
-      a { color: teal }
-      .test { margin-left: 16px }
-      .ok { background-color: green }
-      .error { background-color: red }
-      .total { background-color: navy }
-      .top { float: right }
-    </style>
-  `);
-}();
+!(() => present(`
+  <style>
+    body { font-family: monospace; font-size: 16px }
+    b { padding: 4px 8px; border-radius: 4px; color: white }
+    i { color: orange }
+    u { color: purple }
+    a { color: teal }
+    .test { margin-left: 16px }
+    .ok { background-color: green }
+    .error { background-color: red }
+    .total { background-color: navy }
+    .top { float: right }
+  </style>
+`))();
 
 const GLYPHS = { ok: '\u2713', error: 'x', top: '\u2191' };
 
