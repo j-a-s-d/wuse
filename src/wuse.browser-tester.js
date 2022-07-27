@@ -38,7 +38,9 @@ const addMemberDivision = () => present("<hr style='border: 1px dashed black'/>"
 const addCaseResult = (value, glyph, text) => present(`<h3 class='test'><b class='${value}'>${glyph}</b> ${text}</h3>`);
 
 let testCount = { ok: 0, error: 0 };
+export let totalTests = 0;
 export let pendingTests = 0;
+export let publishedTests = 0;
 export let totals = { ok: 0, error: 0 };
 
 const presentResults = () => {
@@ -52,11 +54,11 @@ const presentResults = () => {
 
 export function publishResults() {
   const interval = setInterval(() => {
-    if (!pendingTests) {
-      setTimeout(presentResults);
+    if (totalTests === publishedTests) {
       clearInterval(interval);
+      setTimeout(presentResults);
     }
-  }, 250);
+  }, 1000);
 }
 
 export function testResult(result, text) {
@@ -66,7 +68,7 @@ export function testResult(result, text) {
 }
 
 export function testModules(modules) {
-  pendingTests = modules.length;
+  totalTests = pendingTests = modules.length;
   modules.forEach(obj => {
     testModule.call(this, obj);
     pendingTests--;
@@ -89,6 +91,7 @@ function performTests(module, file, suite) {
   closeModule(file);
   totals.ok += testCount.ok;
   totals.error += testCount.error;
+  publishedTests++;
 }
 
 export function testClassModule(module, mn, checks, more) {

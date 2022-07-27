@@ -39,6 +39,11 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.3.8] 2022-jul-27
+  - extracted `TemplateImporter` class to an external file
+  - added `TemplateImporter` class unit test
+  - improved custom browser tester
+  - updated `package.json` file
 * [0.3.7] 2022-jul-26
   - extracted `ElementClasses` class to an external file
   - added `ElementClasses` class unit test
@@ -46,6 +51,7 @@ Wuse does not require any build step to be performed.
   - added `UNREGISTRABLE_CLASS` error to `RuntimeErrors` class
   - improved custom browser tester
   - added `package.json` file
+  - published on npm registry
 * [0.3.6] 2022-jul-22
   - extracted `StringConstants` class to an external file
   - extracted `JavascriptHelpers` class to an external file

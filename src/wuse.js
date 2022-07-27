@@ -10,10 +10,11 @@ import WuseNodeManager from './wuse.node-manager.js';
 import WuseContentManager from './wuse.content-manager.js';
 import WusePerformanceMeasurement from './wuse.performance-measurement.js';
 import WuseElementClasses from './wuse.element-classes.js';
+import WuseTemplateImporter from './wuse.template-importer.js';
 
 class Wuse {
 
-  static get VERSION() { return "0.3.7"; }
+  static get VERSION() { return "0.3.8"; }
 
   static WebHelpers = WuseWebHelpers;
 
@@ -551,18 +552,9 @@ class Wuse {
     });
   }
 
-  static #templateImporter = id => {
-    const template = window.document.getElementById(id);
-    if (template === null) {
-      return WuseRuntimeErrors.EXTINCT_TEMPLATE.emit(id);
-    } else if (template.tagName !== "TEMPLATE") {
-      return WuseRuntimeErrors.INVALID_TEMPLATE.emit(id);
-    } else {
-      return template.innerHTML;
-    }
-  }
-
   static #RenderingRoutines = class {
+
+    static #onFetchTemplate = WuseJsHelpers.noop;
 
     static cacheInvalidator = item => item.cache = null;
 
@@ -588,7 +580,7 @@ class Wuse {
 
     static renderChild = (replacer, child) => {
       if (child.kind === WuseStringConstants.TEMPLATES_KIND) {
-        return Wuse.#templateImporter(child.id);
+        return this.#onFetchTemplate(child.id);
       }
       if (child.tag === WuseStringConstants.TEXTNODE_TAG) {
         var c = child.content;
@@ -626,6 +618,12 @@ class Wuse {
         result += "/>"
       }
       return result;
+    }
+
+    static initialize(events) {
+      if (WuseJsHelpers.isAssignedObject(events)) {
+        this.#onFetchTemplate = WuseJsHelpers.ensureFunction(events.onFetchTemplate, this.#onFetchTemplate);
+      }
     }
 
   }
@@ -1357,6 +1355,11 @@ class Wuse {
       onInvalidClass: WuseRuntimeErrors.INVALID_CLASS.emit,
       onDeferredInstantiation: WuseWebHelpers.onDOMContentLoaded
     });
+    WuseTemplateImporter.initialize({
+      onExtinctTemplate: WuseRuntimeErrors.EXTINCT_TEMPLATE.emit,
+      onInvalidTemplate: WuseRuntimeErrors.INVALID_TEMPLATE.emit
+    });
+    Wuse.#RenderingRoutines.initialize({ onFetchTemplate: WuseTemplateImporter.fetch });
     Wuse.#TextReplacements.initialize(WuseStringConstants.DEFAULT_REPLACEMENT_OPEN, WuseStringConstants.DEFAULT_REPLACEMENT_CLOSE);
   }
 
