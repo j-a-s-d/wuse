@@ -1,0 +1,39 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wuse | Simple_Button example</title>
+  <script src="../../dist/wuse.min.js"></script>
+  <script src="Simple_Button.js"></script>
+</head>
+<body>
+  <script>
+    Wuse.register(Simple_Button);
+
+    Wuse.instantiate(Simple_Button);
+    document.getElementsByTagName("simple-button")[0].onclick = e => alert("EN");
+
+    Wuse.instantiate(Simple_Button, "body", {
+      onElementInstantiated: el => {
+        el.setAttribute("id", "btnES");
+        el.backgroundcolor = "red";
+        el.foregroundcolor = "yellow";
+        el.text = "Esto es un botón";
+      }
+    });
+    document.getElementById("btnES").onclick = e => alert("ES");
+
+    Wuse.instantiate(Simple_Button, "body", {
+      onElementInstantiated: el => {
+        el.backgroundcolor = "green";
+        el.foregroundcolor = "yellow";
+        el.text = "Isto é um botão";
+        el.onclick = e => alert("PT");
+      }
+    });
+
+    Wuse.instantiate(Simple_Button, "", { onBadTarget: target => false });
+  </script>
+</body>
+</html>
+

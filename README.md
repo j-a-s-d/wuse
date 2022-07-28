@@ -39,6 +39,11 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.3.9] 2022-jul-28
+  - added `onElementInstantiated` and `onBadTarget` events to the instantiation process
+  - added `Simple_Button` example
+  - extracted `RenderingRoutines` class to an external file
+  - added `RenderingRoutines` class unit test
 * [0.3.8] 2022-jul-27
   - extracted `TemplateImporter` class to an external file
   - added `TemplateImporter` class unit test

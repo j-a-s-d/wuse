@@ -11,10 +11,11 @@ import WuseContentManager from './wuse.content-manager.js';
 import WusePerformanceMeasurement from './wuse.performance-measurement.js';
 import WuseElementClasses from './wuse.element-classes.js';
 import WuseTemplateImporter from './wuse.template-importer.js';
+import WuseRenderingRoutines from './wuse.rendering-routines.js';
 
 class Wuse {
 
-  static get VERSION() { return "0.3.8"; }
+  static get VERSION() { return "0.3.9"; }
 
   static WebHelpers = WuseWebHelpers;
 
@@ -55,8 +56,8 @@ class Wuse {
     return WuseElementClasses.registerClasses(WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes));
   }
 
-  static instantiate(classes, target) {
-    return WuseElementClasses.instantiateClasses(WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes), target);
+  static instantiate(classes, target, events) {
+    return WuseElementClasses.instantiateClasses(WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes), target, events);
   }
 
   static isShadowElement(instance) {
@@ -552,82 +553,6 @@ class Wuse {
     });
   }
 
-  static #RenderingRoutines = class {
-
-    static #onFetchTemplate = WuseJsHelpers.noop;
-
-    static cacheInvalidator = item => item.cache = null;
-
-    static renderingIncluder = item => item.rendering = true;
-
-    static renderingExcluder = item => item.rendering = false;
-
-    static renderRule = (replacer, rule) => {
-      if (WuseJsHelpers.isOf(rule.nested, window.Array)) {
-        return rule.selector + "{" + rule.nested.map(r => Wuse.#RenderingRoutines.renderRule(replacer, r)).join("\n") + "}";
-      } else if (rule.selector !== "") {
-        var c = "";
-        for (const property in rule.properties) {
-          c += property + ":" + rule.properties[property] + ";";
-        }
-        if (WuseJsHelpers.isOf(rule.replacements, window.Array) && !!rule.replacements.length) {
-          rule.replacements.forEach(r => c = replacer(c, r));
-        }
-        return rule.selector + "{" + c + "}";
-      }
-      return null;
-    }
-
-    static renderChild = (replacer, child) => {
-      if (child.kind === WuseStringConstants.TEMPLATES_KIND) {
-        return this.#onFetchTemplate(child.id);
-      }
-      if (child.tag === WuseStringConstants.TEXTNODE_TAG) {
-        var c = child.content;
-        child.replacements["contents"].forEach(r => c = replacer(c, r));
-        return child.encode ? WuseWebHelpers.htmlEncode(c) : c;
-      }
-      var result = WuseJsHelpers.isNonEmptyString(child.id) ? `<${child.tag} id='${child.id}'` : "<" + child.tag;
-      if (!!child.classes.length) {
-        var c = child.classes.join(" ");
-        child.replacements["classes"].forEach(r => c = replacer(c, r));
-        result += ` class='${c}'`;
-      }
-      if (WuseJsHelpers.hasObjectKeys(child.style)) {
-        var c = " style='";
-        for (const property in child.style) {
-          c += property + ": " + child.style[property] + "; ";
-        }
-        c += "'";
-        child.replacements["styles"].forEach(r => c = replacer(c, r));
-        result += c;
-      }
-      if (WuseJsHelpers.hasObjectKeys(child.attributes)) {
-        var c = "";
-        for (const property in child.attributes) {
-          c += " " + property + "=" + child.attributes[property];
-        }
-        child.replacements["attributes"].forEach(r => c = replacer(c, r));
-        result += c;
-      }
-      if (typeof child.content === "string") {
-        var c = child.content;
-        child.replacements["contents"].forEach(r => c = replacer(c, r));
-        result += `>${child.encode ? WuseWebHelpers.htmlEncode(c) : c}</${child.tag}>`;
-      } else {
-        result += "/>"
-      }
-      return result;
-    }
-
-    static initialize(events) {
-      if (WuseJsHelpers.isAssignedObject(events)) {
-        this.#onFetchTemplate = WuseJsHelpers.ensureFunction(events.onFetchTemplate, this.#onFetchTemplate);
-      }
-    }
-
-  }
-
   static #BaseElement = class extends window.HTMLElement {
 
     static get EVENT_NAMES() {
@@ -765,17 +690,17 @@ class Wuse {
 
       })(this),
       renderizers: {
-        rule: rule => this.#contents.style.append(rule.cache ? rule.cache : rule.cache = Wuse.#RenderingRoutines.renderRule(this.#renderingReplacer, rule)),
+        rule: rule => this.#contents.style.append(rule.cache ? rule.cache : rule.cache = WuseRenderingRoutines.renderRule(this.#renderingReplacer, rule)),
         children: {
           mixed: child => this.#shadowed && child.kind === WuseStringConstants.SLOTS_KIND ? this.#contents.renderizers.children.slot(child) : this.#contents.renderizers.children.normal(child),
           slot: child => {
             if (!child.cache) {
               this.#contents.root.verify(content => true);
-              this.#contents.root.append(child.cache = Wuse.#RenderingRoutines.renderChild(this.#renderingReplacer, child));
+              this.#contents.root.append(child.cache = WuseRenderingRoutines.renderChild(this.#renderingReplacer, child));
             }
           },
           normal: child => {
-            this.#contents.main.append(child.cache ? child.cache : child.cache = Wuse.#RenderingRoutines.renderChild(this.#renderingReplacer, child));
+            this.#contents.main.append(child.cache ? child.cache : child.cache = WuseRenderingRoutines.renderChild(this.#renderingReplacer, child));
             child.rules.forEach(this.#contents.renderizers.rule);
           }
         }
@@ -787,7 +712,7 @@ class Wuse {
     // FIXED CALLBACKS
     #renderingReplacer = (str, rep) => str.replace(rep.find, this[rep.field] !== undefined ? this[rep.field] : "");
     /*#ruleInserters = {
-      rule: rule => this.#style.sheet.insertRule(rule.cache ? rule.cache : rule.cache = Wuse.#RenderingRoutines.renderRule(this.#renderingReplacer, rule)),
+      rule: rule => this.#style.sheet.insertRule(rule.cache ? rule.cache : rule.cache = WuseRenderingRoutines.renderRule(this.#renderingReplacer, rule)),
       childRule: child => child.rendering && child.rules.forEach(this.#ruleInserters.rule)
     }*/
     #bindingPerformers = {
@@ -849,8 +774,8 @@ class Wuse {
       this.#main = new WuseNodeManager(
         this.#root, Wuse.#ElementParts.makeMainNode(this.#options.mainDefinition)
       );
-      this.#children.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
-      this.#rules.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
+      this.#children.forEach(WuseRenderingRoutines.cacheInvalidator);
+      this.#rules.forEach(WuseRenderingRoutines.cacheInvalidator);
     }
 
     #extirpateElements() {
@@ -964,15 +889,15 @@ class Wuse {
     #fieldRender(name, label = "$none") {
       if (this.#binded) {
         const rulesHits = Wuse.#TextReplacements.scanRulesForReplacements(this.#rules, name);
-        rulesHits.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
+        rulesHits.forEach(WuseRenderingRoutines.cacheInvalidator);
         const childrenHits = Wuse.#TextReplacements.scanChildrenForReplacements(this.#children, name);
-        childrenHits.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
+        childrenHits.forEach(WuseRenderingRoutines.cacheInvalidator);
         if (Wuse.DEBUG) this.#debug(`reactive render (label: ${label}, field: ${name}, children: ${childrenHits.length}, rules: ${rulesHits.length})`);
         if (!!rulesHits.length || !!childrenHits.length) {
           if (childrenHits.some(x => !!x.kind.length)) {
             // NOTE: when a slot gets invalidated the replaceChild will drop all other slots,
             // so to avoid a full redraw, all other slots are required to be invalidated too.
-            this.#children.forEach(x => x.kind === WuseStringConstants.SLOTS_KIND ? Wuse.#RenderingRoutines.cacheInvalidator(x) : undefined);
+            this.#children.forEach(x => x.kind === WuseStringConstants.SLOTS_KIND ? WuseRenderingRoutines.cacheInvalidator(x) : undefined);
           }
           this.render();
         }
@@ -1286,22 +1211,22 @@ class Wuse {
     }
 
     includeChildElementById(id) {
-      this.#children.forEach(child => (child.id === id) && Wuse.#RenderingRoutines.renderingIncluder(child));
+      this.#children.forEach(child => (child.id === id) && WuseRenderingRoutines.renderingIncluder(child));
       return this;
     }
 
     excludeChildElementById(id) {
-      this.#children.forEach(child => (child.id === id) && Wuse.#RenderingRoutines.renderingExcluder(child));
+      this.#children.forEach(child => (child.id === id) && WuseRenderingRoutines.renderingExcluder(child));
       return this;
     }
 
     invalidateChildElementsById(ids) {
-      this.#children.forEach(child => (ids.indexOf(child.id) > -1) && Wuse.#RenderingRoutines.cacheInvalidator(child));
+      this.#children.forEach(child => (ids.indexOf(child.id) > -1) && WuseRenderingRoutines.cacheInvalidator(child));
       return this;
     }
 
     invalidateChildElements(childs) {
-      if (WuseJsHelpers.isOf(childs, window.Array)) childs.forEach(Wuse.#RenderingRoutines.cacheInvalidator);
+      if (WuseJsHelpers.isOf(childs, window.Array)) childs.forEach(WuseRenderingRoutines.cacheInvalidator);
       return this;
     }
 
@@ -1359,7 +1284,7 @@ class Wuse {
       onExtinctTemplate: WuseRuntimeErrors.EXTINCT_TEMPLATE.emit,
       onInvalidTemplate: WuseRuntimeErrors.INVALID_TEMPLATE.emit
     });
-    Wuse.#RenderingRoutines.initialize({ onFetchTemplate: WuseTemplateImporter.fetch });
+    WuseRenderingRoutines.initialize({ onFetchTemplate: WuseTemplateImporter.fetch });
     Wuse.#TextReplacements.initialize(WuseStringConstants.DEFAULT_REPLACEMENT_OPEN, WuseStringConstants.DEFAULT_REPLACEMENT_CLOSE);
   }
 

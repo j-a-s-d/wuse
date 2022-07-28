@@ -35,24 +35,28 @@ export default class ElementClasses {
     );
   }
 
-  static #immediateClassInstantiator(klass, target) {
+  static #immediateClassInstantiator(klass, target, events) {
     let t = null;
     try {
       t = window.document.querySelector(target);
+    } catch {
+      if (ensureFunction(events.onBadTarget)(target) === false) return;
     } finally {
       t = t || window.document.body;
     }
-    t.appendChild(window.document.createElement(klass.tag));
+    const x = window.document.createElement(klass.tag);
+    ensureFunction(events.onElementInstantiated)(x, target);
+    t.appendChild(x);
   }
 
-  static #instantiateClass(klass, target) {
-    const instantiator = () => this.#immediateClassInstantiator(klass, target);
+  static #instantiateClass(klass, target, events) {
+    const instantiator = () => this.#immediateClassInstantiator(klass, target, events);
     window.document.body ? instantiator() : this.#onDeferredInstantiation(instantiator);
   }
 
-  static instantiateClasses(classes, target) {
+  static instantiateClasses(classes, target, events) {
     if (isNonEmptyArray(classes)) window.Array.prototype.forEach.call(classes, klass => window.customElements.get(klass.tag) ?
-      this.#instantiateClass(klass, target) :
+      this.#instantiateClass(klass, target, isAssignedObject(events) ? events : new window.Object()) :
       this.#onUnregisteredClass(klass.name)
     );
   }
