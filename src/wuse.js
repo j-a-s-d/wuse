@@ -12,10 +12,11 @@ import WusePerformanceMeasurement from './wuse.performance-measurement.js';
 import WuseElementClasses from './wuse.element-classes.js';
 import WuseTemplateImporter from './wuse.template-importer.js';
 import WuseRenderingRoutines from './wuse.rendering-routines.js';
+import WuseTextReplacements from './wuse.text-replacements.js';
 
 class Wuse {
 
-  static get VERSION() { return "0.3.9"; }
+  static get VERSION() { return "0.4.0"; }
 
   static WebHelpers = WuseWebHelpers;
 
@@ -427,113 +428,6 @@ class Wuse {
     return h;
   }
 
-  static #TextReplacements = class {
-
-    static #ReplacementMarkers = class {
-
-      static begin = null;
-
-      static end = null;
-
-      static enclose = match => this.begin + match + this.end;
-
-      static makeRegExp = () => new window.RegExp("(?<=" + this.begin + ").*?(?=" + this.end + ")", "gs");
-
-      static initialize(begin, end) {
-        this.begin = begin;
-        this.end = end;
-      }
-
-    }
-
-    static #ReplacementsScanners = class {
-
-      static rules = (rules, name) => WuseJsHelpers.buildArray(hits => rules.forEach(
-        rule => rule.replacements.forEach(x => (x.field === name) && hits.push(rule))
-      ));
-
-      static children = (children, name) => WuseJsHelpers.buildArray(hits => {
-        const processAll = child => {
-          const process = collection => collection.forEach(
-            x => (x.field === name) && hits.push(child)
-          );
-          ["contents", "classes", "styles", "attributes"].forEach(
-            key => process(child.replacements[key])
-          );
-          child.rules.forEach(rule => rule.replacements.forEach(
-            x => (x.field === name) && hits.push(child)
-          )); // NOTE: in this case is faster to ignore duplication
-        };
-        children.forEach(child => child.rendering && processAll(child));
-      });
-
-    }
-
-    static #ReplacementsExtractors = class {
-
-      static #regExp = null;
-
-      static #addReplacement = (hits, at, match) => hits.push({
-        at, field: match.trim(), find: Wuse.#TextReplacements.#ReplacementMarkers.enclose(match)
-      });
-
-      static #includeMatches = (hits, at, str) => WuseJsHelpers.isNonEmptyString(str) && (str.match(this.#regExp) || WuseJsHelpers.EMPTY_ARRAY).forEach(
-        match => this.#addReplacement(hits, at, match)
-      );
-
-      static #includeStringMatches = (result, key, value) => {
-        result[key] = new window.Array();
-        this.#includeMatches(result[key], key, value);
-      }
-
-      static #includeKeysMatches = (result, key, obj) => {
-        result[key] = new window.Array();
-        window.Object.keys(obj).forEach(k => {
-          this.#includeMatches(result[key], key, k);
-          this.#includeMatches(result[key], key, obj[k]);
-        });
-      }
-
-      static child = child => WuseJsHelpers.buildObject(result => {
-        this.#includeStringMatches(result, "contents", child.content);
-        this.#includeStringMatches(result, "classes", child.classes.join(" "));
-        this.#includeKeysMatches(result, "styles", child.style);
-        this.#includeKeysMatches(result, "attributes", child.attributes);
-        child.rules.forEach(r => r.replacements = this.rule(r));
-      });
-
-      static rule = rule => WuseJsHelpers.buildArray(result => {
-        if (WuseJsHelpers.isOf(rule.nested, window.Array)) {
-          return rule.nested.map(r => this.rule(r));
-        }
-        var c = "";
-        for (const property in rule.properties) {
-          c += property + ":" + rule.properties[property] + ";";
-        }
-        this.#includeMatches(result, "rules", c);
-      });
-
-      static initialize(regExp) {
-        this.#regExp = regExp;
-      }
-
-    }
-
-    static initialize(openMarker, closeMarker) {
-      this.#ReplacementMarkers.initialize(openMarker, closeMarker);
-      this.#ReplacementsExtractors.initialize(this.#ReplacementMarkers.makeRegExp());
-    }
-
-    static extractReplacementsFromRule = this.#ReplacementsExtractors.rule;
-
-    static extractReplacementsFromChild = this.#ReplacementsExtractors.child;
-
-    static scanRulesForReplacements = this.#ReplacementsScanners.rules;
-
-    static scanChildrenForReplacements = this.#ReplacementsScanners.children;
-
-  }
-
   static makeReactiveField(obj, name, value, handler, renderizer) {
     const redefiner = (get, set) => window.Object.defineProperty(obj, name, {
       get, set, enumerable: true, configurable: true
@@ -604,7 +498,7 @@ class Wuse {
 
       on_version_change() {
         this.last.version = this.version;
-        this.last.replacements = Wuse.#TextReplacements.extractReplacementsFromRule(this.last);
+        this.last.replacements = WuseTextReplacements.extractReplacementsFromRule(this.last);
         if (Wuse.DEBUG) this.owner.#debug(`rules list version change: ${this.version}`);
       }
 
@@ -613,7 +507,7 @@ class Wuse {
 
       on_version_change() {
         this.last.version = this.version;
-        this.last.replacements = Wuse.#TextReplacements.extractReplacementsFromChild(this.last);
+        this.last.replacements = WuseTextReplacements.extractReplacementsFromChild(this.last);
         this.owner.#slotted |= (this.last.kind === WuseStringConstants.SLOTS_KIND);
         if (Wuse.DEBUG) this.owner.#debug(`children list version change: ${this.version}`);
       }
@@ -874,7 +768,7 @@ class Wuse {
       this.#trigger(event);
     }
 
-    #redraw(n) {
+    #redraw() {
       if (Wuse.MEASURE) this.#measurement.full.start();
       this.#bind(false);
       this.#extirpateElements();
@@ -888,9 +782,9 @@ class Wuse {
     // FIELD ROUTINES
     #fieldRender(name, label = "$none") {
       if (this.#binded) {
-        const rulesHits = Wuse.#TextReplacements.scanRulesForReplacements(this.#rules, name);
+        const rulesHits = WuseTextReplacements.scanRulesForReplacements(this.#rules, name);
         rulesHits.forEach(WuseRenderingRoutines.cacheInvalidator);
-        const childrenHits = Wuse.#TextReplacements.scanChildrenForReplacements(this.#children, name);
+        const childrenHits = WuseTextReplacements.scanChildrenForReplacements(this.#children, name);
         childrenHits.forEach(WuseRenderingRoutines.cacheInvalidator);
         if (Wuse.DEBUG) this.#debug(`reactive render (label: ${label}, field: ${name}, children: ${childrenHits.length}, rules: ${rulesHits.length})`);
         if (!!rulesHits.length || !!childrenHits.length) {
@@ -1285,7 +1179,7 @@ class Wuse {
       onInvalidTemplate: WuseRuntimeErrors.INVALID_TEMPLATE.emit
     });
     WuseRenderingRoutines.initialize({ onFetchTemplate: WuseTemplateImporter.fetch });
-    Wuse.#TextReplacements.initialize(WuseStringConstants.DEFAULT_REPLACEMENT_OPEN, WuseStringConstants.DEFAULT_REPLACEMENT_CLOSE);
+    WuseTextReplacements.initialize(WuseStringConstants.DEFAULT_REPLACEMENT_OPEN, WuseStringConstants.DEFAULT_REPLACEMENT_CLOSE);
   }
 
 }

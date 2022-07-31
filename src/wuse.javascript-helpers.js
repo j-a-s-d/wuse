@@ -1,5 +1,10 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
+const instanceBuilder = (instance, initializer) => {
+  if (typeof initializer === "function") initializer(instance);
+  return instance;
+}
+
 export default class JavascriptHelpers {
 
   static #EMPTY_ARRAY = new window.Array();
@@ -15,17 +20,12 @@ export default class JavascriptHelpers {
     return typeof str === "string" ? str.split(by) : new window.Array();
   }
 
-  static #instanceBuilder(instance, initializer) {
-    if (this.isOf(initializer, window.Function)) initializer(instance);
-    return instance;
-  }
-
   static buildArray(initializer) {
-    return this.#instanceBuilder(new window.Array(), initializer);
+    return instanceBuilder(new window.Array(), initializer);
   }
 
   static buildObject(initializer) {
-    return this.#instanceBuilder(new window.Object(), initializer);
+    return instanceBuilder(new window.Object(), initializer);
   }
 
   static ensureFunction(fun, def = () => {}) {
