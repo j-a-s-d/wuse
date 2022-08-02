@@ -1,22 +1,24 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
-import WuseStringConstants from './wuse.string-constants.js';
 import WuseWebHelpers from './wuse.web-helpers.js';
 import WuseJsHelpers from './wuse.javascript-helpers.js';
 import WuseRuntimeErrors from './wuse.runtime-errors.js';
-import WuseEqualityAnalyzer from './wuse.equality-analyzer.js';
-import WuseSimpleStorage from './wuse.simple-storage.js';
-import WuseNodeManager from './wuse.node-manager.js';
-import WuseContentManager from './wuse.content-manager.js';
-import WusePerformanceMeasurement from './wuse.performance-measurement.js';
 import WuseElementClasses from './wuse.element-classes.js';
+import WuseSimpleStorage from './wuse.simple-storage.js';
+import WusePerformanceMeasurement from './wuse.performance-measurement.js';
+import WuseStringConstants from './wuse.string-constants.js';
+import WuseTextReplacements from './wuse.text-replacements.js';
 import WuseTemplateImporter from './wuse.template-importer.js';
 import WuseRenderingRoutines from './wuse.rendering-routines.js';
-import WuseTextReplacements from './wuse.text-replacements.js';
+import WuseEqualityAnalyzer from './wuse.equality-analyzer.js';
+import WuseNodeManager from './wuse.node-manager.js';
+import WuseContentManager from './wuse.content-manager.js';
+import WusePartsHolder from './wuse.parts-holder.js';
+import WuseElementParts from './wuse.element-parts.js';
 
 class Wuse {
 
-  static get VERSION() { return "0.4.0"; }
+  static get VERSION() { return "0.4.1"; }
 
   static WebHelpers = WuseWebHelpers;
 
@@ -64,353 +66,6 @@ class Wuse {
   static isShadowElement(instance) {
     const p = window.Object.getPrototypeOf(instance.constructor);
     return p === Wuse.OpenShadowElement || p === Wuse.ClosedShadowElement;
-  }
-
-  static #ElementParts = class {
-
-    static PartsHolder = class extends window.Array {
-
-      owner = null;
-      last = null;
-      version = 0;
-
-      constructor(owner) {
-        super();
-        this.owner = owner;
-      }
-
-      #roll(item)  {
-        this.last = item;
-        this.version++;
-        this.on_version_change();
-      }
-
-      append(item) {
-        if (WuseJsHelpers.isOf(item, window.Object)) {
-          this.push(item);
-          this.#roll(item);
-        }
-      }
-
-      prepend(item) {
-        if (WuseJsHelpers.isOf(item, window.Object)) {
-          this.unshift(item);
-          this.#roll(item);
-        }
-      }
-
-      replace(index, item) {
-        if ((index > -1) && WuseJsHelpers.isOf(item, window.Object)) {
-          this.#roll(this[index] = item);
-        }
-      }
-
-      on_version_change() {}
-
-      persist() {
-        let result = new window.Array();
-        window.Object.getOwnPropertyNames(this).forEach(key => {
-          switch (key) {
-            case "owner":
-            case "last":
-            case "length":
-              break;
-            case "version":
-              result[key] = this[key];
-              break;
-            default:
-              if (window.Number.isInteger(Number(key))) {
-                const item = window.Object.assign(new window.Object(), this[key]);
-                if (item.cache) item.cache = null;
-                result.push(item);
-              }
-              break;
-          }
-        });
-        return result;
-      }
-
-      restore(instance) {
-        window.Object.getOwnPropertyNames(instance).forEach(key => {
-          switch (key) {
-            case "length":
-              break;
-            case "version":
-              this[key] = instance[key];
-              break;
-            default:
-              if (window.Number.isInteger(Number(key))) {
-                const item = window.Object.assign(new window.Object(), instance[key]);
-                if (item.cache) item.cache = null;
-                this.push(item);
-              }
-              break;
-          }
-        });
-      }
-
-    }
-
-    static #ShorthandNotationParser = class {
-
-      static #extractAttributes(result, input) {
-        const op = input.indexOf("[");
-        const cp = input.indexOf("]");
-        if (op > -1 && cp > -1 && cp > op) {
-          const ip = input.substr(op, cp - op + 1);
-          const pp = ip.substr(1, ip.length - 2).split("|");
-          for (var z in pp) {
-            const x = pp[z].split("=");
-            if (x[0] === "style") {
-              x[1].split(";").forEach(r => {
-                const s = r.split(":");
-                const k = s[0].trim();
-                if (!!k.length) {
-                  result.style[k] = s[1].trim();
-                }
-              });
-            } else {
-              result.attributes[x[0]] = x[1];
-            }
-          }
-          return input.replace(ip, "");
-        }
-        return input;
-      }
-
-      static #extractContent(result, input) {
-        const index = input.indexOf("=");
-        if (index > -1) {
-          result.content = input.slice(index + 1);
-          if (!!result.content.length && result.content.charAt(0) === '&') {
-            result.content = result.content.slice(1);
-            result.encode = !!result.content.length && result.content.charAt(0) !== '&';
-          }
-          return input.slice(0, index);
-        }
-        return input;
-      }
-
-      static #extractEvents(result, input) {
-        const tmp = input.replaceAll("!", " ").split(" ");
-        tmp.slice(1).map(item => {
-          const [event, ...rest] = item.toLowerCase().split("+");
-          const capture = (rest || WuseJsHelpers.EMPTY_ARRAY).indexOf("capture") > -1;
-          result.events.push(Wuse.#ElementParts.newEvent(event, capture))
-        });
-        return tmp[0];
-      }
-
-      static #extractClasses(result, input) {
-        const tmp = input.replaceAll(".", " ").split(" ");
-        result.classes = tmp.slice(1);
-        return tmp[0];
-      }
-
-      static #extractIdAndTag(result, input) {
-        if (input !== "") {
-          const x = input.indexOf("#");
-          if (x === -1) {
-            result.tag = input;
-          } else {
-            if (x > 0) {
-              result.tag = input.substr(0, x);
-            }
-            result.id = input.substr(x + 1);
-          }
-        }
-        return result;
-      }
-
-      static #extractData(result, input) {
-        return this.#extractIdAndTag(result,
-          this.#extractClasses(result,
-            this.#extractEvents(result,
-              this.#extractContent(result,
-                this.#extractAttributes(result, input)
-              )
-            )
-          )
-        );
-      }
-
-      static parse(value) {
-        if (WuseJsHelpers.isNonEmptyString(value)) {
-          var def = Wuse.#ElementParts.newDefinition();
-          if (value.charAt(0) === '%') {
-            if (value.startsWith(WuseStringConstants.TEMPLATES_KIND)) {
-              return this.#extractData(def, value.replace(def.kind = WuseStringConstants.TEMPLATES_KIND, ""));
-            } else if (value.startsWith(WuseStringConstants.SLOTS_KIND)) {
-              return this.#extractData(def, value.replace(def.kind = WuseStringConstants.SLOTS_KIND, ""));
-            } else {
-              return null;
-            }
-          } else {
-            return this.#extractData(def, value);
-          }
-        }
-        return null;
-      }
-
-    }
-
-    static #CSSPropertiesParser = class {
-
-      static #process(result, item) {
-        if (!!item.length && item.indexOf(":") > -1) {
-          const [key, ...values] = item.split(":");
-          const k = key.trim();
-          if (!!k.length) {
-            const v = values.join(":").trim();
-            result[k] = v.endsWith(";") ? v.slice(0, -1) : v;
-          }
-        }
-      }
-
-      static parse(content) {
-        let result = new window.Object();
-        (WuseJsHelpers.isOf(content, window.Array) ? content : WuseJsHelpers.forcedStringSplit(content, "\n").map(x => x.trim()).join("").split(";")).forEach(
-          item => WuseJsHelpers.isNonEmptyString(item) && this.#process(result, item.trim())
-        );
-        return result;
-      }
-
-    }
-
-    static makeStyleNode(media, type) {
-      var result = window.document.createElement("style");
-      if (WuseJsHelpers.isNonEmptyString(media)) {
-        result.setAttribute("media", media);
-      }
-      if (WuseJsHelpers.isNonEmptyString(type)) {
-        result.setAttribute("type", type);
-      }
-      result.appendChild(window.document.createTextNode("")); // NOTE: check if this webkit hack is still required
-      return result;
-    }
-
-    static newRule(selector, properties) {
-      const s = WuseJsHelpers.isOf(selector, window.Array) ? selector.join(",") : "" + selector;
-      return !s.length ? null : {
-        selector: s,
-        properties: WuseJsHelpers.isOf(properties, window.Object) ? properties : this.#CSSPropertiesParser.parse(properties),
-        cache: null
-      };
-    }
-
-    static newNestedRule(selector, sub, properties) {
-      const s = WuseJsHelpers.isOf(selector, window.Array) ? selector.join(",") : "" + selector;
-      const b = WuseJsHelpers.isOf(sub, window.Array) ? sub.join(",") : "" + sub;
-      return !s.length || !b.length ? null : {
-        selector: s,
-        nested: [{
-          selector: b,
-          properties: WuseJsHelpers.isOf(properties, window.Object) ? properties : this.#CSSPropertiesParser.parse(properties)
-        }],
-        cache: null
-      };
-    }
-
-    static tryToJoinRules(lr, rule) {
-      if (lr.selector === rule.selector) {
-        for (const p in rule.properties) {
-          lr.properties[p] = rule.properties[p];
-        }
-        lr.cache = null;
-        return true;
-      }
-      return false;
-    }
-
-    static tryToJoinNestedRules(lr, rule) {
-      if (WuseJsHelpers.isOf(lr.nested, window.Array) && lr.selector === rule.selector) {
-        rule.nested.forEach(n => {
-          var found = false;
-          for (const x in lr.nested) {
-            if ((found = lr.nested[x].selector === n.selector)) {
-              for (const p in n.properties) {
-                lr.nested[x].properties[p] = n.properties[p];
-              }
-              break;
-            }
-          }
-          if (!found) {
-            lr.nested.push(n);
-          }
-        });
-        lr.cache = null;
-        return true;
-      }
-      return false;
-    }
-
-    static makeMainNode(mainDefinition) {
-      var result = window.document.createElement(mainDefinition.tag);
-      if (!!mainDefinition.id.length) {
-        result.setAttribute("id", mainDefinition.id);
-      }
-      if (!!mainDefinition.classes.length) {
-        result.setAttribute("class", mainDefinition.classes.join(" "));
-      }
-      if (WuseJsHelpers.hasObjectKeys(mainDefinition.style)) {
-        var style = "";
-        for (const property in mainDefinition.style) {
-          style += property + ": " + mainDefinition.style[property] + "; ";
-        }
-        if (!!style.length) {
-          const v = style.trim();
-          result.setAttribute("style", v.endsWith(";") ? v.slice(0, -1) : v);
-        }
-      }
-      if (WuseJsHelpers.hasObjectKeys(mainDefinition.attributes)) {
-        for (const property in mainDefinition.attributes) {
-          result.setAttribute(property, mainDefinition.attributes[property]);
-        }
-      }
-      return result;
-    }
-
-    static newEvent(kind, capture) {
-      return typeof kind === "string" && typeof capture === "boolean" ? { kind, capture: capture } : null;
-    }
-
-    static performValidations(child) {
-      if (child.kind === WuseStringConstants.TEMPLATES_KIND) {
-        if (!window.document.getElementById(child.id)) {
-          return WuseRuntimeErrors.INEXISTENT_TEMPLATE.emit(child.id);
-        }
-      } else if (child.kind === WuseStringConstants.SLOTS_KIND) {
-        if (new String(child.attributes["slot"]).replaceAll("\"", "").replaceAll("\'", "").length === 0) {
-          return WuseRuntimeErrors.UNESPECIFIED_SLOT.emit(child.id);
-        }
-      } else if (typeof child.id !== "string" || (child.id !== "" && window.document.getElementById(child.id) !== null)) {
-        return WuseRuntimeErrors.INVALID_ID.emit(child.id);
-      }
-      return child;
-    }
-
-    static newChild(shorthandNotation, rules) {
-      var result = this.#ShorthandNotationParser.parse(shorthandNotation.trimLeft());
-      if (!result) {
-        return WuseRuntimeErrors.INVALID_DEFINITION.emit(shorthandNotation);
-      }
-      result.rules = WuseJsHelpers.isOf(rules, window.Array) ? rules : new window.Array();
-      result.rendering = true;
-      result.cache = null;
-      return result;
-    }
-
-    static newDefinition() {
-      return {
-        kind: WuseStringConstants.DEFAULT_KIND,
-        // =
-        tag: WuseStringConstants.DEFAULT_TAG, id: "", classes: new window.Array(),
-        attributes: new window.Object(), style: new window.Object(), events: new window.Array(),
-        // =
-        content: "", encode: false
-      }
-    }
-
   }
 
   static #elementsStorage = new WuseSimpleStorage();
@@ -480,7 +135,7 @@ class Wuse {
 
     }
 
-    static specializeClass = (rootMode) => class extends this {
+    static specializeClass = rootMode => class extends this {
 
       constructor() {
         super(rootMode);
@@ -493,8 +148,8 @@ class Wuse {
     // PRIVATE
 
     // CONTENT HOLDERS
-    #html = "" // RAW HTML
-    #rules = new (class extends Wuse.#ElementParts.PartsHolder {
+    #html = ""; // RAW HTML
+    #rules = new (class extends WusePartsHolder {
 
       on_version_change() {
         this.last.version = this.version;
@@ -502,8 +157,8 @@ class Wuse {
         if (Wuse.DEBUG) this.owner.#debug(`rules list version change: ${this.version}`);
       }
 
-    })(this) // CSS RULES
-    #children = new (class extends Wuse.#ElementParts.PartsHolder {
+    })(this); // CSS RULES
+    #children = new (class extends WusePartsHolder {
 
       on_version_change() {
         this.last.version = this.version;
@@ -512,8 +167,8 @@ class Wuse {
         if (Wuse.DEBUG) this.owner.#debug(`children list version change: ${this.version}`);
       }
 
-    })(this) // HTML ELEMENTS
-    #fields = new (class extends Wuse.#ElementParts.PartsHolder {
+    })(this); // HTML ELEMENTS
+    #fields = new (class extends WusePartsHolder {
 
       on_version_change() {
         if (Wuse.DEBUG) this.owner.#debug(`fields list version change: ${this.version}`);
@@ -527,11 +182,11 @@ class Wuse {
         this.forEach(x => this.owner[x.name] = x.value);
       }
 
-    })(this) // INSTANCE FIELDS
+    })(this); // INSTANCE FIELDS
 
     // USER CUSTOMIZATION
     #options = {
-      mainDefinition: Wuse.#ElementParts.newDefinition(),
+      mainDefinition: WuseElementParts.newDefinition(),
       styleMedia: WuseStringConstants.DEFAULT_STYLE_MEDIA,
       styleType: WuseStringConstants.DEFAULT_STYLE_TYPE,
       rawContent: false,
@@ -663,10 +318,10 @@ class Wuse {
 
     #prepareElements() {
       this.#style = !!this.#rules.length ? new WuseNodeManager(
-        this.#root, Wuse.#ElementParts.makeStyleNode(this.#options.styleMedia, this.#options.styleType)
+        this.#root, WuseElementParts.makeStyleNode(this.#options.styleMedia, this.#options.styleType)
       ) : null;
       this.#main = new WuseNodeManager(
-        this.#root, Wuse.#ElementParts.makeMainNode(this.#options.mainDefinition)
+        this.#root, WuseElementParts.makeMainNode(this.#options.mainDefinition)
       );
       this.#children.forEach(WuseRenderingRoutines.cacheInvalidator);
       this.#rules.forEach(WuseRenderingRoutines.cacheInvalidator);
@@ -960,8 +615,8 @@ class Wuse {
     }
 
     setMainElement(shorthandNotation) {
-      const tmp = Wuse.#ElementParts.newChild(shorthandNotation);
-      if (Wuse.#ElementParts.performValidations(tmp)) {
+      const tmp = WuseElementParts.newChild(shorthandNotation);
+      if (WuseElementParts.performValidations(tmp)) {
         if (tmp.content !== "" || !!tmp.events.length) {
           return WuseRuntimeErrors.INVALID_DEFINITION.emit(shorthandNotation);
         }
@@ -1023,8 +678,8 @@ class Wuse {
     appendCSSRule(selector, properties, nesting) {
       if (nesting) return this.appendCSSNestedRule(selector, properties, nesting);
       const sliced = this.#rules.slice(-1);
-      const rule = Wuse.#ElementParts.newRule(selector, properties);
-      if (!sliced.length || !Wuse.#ElementParts.tryToJoinRules(sliced[0], rule)) {
+      const rule = WuseElementParts.newRule(selector, properties);
+      if (!sliced.length || !WuseElementParts.tryToJoinRules(sliced[0], rule)) {
         this.#rules.append(rule);
       }
       return this;
@@ -1033,8 +688,8 @@ class Wuse {
     prependCSSRule(selector, properties, nesting) {
       if (nesting) return this.prependCSSNestedRule(selector, properties, nesting);
       const sliced = this.#rules.slice(0, 1);
-      const rule = Wuse.#ElementParts.newRule(selector, properties);
-      if (!sliced.length || !Wuse.#ElementParts.tryToJoinRules(sliced[0], rule)) {
+      const rule = WuseElementParts.newRule(selector, properties);
+      if (!sliced.length || !WuseElementParts.tryToJoinRules(sliced[0], rule)) {
         this.#rules.prepend(rule);
       }
       return this;
@@ -1042,8 +697,8 @@ class Wuse {
 
     appendCSSNestedRule(selector, subselector, properties) {
       const sliced = this.#rules.slice(-1);
-      const rule = Wuse.#ElementParts.newNestedRule(selector, subselector, properties);
-      if (!sliced.length || !Wuse.#ElementParts.tryToJoinNestedRules(sliced[0], rule)) {
+      const rule = WuseElementParts.newNestedRule(selector, subselector, properties);
+      if (!sliced.length || !WuseElementParts.tryToJoinNestedRules(sliced[0], rule)) {
         this.#rules.append(rule);
       }
       return this;
@@ -1051,8 +706,8 @@ class Wuse {
 
     prependCSSNestedRule(selector, subselector, properties) {
       const sliced = this.#rules.slice(0, 1);
-      const rule = Wuse.#ElementParts.newNestedRule(selector, subselector, properties);
-      if (!sliced.length || !Wuse.#ElementParts.tryToJoinNestedRules(sliced[0], rule)) {
+      const rule = WuseElementParts.newNestedRule(selector, subselector, properties);
+      if (!sliced.length || !WuseElementParts.tryToJoinNestedRules(sliced[0], rule)) {
         this.#rules.prepend(rule);
       }
       return this;
@@ -1060,8 +715,8 @@ class Wuse {
 
     appendChildElement(shorthandNotation, rules) {
       this.#children.append(
-        Wuse.#ElementParts.performValidations(
-          Wuse.#ElementParts.newChild(shorthandNotation, rules)
+        WuseElementParts.performValidations(
+          WuseElementParts.newChild(shorthandNotation, rules)
         )
       );
       return this;
@@ -1069,8 +724,8 @@ class Wuse {
 
     prependChildElement(shorthandNotation, rules) {
       this.#children.prepend(
-        Wuse.#ElementParts.performValidations(
-          Wuse.#ElementParts.newChild(shorthandNotation, rules)
+        WuseElementParts.performValidations(
+          WuseElementParts.newChild(shorthandNotation, rules)
         )
       );
       return this;
@@ -1079,7 +734,7 @@ class Wuse {
     replaceChildElement(id, shorthandNotation) {
       this.#children.replace(
         this.#children.findIndex(child => child.id === id),
-        Wuse.#ElementParts.newChild(shorthandNotation)
+        WuseElementParts.newChild(shorthandNotation)
       );
       return this;
     }

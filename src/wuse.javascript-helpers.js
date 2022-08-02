@@ -46,6 +46,14 @@ export default class JavascriptHelpers {
     return !!(obj && !!window.Object.keys(obj).length);
   }
 
+  static cloneObject(instance) {
+    return window.Object.assign(new window.Object(), instance);
+  }
+
+  static forEachOwnProperty(instance, callback) {
+    instance && window.Object.getOwnPropertyNames(instance).forEach(callback);
+  }
+
   static isAssignedObject(instance) {
     return typeof instance === "object" && instance !== null;
   }

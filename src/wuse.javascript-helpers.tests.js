@@ -12,6 +12,8 @@ export default new class {
     tester.testModuleFunction(module, "buildObject", ["existence", "type:object"], this.buildObject);
     tester.testModuleFunction(module, "ensureFunction", ["existence", "type:function"], this.ensureFunction);
     tester.testModuleFunction(module, "isOf", ["existence", "type:boolean"], this.isOf);
+    tester.testModuleFunction(module, "cloneObject", ["existence", "type:object"], this.cloneObject);
+    tester.testModuleFunction(module, "forEachOwnProperty", ["existence", "type:undefined"], this.forEachOwnProperty);
     tester.testModuleFunction(module, "hasObjectKeys", ["existence", "type:boolean"], this.hasObjectKeys);
     tester.testModuleFunction(module, "isAssignedObject", ["existence", "type:boolean"], this.isAssignedObject);
     tester.testModuleFunction(module, "isAssignedArray", ["existence", "type:boolean"], this.isAssignedArray);
@@ -53,6 +55,21 @@ export default new class {
     tester.testInvokationResult(module, fn, "without args", result => result === false);
     tester.testInvokationWithArgsResult(module, fn, [{}], `with empty object`, result => result === false);
     tester.testInvokationWithArgsResult(module, fn, [{a:123}], `with object with keys`, result => result === true);
+  }
+
+  cloneObject = (tester, module, name) => {
+    tester.testInvokationResult(module, name, "without args", result => window.Object.getOwnPropertyNames(result).length === 0);
+    tester.testInvokationWithArgsResult(module, name, [{}], `with empty object`, result => window.Object.getOwnPropertyNames(result).length === 0);
+    tester.testInvokationWithArgsResult(module, name, [{a:123}], `with object with keys`, result => window.Object.getOwnPropertyNames(result).length === 1 && result.a === 123);
+  }
+
+  forEachOwnProperty = (tester, module, name) => {
+    var r = true;
+    module[name]({}, _ => r = false);
+    tester.testResult(r, `<u>${name}</u> got called with an empty object: <i>${r}</i>`);
+    r = false;
+    module[name]({a:123}, _ => r = true);
+    tester.testResult(r, `<u>${name}</u> got called with an object with keys: <i>${r}</i>`);
   }
 
   isNonEmptyString = (tester, module, fn) => {
