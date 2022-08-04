@@ -18,7 +18,7 @@ import WuseElementParts from './wuse.element-parts.js';
 
 class Wuse {
 
-  static get VERSION() { return "0.4.1"; }
+  static get VERSION() { return "0.4.2"; }
 
   static WebHelpers = WuseWebHelpers;
 

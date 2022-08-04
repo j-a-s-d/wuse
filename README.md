@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.4.2] 2022-ago-04
+  - added `ElementParts` class unit test
+  - added `PartsHolder` class unit test
 * [0.4.1] 2022-ago-02
   - added `cloneObject` and `forEachOwnProperty` to `JavascriptHelpers` class
   - extracted `ElementParts` class to an external file

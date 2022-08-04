@@ -53,7 +53,7 @@ export default class PartsHolder extends window.Array {
           result[key] = this[key];
           break;
         default:
-          if (window.Number.isInteger(Number(key))) {
+          if (window.Number.isInteger(window.Number(key))) {
             const item = cloneObject(this[key]);
             if (item.cache) item.cache = null;
             result.push(item);
@@ -72,7 +72,7 @@ export default class PartsHolder extends window.Array {
           this[key] = instance[key];
           break;
         default:
-          if (window.Number.isInteger(Number(key))) {
+          if (window.Number.isInteger(window.Number(key))) {
             const item = cloneObject(instance[key]);
             if (item.cache) item.cache = null;
             this.push(item);

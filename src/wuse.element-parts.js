@@ -93,17 +93,18 @@ class ShorthandNotationParser {
 
   static parse(value) {
     if (isNonEmptyString(value)) {
+      let val = value.trimLeft();
       let def = makeDefinition();
-      if (value.charAt(0) === '%') {
-        if (value.startsWith(TEMPLATES_KIND)) {
-          return this.#extractData(def, value.replace(def.kind = TEMPLATES_KIND, ""));
-        } else if (value.startsWith(SLOTS_KIND)) {
-          return this.#extractData(def, value.replace(def.kind = SLOTS_KIND, ""));
+      if (val.charAt(0) === '%') {
+        if (val.startsWith(TEMPLATES_KIND)) {
+          return this.#extractData(def, val.replace(def.kind = TEMPLATES_KIND, ""));
+        } else if (val.startsWith(SLOTS_KIND)) {
+          return this.#extractData(def, val.replace(def.kind = SLOTS_KIND, ""));
         } else {
           return null;
         }
       } else {
-        return this.#extractData(def, value);
+        return this.#extractData(def, val);
       }
     }
     return null;
@@ -146,7 +147,7 @@ const makeDefinition = () => ({
 const makeEvent = (kind, capture) => typeof kind === "string" && typeof capture === "boolean" ? { kind, capture } : null;
 
 const makeChild = (shorthandNotation, rules) => {
-  let result = ShorthandNotationParser.parse(shorthandNotation.trimLeft());
+  let result = ShorthandNotationParser.parse(shorthandNotation);
   if (!result) {
     return RuntimeErrors.INVALID_DEFINITION.emit(shorthandNotation);
   }
@@ -162,7 +163,7 @@ const doValidations = child => {
       return RuntimeErrors.INEXISTENT_TEMPLATE.emit(child.id);
     }
   } else if (child.kind === SLOTS_KIND) {
-    if (new String(child.attributes["slot"]).replaceAll("\"", "").replaceAll("\'", "").length === 0) {
+    if (new window.String(child.attributes["slot"]).replaceAll("\"", "").replaceAll("\'", "").length === 0) {
       return RuntimeErrors.UNESPECIFIED_SLOT.emit(child.id);
     }
   } else if (typeof child.id !== "string" || (child.id !== "" && window.document.getElementById(child.id) !== null)) {
@@ -172,6 +173,9 @@ const doValidations = child => {
 }
 
 const createMainNode = mainDefinition => {
+  if (!isOf(mainDefinition, window.Object)) {
+    return null;
+  }
   let result = window.document.createElement(mainDefinition.tag);
   if (!!mainDefinition.id.length) {
     result.setAttribute("id", mainDefinition.id);
@@ -210,7 +214,7 @@ const createStyleNode = (media, type) => {
 }
 
 const makeRule = (selector, properties) => {
-  const s = isOf(selector, window.Array) ? selector.join(",") : "" + selector;
+  const s = isOf(selector, window.Array) ? selector.join(",") : (isNonEmptyString(selector) ? selector : "");
   return !s.length ? null : {
     selector: s,
     properties: isOf(properties, window.Object) ? properties : CSSPropertiesParser.parse(properties),
@@ -219,8 +223,8 @@ const makeRule = (selector, properties) => {
 }
 
 const makeNestedRule = (selector, sub, properties) => {
-  const s = isOf(selector, window.Array) ? selector.join(",") : "" + selector;
-  const b = isOf(sub, window.Array) ? sub.join(",") : "" + sub;
+  const s = isOf(selector, window.Array) ? selector.join(",") : (isNonEmptyString(selector) ? selector : "");
+  const b = isOf(sub, window.Array) ? sub.join(",") : (isNonEmptyString(sub) ? sub : "");
   return !s.length || !b.length ? null : {
     selector: s,
     nested: [{

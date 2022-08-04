@@ -6,7 +6,7 @@ export default class RuntimeErrors {
 
     static #makeError = (code, writer) => { return { code, emit: (arg) => {
       const msg = `${this.#ERROR_TAG} ${code} | ${writer(arg)}`;
-      if (Wuse.FATALS || code < 10) {
+      if ((window.Wuse && window.Wuse.FATALS) || code < 10) {
         throw new window.Error(msg);
       } else {
         window.console.error(msg);
