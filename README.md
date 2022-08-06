@@ -39,6 +39,8 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.4.3] 2022-ago-05
+  - extracted `BaseElement` class to an external file
 * [0.4.2] 2022-ago-04
   - added `ElementParts` class unit test
   - added `PartsHolder` class unit test
