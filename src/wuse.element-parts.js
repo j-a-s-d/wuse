@@ -1,10 +1,16 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
 import JsHelpers from './wuse.javascript-helpers.js';
-const { EMPTY_ARRAY, buildArray, buildObject, isOf, hasObjectKeys, isNonEmptyString, forcedStringSplit } = JsHelpers;
+const { EMPTY_STRING, EMPTY_ARRAY, noop, buildArray, buildObject, isOf, hasObjectKeys, isNonEmptyString, forcedStringSplit } = JsHelpers;
 import StringConstants from './wuse.string-constants.js';
 const { DEFAULT_TAG, DEFAULT_KIND, TEMPLATES_KIND, SLOTS_KIND } = StringConstants;
-import RuntimeErrors from './wuse.runtime-errors.js';
+
+const RuntimeErrors = {
+  onInvalidDefinition: noop,
+  onInexistentTemplate: noop,
+  onUnespecifiedSlot: noop,
+  onInvalidId: noop
+}
 
 // PARSERS
 
@@ -30,7 +36,7 @@ class ShorthandNotationParser {
           result.attributes[x[0]] = x[1];
         }
       }
-      return input.replace(ip, "");
+      return input.replace(ip, EMPTY_STRING);
     }
     return input;
   }
@@ -65,7 +71,7 @@ class ShorthandNotationParser {
   }
 
   static #extractIdAndTag(result, input) {
-    if (input !== "") {
+    if (isNonEmptyString(input)) {
       const x = input.indexOf("#");
       if (x === -1) {
         result.tag = input;
@@ -97,9 +103,9 @@ class ShorthandNotationParser {
       let def = makeDefinition();
       if (val.charAt(0) === '%') {
         if (val.startsWith(TEMPLATES_KIND)) {
-          return this.#extractData(def, val.replace(def.kind = TEMPLATES_KIND, ""));
+          return this.#extractData(def, val.replace(def.kind = TEMPLATES_KIND, EMPTY_STRING));
         } else if (val.startsWith(SLOTS_KIND)) {
-          return this.#extractData(def, val.replace(def.kind = SLOTS_KIND, ""));
+          return this.#extractData(def, val.replace(def.kind = SLOTS_KIND, EMPTY_STRING));
         } else {
           return null;
         }
@@ -127,7 +133,7 @@ class CSSPropertiesParser {
 
   static parse(content) {
     return buildObject(result => (
-      isOf(content, window.Array) ? content : forcedStringSplit(content, "\n").map(x => x.trim()).join("").split(";")
+      isOf(content, window.Array) ? content : forcedStringSplit(content, "\n").map(x => x.trim()).join(EMPTY_STRING).split(";")
     ).forEach(item => isNonEmptyString(item) && this.#process(result, item.trim())));
   }
 
@@ -138,10 +144,10 @@ class CSSPropertiesParser {
 const makeDefinition = () => ({
   kind: DEFAULT_KIND,
   // =
-  tag: DEFAULT_TAG, id: "", classes: new window.Array(),
+  tag: DEFAULT_TAG, id: EMPTY_STRING, classes: new window.Array(),
   attributes: new window.Object(), style: new window.Object(), events: new window.Array(),
   // =
-  content: "", encode: false
+  content: EMPTY_STRING, encode: false
 });
 
 const makeEvent = (kind, capture) => typeof kind === "string" && typeof capture === "boolean" ? { kind, capture } : null;
@@ -149,7 +155,7 @@ const makeEvent = (kind, capture) => typeof kind === "string" && typeof capture 
 const makeChild = (shorthandNotation, rules) => {
   let result = ShorthandNotationParser.parse(shorthandNotation);
   if (!result) {
-    return RuntimeErrors.INVALID_DEFINITION.emit(shorthandNotation);
+    return RuntimeErrors.onInvalidDefinition(shorthandNotation);
   }
   result.rules = isOf(rules, window.Array) ? rules : new window.Array();
   result.rendering = true;
@@ -158,16 +164,18 @@ const makeChild = (shorthandNotation, rules) => {
 }
 
 const doValidations = child => {
-  if (child.kind === TEMPLATES_KIND) {
-    if (!window.document.getElementById(child.id)) {
-      return RuntimeErrors.INEXISTENT_TEMPLATE.emit(child.id);
+  if (child !== null) {
+    if (child.kind === TEMPLATES_KIND) {
+      if (!window.document.getElementById(child.id)) {
+        return RuntimeErrors.onInexistentTemplate(child.id);
+      }
+    } else if (child.kind === SLOTS_KIND) {
+      if (new window.String(child.attributes["slot"]).replaceAll("\"", EMPTY_STRING).replaceAll("\'", EMPTY_STRING).length === 0) {
+        return RuntimeErrors.onUnespecifiedSlot(child.id);
+      }
+    } else if (typeof child.id !== "string" || (isNonEmptyString(child.id) && window.document.getElementById(child.id) !== null)) {
+      return RuntimeErrors.onInvalidId(child.id);
     }
-  } else if (child.kind === SLOTS_KIND) {
-    if (new window.String(child.attributes["slot"]).replaceAll("\"", "").replaceAll("\'", "").length === 0) {
-      return RuntimeErrors.UNESPECIFIED_SLOT.emit(child.id);
-    }
-  } else if (typeof child.id !== "string" || (child.id !== "" && window.document.getElementById(child.id) !== null)) {
-    return RuntimeErrors.INVALID_ID.emit(child.id);
   }
   return child;
 }
@@ -184,7 +192,7 @@ const createMainNode = mainDefinition => {
     result.setAttribute("class", mainDefinition.classes.join(" "));
   }
   if (hasObjectKeys(mainDefinition.style)) {
-    var style = "";
+    var style = new window.String();
     for (const property in mainDefinition.style) {
       style += property + ": " + mainDefinition.style[property] + "; ";
     }
@@ -209,12 +217,12 @@ const createStyleNode = (media, type) => {
   if (isNonEmptyString(type)) {
     result.setAttribute("type", type);
   }
-  result.appendChild(window.document.createTextNode("")); // NOTE: check if this webkit hack is still required
+  result.appendChild(window.document.createTextNode(EMPTY_STRING)); // NOTE: check if this webkit hack is still required
   return result;
 }
 
 const makeRule = (selector, properties) => {
-  const s = isOf(selector, window.Array) ? selector.join(",") : (isNonEmptyString(selector) ? selector : "");
+  const s = isOf(selector, window.Array) ? selector.join(",") : (isNonEmptyString(selector) ? selector : EMPTY_STRING);
   return !s.length ? null : {
     selector: s,
     properties: isOf(properties, window.Object) ? properties : CSSPropertiesParser.parse(properties),
@@ -223,8 +231,8 @@ const makeRule = (selector, properties) => {
 }
 
 const makeNestedRule = (selector, sub, properties) => {
-  const s = isOf(selector, window.Array) ? selector.join(",") : (isNonEmptyString(selector) ? selector : "");
-  const b = isOf(sub, window.Array) ? sub.join(",") : (isNonEmptyString(sub) ? sub : "");
+  const s = isOf(selector, window.Array) ? selector.join(",") : (isNonEmptyString(selector) ? selector : EMPTY_STRING);
+  const b = isOf(sub, window.Array) ? sub.join(",") : (isNonEmptyString(sub) ? sub : EMPTY_STRING);
   return !s.length || !b.length ? null : {
     selector: s,
     nested: [{
@@ -272,25 +280,42 @@ const nestedRulesJoiner = (lr, rule) => {
 
 export default class ElementParts {
 
-    static makeStyleNode = createStyleNode;
+  static makeStyleNode = createStyleNode;
 
-    static newRule = makeRule;
+  static newRule = makeRule;
 
-    static newNestedRule = makeNestedRule;
+  static newNestedRule = makeNestedRule;
 
-    static tryToJoinRules = rulesJoiner;
+  static tryToJoinRules = rulesJoiner;
 
-    static tryToJoinNestedRules = nestedRulesJoiner;
+  static tryToJoinNestedRules = nestedRulesJoiner;
 
-    static performValidations = doValidations;
+  static performValidations = doValidations;
 
-    static makeMainNode = createMainNode;
+  static makeMainNode = createMainNode;
 
-    static newChild = makeChild;
+  static newChild = makeChild;
 
-    static newDefinition = makeDefinition;
+  static newDefinition = makeDefinition;
 
-    static newEvent = makeEvent;
+  static newEvent = makeEvent;
+
+  static initialize(options) {
+    if (isOf(options, window.Object)) {
+      if (isOf(options.onInvalidDefinition, window.Function)) {
+        RuntimeErrors.onInvalidDefinition = options.onInvalidDefinition;
+      }
+      if (isOf(options.onInexistentTemplate, window.Function)) {
+        RuntimeErrors.onInexistentTemplate = options.onInexistentTemplate;
+      }
+      if (isOf(options.onUnespecifiedSlot, window.Function)) {
+        RuntimeErrors.onUnespecifiedSlot = options.onUnespecifiedSlot;
+      }
+      if (isOf(options.onInvalidId, window.Function)) {
+        RuntimeErrors.onInvalidId = options.onInvalidId;
+      }
+    }
+  }
 
 }
 

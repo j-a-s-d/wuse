@@ -1,6 +1,6 @@
 {
   "name": "wuse",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates the usage of the Custom Elements Registry and the Shadow DOM features of ES6.",
   "main": "src/wuse.js",
   "repository": {

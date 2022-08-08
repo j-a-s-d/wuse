@@ -5,6 +5,8 @@ export default new class {
   file = "./wuse.javascript-helpers.js"
 
   suite = (tester, module) => {
+    tester.testModuleProperty(module, "EMPTY_STRING", ["existence", "type:string"], this.EMPTY_STRING);
+    tester.testModuleProperty(module, "EMPTY_ARRAY", ["existence", "type:object"], this.EMPTY_ARRAY);
     tester.testModuleFunction(module, "noop", ["existence", "type:undefined"], this.noop);
     tester.testModuleFunction(module, "isNonEmptyString", ["existence", "type:boolean"], this.isNonEmptyString);
     tester.testModuleFunction(module, "forcedStringSplit", ["existence"], this.forcedStringSplit);
@@ -18,6 +20,32 @@ export default new class {
     tester.testModuleFunction(module, "isAssignedObject", ["existence", "type:boolean"], this.isAssignedObject);
     tester.testModuleFunction(module, "isAssignedArray", ["existence", "type:boolean"], this.isAssignedArray);
     tester.testModuleFunction(module, "isNonEmptyArray", ["existence", "type:boolean"], this.isNonEmptyArray);
+  }
+
+  EMPTY_STRING = (tester, module, name) => {
+    let a = module[name];
+    var r = a.constructor.name === "String" && a.length === 0;
+    tester.testResult(r, `<u>${name}</u> called: <i>${r}</i>`);
+    try {
+      module[name] = "blah";
+    } catch {
+    }
+    let b = module[name];
+    var r = b.length === 0;
+    tester.testResult(r, `<u>${name}</u> tryed to change denied: <i>${r}</i>`);
+  }
+
+  EMPTY_ARRAY = (tester, module, name) => {
+    let a = module[name];
+    var r = a.constructor.name === "Array" && a.length === 0;
+    tester.testResult(r, `<u>${name}</u> called: <i>${r}</i>`);
+    try {
+      module[name].push(1);
+    } catch {
+    }
+    let b = module[name];
+    var r = b.length === 0;
+    tester.testResult(r, `<u>${name}</u> tryed to change denied: <i>${r}</i>`);
   }
 
   noop = (tester, module, fn) => {

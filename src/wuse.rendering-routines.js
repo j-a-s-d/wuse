@@ -21,7 +21,7 @@ export default class RenderingRoutines {
       if (isOf(rule.nested, window.Array)) {
         return `${rule.selector}{${rule.nested.map(r => this.renderRule(replacer, r)).join("\n")}}`;
       } else if (isNonEmptyString(rule.selector) && !rule.nested) {
-        var c = "";
+        var c = new window.String();
         for (const property in rule.properties) {
           c += `${property}:${rule.properties[property]};`;
         }
@@ -58,7 +58,7 @@ export default class RenderingRoutines {
         result += c;
       }
       if (hasObjectKeys(child.attributes)) {
-        var c = "";
+        var c = new window.String();
         for (const property in child.attributes) {
           c += ` ${property}=${child.attributes[property]}`;
         }

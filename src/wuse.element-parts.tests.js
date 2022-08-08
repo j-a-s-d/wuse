@@ -8,6 +8,7 @@ export default new class {
     // NOTE: due to their high performance impact, some of
     // the following routines are not performing validation
     // checks, so the tests does not explore those options.
+    tester.testClassModule(module, "ElementParts", ["existence", "type:function"], this.ElementParts);
     tester.testModuleFunction(module, "makeStyleNode", ["existence", "type:object"], this.makeStyleNode);
     tester.testModuleFunction(module, "newRule", ["existence", "type:object"], this.newRule);
     tester.testModuleFunction(module, "newNestedRule", ["existence", "type:object"], this.newNestedRule);
@@ -18,6 +19,18 @@ export default new class {
     tester.testModuleFunction(module, "newChild", ["existence", "type:object"], this.newChild);
     tester.testModuleFunction(module, "newDefinition", ["existence", "type:object"], this.newDefinition);
     tester.testModuleFunction(module, "newEvent", ["existence", "type:object"], this.newEvent);
+  }
+
+  ElementParts = (tester, module, name) => {
+    var r = module.initialize() === undefined;
+    tester.testResult(r, `<u>${name}</u> initialized with an invalid value (undefined): <i>${r}</i>`);
+    r = module.initialize({
+      onInvalidDefinition: _ => null,
+      onInexistentTemplate: _ => null,
+      onUnespecifiedSlot: _ => null,
+      onInvalidId: _ => null
+    }) === undefined;
+    tester.testResult(r, `<u>${name}</u> initialized with a valid value (object): <i>${r}</i>`);
   }
 
   makeStyleNode = (tester, module, name) => {

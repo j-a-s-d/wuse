@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.4.4] 2022-ago-08
+  - added `EMPTY_STRING` to `JavascriptHelpers` class
+  - improved `BaseElement` class
 * [0.4.3] 2022-ago-05
   - extracted `BaseElement` class to an external file
 * [0.4.2] 2022-ago-04

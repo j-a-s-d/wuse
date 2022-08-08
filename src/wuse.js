@@ -9,9 +9,9 @@ import WuseTemplateImporter from './wuse.template-importer.js';
 import WusePerformanceMeasurement from './wuse.performance-measurement.js';
 import WuseBaseElement from './wuse.base-element.js';
 
-class Wuse {
+window.Wuse = class {
 
-  static get VERSION() { return "0.4.3"; }
+  static get VERSION() { return "0.4.4"; }
 
   static WebHelpers = WuseWebHelpers;
 
@@ -29,17 +29,32 @@ class Wuse {
 
   static RENDERING = true; // global rendering flag
 
+  static get elementCount() { return WuseBaseElement.instancesCount; }
+
+  static elementsStorage = new WuseSimpleStorage();
+
+  static hashRoutine = str => {
+    // NOTE: Java's classic String.hashCode()
+    // style, multiplying by the odd prime 31
+    // ('(h << 5) - h' was faster originally)
+    var h = 0;
+    for (let x = 0; x < str.length; x++) {
+      h = (h = ((h << 5) - h) + str.charCodeAt(x)) & h;
+    }
+    return h;
+  }
+
   static blockUpdate(task, arg) {
     if (WuseJsHelpers.isOf(task, Function)) {
-      if (Wuse.DEBUG) Wuse.debug("blocking");
-      Wuse.RENDERING = false;
+      if (window.Wuse.DEBUG) window.Wuse.debug("blocking");
+      window.Wuse.RENDERING = false;
       try {
         task(arg);
       } catch (e) {
         throw e;
       } finally {
-        Wuse.RENDERING = true;
-        if (Wuse.DEBUG) Wuse.debug("unblocking");
+        window.Wuse.RENDERING = true;
+        if (window.Wuse.DEBUG) window.Wuse.debug("unblocking");
       }
     }
   }
@@ -58,7 +73,7 @@ class Wuse {
 
   static isShadowElement(instance) {
     const p = window.Object.getPrototypeOf(instance.constructor);
-    return p === Wuse.OpenShadowElement || p === Wuse.ClosedShadowElement;
+    return p === window.Wuse.OpenShadowElement || p === window.Wuse.ClosedShadowElement;
   }
 
   static NonShadowElement = WuseBaseElement.specializeClass(WuseBaseElement.RootMode.REGULAR);
@@ -66,40 +81,6 @@ class Wuse {
   static OpenShadowElement = WuseBaseElement.specializeClass(WuseBaseElement.RootMode.OPEN);
 
   static ClosedShadowElement = WuseBaseElement.specializeClass(WuseBaseElement.RootMode.CLOSED);
-
-  static get elementCount() { return WuseBaseElement.instancesCount; }
-
-  static elementsStorage = new WuseSimpleStorage();
-
-  static hashRoutine = (s) => {
-    // NOTE: Java's classic String.hashCode()
-    // style, multiplying by the odd prime 31
-    // ('(h << 5) - h' was faster originally)
-    var h = 0;
-    for (let x = 0; x < s.length; x++) {
-      h = (h = ((h << 5) - h) + s.charCodeAt(x)) & h;
-    }
-    return h;
-  }
-
-  static makeReactiveField(obj, name, value, handler, renderizer) {
-    const redefiner = (get, set) => window.Object.defineProperty(obj, name, {
-      get, set, enumerable: true, configurable: true
-    });
-    const remover = () => delete obj[name];
-    const recreator = (v, maneuverer) => Wuse.makeReactiveField(obj, name, v, maneuverer, renderizer);
-    redefiner(() => value, (v) => {
-      recreator(v, handler);
-      !WuseJsHelpers.isOf(handler, window.Function) ? renderizer(name) : handler({
-        renderize: (label) => renderizer(name, label), // manual render
-        automate: () => recreator(v, null), // converts the field into an automatic reactive field (autorenders)
-        freeze: () => redefiner(() => v, (v) => {}), // freeze the field value until calling defreeze()
-        defreeze: () => recreator(v, handler), // defreezes the field after the freeze action
-        dereact: () => redefiner(() => v, (v) => { remover(); obj[name] = v }), // disable reactiveness (convert into a simple field)
-        remove: () => remover() // removes the field enterely
-      });
-    });
-  }
 
   static {
     const detectFeature = (flag, msg) => !flag && WuseRuntimeErrors.UNSUPPORTED_FEATURE.emit(msg);
@@ -110,8 +91,8 @@ class Wuse {
     } catch (e) {
       WuseRuntimeErrors.UNKNOWN_ERROR.emit();
     }
-    WusePerformanceMeasurement.initialize((stopWatch, event) => Wuse.debug(JSON.stringify(WuseJsHelpers.buildArray(data => {
-      data.push({ instances: Wuse.elementCount });
+    WusePerformanceMeasurement.initialize((stopWatch, event) => window.Wuse.debug(JSON.stringify(WuseJsHelpers.buildArray(data => {
+      data.push({ instances: window.Wuse.elementCount });
       data.push(stopWatch.getDebugInfo());
       switch (event) {
         case "stop":
@@ -122,6 +103,10 @@ class Wuse {
           break;
       }
     }))));
+    WuseTemplateImporter.initialize({
+      onExtinctTemplate: WuseRuntimeErrors.EXTINCT_TEMPLATE.emit,
+      onInvalidTemplate: WuseRuntimeErrors.INVALID_TEMPLATE.emit
+    });
     WuseElementClasses.initialize({
       onMisnamedClass: WuseRuntimeErrors.MISNAMED_CLASS.emit,
       onUnregistrableClass: WuseRuntimeErrors.UNREGISTRABLE_CLASS.emit,
@@ -129,14 +114,16 @@ class Wuse {
       onInvalidClass: WuseRuntimeErrors.INVALID_CLASS.emit,
       onDeferredInstantiation: WuseWebHelpers.onDOMContentLoaded
     });
-    WuseTemplateImporter.initialize({
-      onExtinctTemplate: WuseRuntimeErrors.EXTINCT_TEMPLATE.emit,
-      onInvalidTemplate: WuseRuntimeErrors.INVALID_TEMPLATE.emit
+    WuseBaseElement.initialize({
+      onAllowHTML: WuseRuntimeErrors.ALLOW_HTML.emit,
+      onInvalidKey: WuseRuntimeErrors.INVALID_KEY.emit,
+      onInvalidDefinition: WuseRuntimeErrors.INVALID_DEFINITION.emit,
+      onInexistentTemplate: WuseRuntimeErrors.INEXISTENT_TEMPLATE.emit,
+      onUnespecifiedSlot: WuseRuntimeErrors.UNESPECIFIED_SLOT.emit,
+      onInvalidId: WuseRuntimeErrors.INVALID_ID.emit,
+      onFetchTemplate: WuseTemplateImporter.fetch
     });
-    WuseBaseElement.initialize({ onFetchTemplate: WuseTemplateImporter.fetch });
   }
 
 }
-
-window.Wuse = Wuse;
 

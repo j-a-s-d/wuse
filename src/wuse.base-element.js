@@ -10,6 +10,25 @@ import WuseContentManager from './wuse.content-manager.js';
 import WusePartsHolder from './wuse.parts-holder.js';
 import WuseElementParts from './wuse.element-parts.js';
 
+function createReactiveField(obj, name, value, handler, renderizer) {
+  const redefiner = (get, set) => window.Object.defineProperty(obj, name, {
+    get, set, enumerable: true, configurable: true
+  });
+  const remover = () => delete obj[name];
+  const recreator = (v, maneuverer) => createReactiveField(obj, name, v, maneuverer, renderizer);
+  redefiner(() => value, (v) => {
+    recreator(v, handler);
+    !WuseJsHelpers.isOf(handler, window.Function) ? renderizer(name) : handler({
+      renderize: (label) => renderizer(name, label), // manual render
+      automate: () => recreator(v, null), // converts the field into an automatic reactive field (autorenders)
+      freeze: () => redefiner(() => v, (v) => {}), // freeze the field value until calling defreeze()
+      defreeze: () => recreator(v, handler), // defreezes the field after the freeze action
+      dereact: () => redefiner(() => v, (v) => { remover(); obj[name] = v }), // disable reactiveness (convert into a simple field)
+      remove: () => remover() // removes the field enterely
+    });
+  });
+}
+
 const EVENT_NAMES =
   // NOTE: this are root-level events, that means it does not include other events like
   // those related to: children (click, mouseoout, etc), slots (change), document, etc.
@@ -40,12 +59,18 @@ class RootModes {
 
 }
 
+let RuntimeErrors = {
+  onInvalidKey: WuseJsHelpers.noop,
+  onInvalidDefinition: WuseJsHelpers.noop,
+  onAllowHTML: WuseJsHelpers.noop
+}
+
 export default class BaseElement extends window.HTMLElement {
 
   // PRIVATE
 
   // CONTENT HOLDERS
-  #html = ""; // RAW HTML
+  #html = new window.String(); // RAW HTML
   #rules = new (class extends WusePartsHolder {
     on_version_change() {
       this.last.version = this.version;
@@ -101,7 +126,7 @@ export default class BaseElement extends window.HTMLElement {
   // ELEMENT STATE
   #elementsStore = window.Wuse.elementsStorage;
   #elementState = null;
-  #key = "";
+  #key = new window.String();
   #keyed = false;
 
   // RENDERING STATE
@@ -142,7 +167,7 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   // FIXED CALLBACKS
-  #renderingReplacer = (str, rep) => str.replace(rep.find, this[rep.field] !== undefined ? this[rep.field] : "");
+  #renderingReplacer = (str, rep) => str.replace(rep.find, this[rep.field] !== undefined ? this[rep.field] : WuseJsHelpers.EMPTY_STRING);
   /*#ruleInserters = {
     rule: rule => this.#style.sheet.insertRule(rule.cache ? rule.cache : rule.cache = WuseRenderingRoutines.renderRule(this.#renderingReplacer, rule)),
     childRule: child => child.rendering && child.rules.forEach(this.#ruleInserters.rule)
@@ -255,8 +280,8 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   #prepareContents() {
-    this.#contents.root.reset("");
-    this.#contents.style.reset("");
+    this.#contents.root.reset(WuseJsHelpers.EMPTY_STRING);
+    this.#contents.style.reset(WuseJsHelpers.EMPTY_STRING);
     this.#contents.main.reset(this.#html);
     const r = this.#slotted ? this.#contents.renderizers.children.mixed : this.#contents.renderizers.children.normal;
     this.#children.forEach(child => child.rendering && r(child));
@@ -337,7 +362,7 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   #makeReactiveField(name, value, handler, initial = true) {
-    window.Wuse.makeReactiveField(this, name, value, handler, (name, label) => this.#fieldRender(name, label || "$auto"));
+    createReactiveField(this, name, value, handler, (name, label) => this.#fieldRender(name, label || "$auto"));
     this.#fields.append({ name, value });
     if (initial) this.#fieldRender(name, "$init");
     return this;
@@ -377,7 +402,7 @@ export default class BaseElement extends window.HTMLElement {
 
   #validateElementsStoreKey() {
     if (!this.#keyed) {
-      WuseRuntimeErrors.INVALID_KEY.emit();
+      RuntimeErrors.onInvalidKey();
       return false;
     }
     return true;
@@ -386,7 +411,7 @@ export default class BaseElement extends window.HTMLElement {
   // PUBLIC
 
   info = {
-    instanceNumber: ++this.instancesCount,
+    instanceNumber: ++BaseElement.instancesCount,
     unmodifiedRounds: 0,
     updatedRounds: 0
   }
@@ -498,24 +523,24 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   setMainElement(shorthandNotation) {
-    const tmp = WuseElementParts.newChild(shorthandNotation);
-    if (WuseElementParts.performValidations(tmp)) {
-      if (tmp.content !== "" || !!tmp.events.length) {
-        return WuseRuntimeErrors.INVALID_DEFINITION.emit(shorthandNotation);
+    const tmp = WuseElementParts.performValidations(WuseElementParts.newChild(shorthandNotation));
+    if (tmp !== null) {
+      if (WuseJsHelpers.isNonEmptyString(tmp.content) || WuseJsHelpers.isNonEmptyArray(tmp.events)) {
+        return RuntimeErrors.onInvalidDefinition(shorthandNotation);
       }
-      if (this.#identified = !!tmp.id.length) {
+      if (this.#identified = WuseJsHelpers.isNonEmptyString(tmp.id)) {
         this.#options.mainDefinition.id = tmp.id;
       }
-      if (!!tmp.tag.length) {
+      if (WuseJsHelpers.isNonEmptyString(tmp.tag)) {
         this.#options.mainDefinition.tag = tmp.tag;
       }
-      if (!!tmp.classes.length) {
+      if (WuseJsHelpers.isNonEmptyArray(tmp.classes)) {
         this.#options.mainDefinition.classes = tmp.classes;
       }
-      if (tmp.style) {
+      if (WuseJsHelpers.isOf(tmp.style, window.Object)) {
         this.#options.mainDefinition.style = tmp.style;
       }
-      if (tmp.attributes) {
+      if (WuseJsHelpers.isOf(tmp.attributes, window.Array)) {
         this.#options.mainDefinition.attributes = tmp.attributes;
       }
     }
@@ -523,8 +548,8 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   setStyleOptions(media, type) {
-    this.#options.styleMedia = media || "";
-    this.#options.styleType = type || "";
+    this.#options.styleMedia = WuseJsHelpers.isNonEmptyString(media) ? media : WuseJsHelpers.EMPTY_STRING;
+    this.#options.styleType = WuseJsHelpers.isNonEmptyString(type) ? type : WuseJsHelpers.EMPTY_STRING;
     return this;
   }
 
@@ -544,17 +569,17 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   setRawContent(html) {
-    this.#options.rawContent ? this.#html = html : WuseRuntimeErrors.ALLOW_HTML.emit();
+    this.#options.rawContent ? this.#html = html : RuntimeErrors.onAllowHTML();
     return this;
   }
 
   appendRawContent(html) {
-    this.#options.rawContent ? this.#html = this.#html + html : WuseRuntimeErrors.ALLOW_HTML.emit();
+    this.#options.rawContent ? this.#html = this.#html + html : RuntimeErrors.onAllowHTML();
     return this;
   }
 
   prependRawContent(html) {
-    this.#options.rawContent ? this.#html = html + this.#html : WuseRuntimeErrors.ALLOW_HTML.emit();
+    this.#options.rawContent ? this.#html = html + this.#html : RuntimeErrors.onAllowHTML();
     return this;
   }
 
@@ -597,28 +622,20 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   appendChildElement(shorthandNotation, rules) {
-    this.#children.append(
-      WuseElementParts.performValidations(
-        WuseElementParts.newChild(shorthandNotation, rules)
-      )
-    );
+    const tmp = WuseElementParts.performValidations(WuseElementParts.newChild(shorthandNotation, rules));
+    if (tmp !== null) this.#children.append(tmp);
     return this;
   }
 
   prependChildElement(shorthandNotation, rules) {
-    this.#children.prepend(
-      WuseElementParts.performValidations(
-        WuseElementParts.newChild(shorthandNotation, rules)
-      )
-    );
+    const tmp = WuseElementParts.performValidations(WuseElementParts.newChild(shorthandNotation, rules));
+    if (tmp !== null) this.#children.prepend(tmp);
     return this;
   }
 
-  replaceChildElement(id, shorthandNotation) {
-    this.#children.replace(
-      this.#children.findIndex(child => child.id === id),
-      WuseElementParts.newChild(shorthandNotation)
-    );
+  replaceChildElement(id, shorthandNotation, rules) {
+    const tmp = WuseElementParts.newChild(shorthandNotation, rules);
+    if (tmp !== null) this.#children.replace(this.#children.findIndex(child => child.id === id), tmp);
     return this;
   }
 
@@ -690,8 +707,36 @@ export default class BaseElement extends window.HTMLElement {
 
   static initialize(options) {
     WuseTextReplacements.initialize(WuseStringConstants.DEFAULT_REPLACEMENT_OPEN, WuseStringConstants.DEFAULT_REPLACEMENT_CLOSE);
-    if (WuseJsHelpers.isOf(options, window.Object) && WuseJsHelpers.isOf(options.onFetchTemplate, window.Function)) {
-      WuseRenderingRoutines.initialize({ onFetchTemplate: options.onFetchTemplate });
+    if (WuseJsHelpers.isOf(options, window.Object)) {
+      if (WuseJsHelpers.isOf(options.onFetchTemplate, window.Function)) {
+        WuseRenderingRoutines.initialize({ onFetchTemplate: options.onFetchTemplate });
+      }
+      if (WuseJsHelpers.isOf(options.onAllowHTML, window.Function)) {
+        RuntimeErrors.onAllowHTML = options.onAllowHTML;
+      }
+      if (WuseJsHelpers.isOf(options.onInvalidKey, window.Function)) {
+        RuntimeErrors.onInvalidKey = options.onInvalidKey;
+      }
+      let rte = {
+        onInvalidDefinition: WuseJsHelpers.noop,
+        onInexistentTemplate: WuseJsHelpers.noop,
+        onUnespecifiedSlot: WuseJsHelpers.noop,
+        onInvalidId: WuseJsHelpers.noop
+      };
+      if (WuseJsHelpers.isOf(options.onInvalidDefinition, window.Function)) {
+        RuntimeErrors.onInvalidDefinition = options.onInvalidDefinition;
+        rte.onInvalidDefinition = options.onInvalidDefinition;
+      }
+      if (WuseJsHelpers.isOf(options.onInexistentTemplate, window.Function)) {
+        rte.onInexistentTemplate = options.onInexistentTemplate;
+      }
+      if (WuseJsHelpers.isOf(options.onUnespecifiedSlot, window.Function)) {
+        rte.onUnespecifiedSlot = options.onUnespecifiedSlot;
+      }
+      if (WuseJsHelpers.isOf(options.onInvalidId, window.Function)) {
+        rte.onInvalidId = options.onInvalidId;
+      }
+      WuseElementParts.initialize(rte);
     }
   }
 

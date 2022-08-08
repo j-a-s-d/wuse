@@ -7,7 +7,10 @@ const instanceBuilder = (instance, initializer) => {
 
 export default class JavascriptHelpers {
 
-  static #EMPTY_ARRAY = new window.Array();
+  static #EMPTY_STRING = (new window.String()).valueOf();
+  static get EMPTY_STRING() { return this.#EMPTY_STRING; }
+
+  static #EMPTY_ARRAY = window.Object.freeze(new window.Array());
   static get EMPTY_ARRAY() { return this.#EMPTY_ARRAY; }
 
   static noop() {};
