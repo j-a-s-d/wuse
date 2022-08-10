@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.4.5] 2022-ago-10
+  - added `force` argument to the `process` method of the `ContentManager` class
+  - refactored `Wuse` class
 * [0.4.4] 2022-ago-08
   - added `EMPTY_STRING` to `JavascriptHelpers` class
   - improved `BaseElement` class

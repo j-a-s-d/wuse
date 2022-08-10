@@ -11,15 +11,7 @@ import WuseBaseElement from './wuse.base-element.js';
 
 window.Wuse = class {
 
-  static get VERSION() { return "0.4.4"; }
-
-  static WebHelpers = WuseWebHelpers;
-
-  static JsHelpers = WuseJsHelpers;
-
-  static PerformanceMeasurement = WusePerformanceMeasurement;
-
-  static tmp = new window.Object(); // convenience temporary object
+  static get VERSION() { return "0.4.5"; }
 
   static DEBUG = false; // debug mode
 
@@ -28,10 +20,6 @@ window.Wuse = class {
   static MEASURE = false; // performance monitoring
 
   static RENDERING = true; // global rendering flag
-
-  static get elementCount() { return WuseBaseElement.instancesCount; }
-
-  static elementsStorage = new WuseSimpleStorage();
 
   static hashRoutine = str => {
     // NOTE: Java's classic String.hashCode()
@@ -44,45 +32,39 @@ window.Wuse = class {
     return h;
   }
 
-  static blockUpdate(task, arg) {
-    if (WuseJsHelpers.isOf(task, Function)) {
-      if (window.Wuse.DEBUG) window.Wuse.debug("blocking");
-      window.Wuse.RENDERING = false;
-      try {
-        task(arg);
-      } catch (e) {
-        throw e;
-      } finally {
-        window.Wuse.RENDERING = true;
-        if (window.Wuse.DEBUG) window.Wuse.debug("unblocking");
-      }
-    }
-  }
+  static elementsStorage = new WuseSimpleStorage(); // wuse elements storage
 
-  static debug(msg) {
-    window.console.log("[WUSE:DEBUG]", msg);
-  }
+  static get elementCount() { return WuseBaseElement.instancesCount; } // wuse element count
 
-  static register(classes) {
-    return WuseElementClasses.registerClasses(WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes));
-  }
+  // UNWRITABLE PLACEHOLDERS
 
-  static instantiate(classes, target, events) {
-    return WuseElementClasses.instantiateClasses(WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes), target, events);
-  }
+  static tmp = null; // convenience temporary object
 
-  static isShadowElement(instance) {
-    const p = window.Object.getPrototypeOf(instance.constructor);
-    return p === window.Wuse.OpenShadowElement || p === window.Wuse.ClosedShadowElement;
-  }
+  static WebHelpers = null; // utility web helpers
 
-  static NonShadowElement = WuseBaseElement.specializeClass(WuseBaseElement.RootMode.REGULAR);
+  static JsHelpers = null; // utility javascript helpers
 
-  static OpenShadowElement = WuseBaseElement.specializeClass(WuseBaseElement.RootMode.OPEN);
+  static PerformanceMeasurement = null; // performance measurement module
 
-  static ClosedShadowElement = WuseBaseElement.specializeClass(WuseBaseElement.RootMode.CLOSED);
+  static NonShadowElement = null; // non-shadow element class
 
-  static {
+  static OpenShadowElement = null; // open-shadow element class
+
+  static ClosedShadowElement = null; // closed-shadow element class
+
+  static debug = WuseJsHelpers.noop; // wuse console debug
+
+  static blockUpdate = WuseJsHelpers.noop; // wuse block update
+
+  static register = WuseJsHelpers.noop; // element register
+
+  static instantiate = WuseJsHelpers.noop; // element instantiation
+
+  static isShadowElement = WuseJsHelpers.noop; // shadow presence
+
+  // PRIVATE ROUTINES
+
+  static #detectFeatures() {
     const detectFeature = (flag, msg) => !flag && WuseRuntimeErrors.UNSUPPORTED_FEATURE.emit(msg);
     try {
       detectFeature(WuseJsHelpers.isOf(window.document, window.HTMLDocument), "HTML Document");
@@ -91,6 +73,9 @@ window.Wuse = class {
     } catch (e) {
       WuseRuntimeErrors.UNKNOWN_ERROR.emit();
     }
+  }
+
+  static #initializeModules() {
     WusePerformanceMeasurement.initialize((stopWatch, event) => window.Wuse.debug(JSON.stringify(WuseJsHelpers.buildArray(data => {
       data.push({ instances: window.Wuse.elementCount });
       data.push(stopWatch.getDebugInfo());
@@ -123,6 +108,57 @@ window.Wuse = class {
       onInvalidId: WuseRuntimeErrors.INVALID_ID.emit,
       onFetchTemplate: WuseTemplateImporter.fetch
     });
+  }
+
+  static #declareUnwritable(items) {
+    WuseJsHelpers.forEachOwnProperty(items, name => Object.defineProperty(
+      this, name, { value: items[name], writable: false, configurable: false, enumerable: false }
+    ));
+  }
+
+  // WUSE INITILIZATION
+
+  static {
+    this.#detectFeatures();
+    const fields = {
+      tmp: new window.Object(),
+      WebHelpers: WuseWebHelpers,
+      JsHelpers: WuseJsHelpers,
+      PerformanceMeasurement: WusePerformanceMeasurement,
+      NonShadowElement: WuseBaseElement.specializeClass(WuseBaseElement.RootMode.REGULAR),
+      OpenShadowElement: WuseBaseElement.specializeClass(WuseBaseElement.RootMode.OPEN),
+      ClosedShadowElement: WuseBaseElement.specializeClass(WuseBaseElement.RootMode.CLOSED)
+    }
+    this.#declareUnwritable(fields);
+    const methods = {
+      debug: (msg) => window.console.log("[WUSE:DEBUG]", msg),
+      blockUpdate: (task, arg) => {
+        if (WuseJsHelpers.isOf(task, Function)) {
+          if (window.Wuse.DEBUG) window.Wuse.debug("blocking");
+          window.Wuse.RENDERING = false;
+          try {
+            task(arg);
+          } catch (e) {
+            throw e;
+          } finally {
+            window.Wuse.RENDERING = true;
+            if (window.Wuse.DEBUG) window.Wuse.debug("unblocking");
+          }
+        }
+      },
+      register: classes => WuseElementClasses.registerClasses(
+        WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes)
+      ),
+      instantiate: (classes, target, events) => WuseElementClasses.instantiateClasses(
+        WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes), target, events
+      ),
+      isShadowElement: instance => {
+        const p = window.Object.getPrototypeOf(instance.constructor);
+        return p === window.Wuse.OpenShadowElement || p === window.Wuse.ClosedShadowElement;
+      }
+    }
+    this.#declareUnwritable(methods);
+    this.#initializeModules();
   }
 
 }

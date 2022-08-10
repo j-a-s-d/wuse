@@ -290,10 +290,10 @@ export default class BaseElement extends window.HTMLElement {
     this.#contents.style.verify(content => !this.#waste.style.compute(content));
   }
 
-  #commitContents() {
-    this.#contents.root.process();
-    this.#contents.style.process();
-    this.#contents.main.process();
+  #commitContents(forceRoot, forceStyle, forceMain) {
+    this.#contents.root.process(forceRoot);
+    this.#contents.style.process(forceStyle);
+    this.#contents.main.process(forceMain);
     if (window.Wuse.DEBUG) this.#debug(this.#contents.getDebugInfo());
   }
 
@@ -304,7 +304,7 @@ export default class BaseElement extends window.HTMLElement {
     this.#prepareContents();
     if (this.#contents.gotModified()) {
       this.#bind(false);
-      this.#commitContents();
+      this.#commitContents(false, false, false);
       this.#bind(true);
       this.info.updatedRounds++;
       this.#trigger("on_update");
@@ -324,9 +324,8 @@ export default class BaseElement extends window.HTMLElement {
     this.#insertElements();
     this.#trigger("on_inject");
     this.#prepareContents();
-    // NOTE: due to it's optional nature, on injection the style element must be invalidated if present, no matter the triggered event or the content change
-    this.#contents.style.verify(content => !!this.#style);
-    this.#commitContents();
+    // NOTE: on injection, due to it's optional nature the style element must be invalidated only if present
+    this.#commitContents(false, !!this.#style, true);
     this.#bind(true);
     this.#trigger(event);
   }

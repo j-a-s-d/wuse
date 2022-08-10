@@ -25,8 +25,8 @@ export default class ContentManager {
     this.#invalidated = verifier(this.#content);
   }
 
-  process() {
-    if (this.#invalidated) this.on_content_invalidation(this.#content);
+  process(force) {
+    if (force || this.#invalidated) this.on_content_invalidation(this.#content);
   }
 
   on_content_invalidation(content) {}
