@@ -5,20 +5,23 @@ export default new class {
   file = "./wuse.runtime-errors.js"
 
   suite = (tester, module) => {
-    tester.testModuleProperty(module, "UNKNOWN_ERROR", ["existence", "type:object"], this.UNKNOWN_ERROR);
-    tester.testModuleProperty(module, "UNSUPPORTED_FEATURE", ["existence", "type:object"], this.UNSUPPORTED_FEATURE);
-    tester.testModuleProperty(module, "UNREGISTERED_CLASS", ["existence", "type:object"], this.UNREGISTERED_CLASS);
-    tester.testModuleProperty(module, "UNREGISTRABLE_CLASS", ["existence", "type:object"], this.UNREGISTRABLE_CLASS);
-    tester.testModuleProperty(module, "INVALID_CLASS", ["existence", "type:object"], this.INVALID_CLASS);
-    tester.testModuleProperty(module, "MISNAMED_CLASS", ["existence", "type:object"], this.MISNAMED_CLASS);
-    tester.testModuleProperty(module, "INVALID_DEFINITION", ["existence", "type:object"], this.INVALID_DEFINITION);
-    tester.testModuleProperty(module, "INVALID_ID", ["existence", "type:object"], this.INVALID_ID);
-    tester.testModuleProperty(module, "INVALID_KEY", ["existence", "type:object"], this.INVALID_KEY);
-    tester.testModuleProperty(module, "ALLOW_HTML", ["existence", "type:object"], this.ALLOW_HTML);
-    tester.testModuleProperty(module, "INEXISTENT_TEMPLATE", ["existence", "type:object"], this.INEXISTENT_TEMPLATE);
-    tester.testModuleProperty(module, "EXTINCT_TEMPLATE", ["existence", "type:object"], this.EXTINCT_TEMPLATE);
-    tester.testModuleProperty(module, "INVALID_TEMPLATE", ["existence", "type:object"], this.INVALID_TEMPLATE);
-    tester.testModuleProperty(module, "UNESPECIFIED_SLOT", ["existence", "type:object"], this.UNESPECIFIED_SLOT);
+    [
+      "UNKNOWN_ERROR",
+      "UNSUPPORTED_FEATURE",
+      "UNREGISTERED_CLASS",
+      "UNREGISTRABLE_CLASS",
+      "INVALID_CLASS",
+      "MISNAMED_CLASS",
+      "INVALID_DEFINITION",
+      "INVALID_ID",
+      "INVALID_KEY",
+      "ALLOW_HTML",
+      "INVALID_STATE",
+      "INEXISTENT_TEMPLATE",
+      "EXTINCT_TEMPLATE",
+      "INVALID_TEMPLATE",
+      "UNESPECIFIED_SLOT"
+    ].forEach(name => tester.testModuleProperty(module, name, ["existence", "type:object"], this[name]));
   }
 
   testError = (tester, module, mb, code) => tester.testResult(module[mb].code === code, `<u>${mb}</u> code is: <i>${module[mb].code}</i>`);
@@ -42,6 +45,8 @@ export default new class {
   INVALID_KEY = (tester, module, mb) => this.testError(tester, module, mb, 12);
 
   ALLOW_HTML = (tester, module, mb) => this.testError(tester, module, mb, 13);
+
+  INVALID_STATE = (tester, module, mb) => this.testError(tester, module, mb, 14);
 
   INEXISTENT_TEMPLATE = (tester, module, mb) => this.testError(tester, module, mb, 20);
 

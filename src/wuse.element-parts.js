@@ -150,6 +150,8 @@ const makeDefinition = () => ({
   content: EMPTY_STRING, encode: false
 });
 
+const makeState = () => ({ generation: 0, persisted: false });
+
 const makeEvent = (kind, capture) => typeof kind === "string" && typeof capture === "boolean" ? { kind, capture } : null;
 
 const makeChild = (shorthandNotation, rules) => {
@@ -299,6 +301,8 @@ export default class ElementParts {
   static newDefinition = makeDefinition;
 
   static newEvent = makeEvent;
+  
+  static newState = makeState;
 
   static initialize(options) {
     if (isOf(options, window.Object)) {

@@ -384,11 +384,16 @@ export default class BaseElement extends window.HTMLElement {
   // ELEMENT STATE
   #initializeElementState() {
     if (this.#keyed) {
-      this.#elementState = this.#elementsStore.hasItem(this.#key) ?
-        this.#elementsStore.getItem(this.#key) : { generation: 0, persisted: false };
-      this.#elementState.generation++;
-      this.#persistElementState();
-      return true;
+      const state = this.#elementsStore.hasItem(this.#key) ?
+        this.#elementsStore.getItem(this.#key) : WuseElementParts.newState();
+      if (WuseJsHelpers.isOf(state, window.Object)) {
+        this.#elementState = state;
+        this.#elementState.generation++;
+        this.#persistElementState();
+        return true;
+      } else {
+        RuntimeErrors.onInvalidState();
+      }
     }
     return false;
   }
@@ -397,6 +402,16 @@ export default class BaseElement extends window.HTMLElement {
     if (window.Wuse.DEBUG) this.#elementState.key = this.#key;
     this.#elementState.persisted = !!this.#elementState.data;
     this.#elementsStore.setItem(this.#key, this.#elementState);
+  }
+
+  #eraseFromElementsStore() {
+    const state = this.#elementState;
+    if (WuseJsHelpers.isOf(state, window.Object) && state.persisted && state.data) {
+      delete state.data;
+      this.#persistElementState();
+      return true;
+    }
+    return false;
   }
 
   #validateElementsStoreKey() {
@@ -470,7 +485,7 @@ export default class BaseElement extends window.HTMLElement {
   persistToElementsStore() {
     if (this.#validateElementsStoreKey()) {
       const state = this.#elementState;
-      if (state) {
+      if (WuseJsHelpers.isOf(state, window.Object)) {
         this.#fields.snapshot();
         state.data = new window.Object({
           options: this.#options,
@@ -488,10 +503,10 @@ export default class BaseElement extends window.HTMLElement {
     return false;
   }
 
-  restoreFromElementsStore(keepDataStored) {
+  restoreFromElementsStore() {
     if (this.#validateElementsStoreKey()) {
       const state = this.#elementState;
-      if (state && state.persisted && state.data) {
+      if (WuseJsHelpers.isOf(state, window.Object) && state.persisted && state.data) {
         this.#options = state.data.options;
         this.#slotted = state.data.slotted;
         this.#identified = state.data.identified;
@@ -503,14 +518,14 @@ export default class BaseElement extends window.HTMLElement {
         this.#fields.restore(state.data.fields);
         this.#fields.owner = this;
         this.#fields.recall();
-        if (!keepDataStored) {
-          delete state.data;
-          this.#persistElementState();
-        }
         return true;
       }
     }
     return false;
+  }
+
+  removeFromElementsStore() {
+    return this.#validateElementsStoreKey() && this.#eraseFromElementsStore();
   }
 
   selectChildElement(x) {
@@ -632,12 +647,6 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
-  replaceChildElement(id, shorthandNotation, rules) {
-    const tmp = WuseElementParts.newChild(shorthandNotation, rules);
-    if (tmp !== null) this.#children.replace(this.#children.findIndex(child => child.id === id), tmp);
-    return this;
-  }
-
   appendChildElements(items) {
     (WuseJsHelpers.isOf(items, window.Array) ? items : WuseJsHelpers.forcedStringSplit(items, "\n")).forEach(
       item => typeof item === "string" && !!item.trim().length && this.appendChildElement(item)
@@ -649,6 +658,12 @@ export default class BaseElement extends window.HTMLElement {
     (WuseJsHelpers.isOf(items, window.Array) ? items : WuseJsHelpers.forcedStringSplit(items, "\n")).forEach(
       item => typeof item === "string" && !!item.trim().length && this.prependChildElement(item)
     );
+    return this;
+  }
+
+  replaceChildElementById(id, shorthandNotation, rules) {
+    const tmp = WuseElementParts.newChild(shorthandNotation, rules);
+    if (tmp !== null) this.#children.replace(this.#children.findIndex(child => child.id === id), tmp);
     return this;
   }
 
@@ -715,6 +730,9 @@ export default class BaseElement extends window.HTMLElement {
       }
       if (WuseJsHelpers.isOf(options.onInvalidKey, window.Function)) {
         RuntimeErrors.onInvalidKey = options.onInvalidKey;
+      }
+      if (WuseJsHelpers.isOf(options.onInvalidState, window.Function)) {
+        RuntimeErrors.onInvalidState = options.onInvalidState;
       }
       let rte = {
         onInvalidDefinition: WuseJsHelpers.noop,

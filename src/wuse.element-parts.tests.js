@@ -19,6 +19,7 @@ export default new class {
     tester.testModuleFunction(module, "newChild", ["existence", "type:object"], this.newChild);
     tester.testModuleFunction(module, "newDefinition", ["existence", "type:object"], this.newDefinition);
     tester.testModuleFunction(module, "newEvent", ["existence", "type:object"], this.newEvent);
+    tester.testModuleFunction(module, "newState", ["existence", "type:object"], this.newState);
   }
 
   ElementParts = (tester, module, name) => {
@@ -111,6 +112,11 @@ export default new class {
     tester.testResult(r === null, `<u>${name}</u> called with invalid values: <i>${r}</i>`);
     r = module.newEvent("click", false);
     tester.testResult(typeof r === "object" && r.kind === "click" && typeof r.capture === "boolean", `<u>${name}</u> called with valid values: <i>${r}</i>`);
+  }
+
+  newState = (tester, module, name) => {
+    var r = module.newState();
+    tester.testResult(typeof r === "object" && r.generation === 0 && typeof r.persisted === "boolean", `<u>${name}</u> called: <i>${r}</i>`);
   }
 
 }

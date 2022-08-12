@@ -39,6 +39,12 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.5.0] 2022-ago-12
+  - added `removeFromElementsStore` to the `BaseElement` class
+  - removed `keepDataStored` to the `restoreFromElementsStore` method of the `BaseElement` class
+  - added `makeState` to `ElementParts` class
+  - added `INVALID_STATE` error to `RuntimeErrors` class
+  - added `Element_Events` example
 * [0.4.5] 2022-ago-10
   - added `force` argument to the `process` method of the `ContentManager` class
   - refactored `Wuse` class

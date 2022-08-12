@@ -54,6 +54,10 @@ export default class RuntimeErrors {
       return this.#makeError(13, arg => `Call first: this.allowRawContent(true).`);
     }
 
+    static get INVALID_STATE() {
+      return this.#makeError(14, arg => `Invalid state.`);
+    }
+
     static get INEXISTENT_TEMPLATE() {
       return this.#makeError(20, arg => `Inexistent template: #${arg}.`);
     }

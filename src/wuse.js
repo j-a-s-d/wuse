@@ -11,7 +11,7 @@ import WuseBaseElement from './wuse.base-element.js';
 
 window.Wuse = class {
 
-  static get VERSION() { return "0.4.5"; }
+  static get VERSION() { return "0.5.0"; }
 
   static DEBUG = false; // debug mode
 
@@ -106,6 +106,7 @@ window.Wuse = class {
       onInexistentTemplate: WuseRuntimeErrors.INEXISTENT_TEMPLATE.emit,
       onUnespecifiedSlot: WuseRuntimeErrors.UNESPECIFIED_SLOT.emit,
       onInvalidId: WuseRuntimeErrors.INVALID_ID.emit,
+      onInvalidState: WuseRuntimeErrors.INVALID_STATE.emit,
       onFetchTemplate: WuseTemplateImporter.fetch
     });
   }
