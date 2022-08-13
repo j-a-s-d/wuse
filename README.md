@@ -39,6 +39,10 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.5.1] 2022-ago-13
+  - extracted `ElementModes` class to an external file
+  - added `ElementModes` class unit test
+  - added `Performing_100K_Updates` example
 * [0.5.0] 2022-ago-12
   - added `removeFromElementsStore` to the `BaseElement` class
   - removed `keepDataStored` to the `restoreFromElementsStore` method of the `BaseElement` class

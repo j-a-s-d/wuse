@@ -9,6 +9,7 @@ import WuseNodeManager from './wuse.node-manager.js';
 import WuseContentManager from './wuse.content-manager.js';
 import WusePartsHolder from './wuse.parts-holder.js';
 import WuseElementParts from './wuse.element-parts.js';
+import WuseElementModes from './wuse.element-modes.js';
 
 function createReactiveField(obj, name, value, handler, renderizer) {
   const redefiner = (get, set) => window.Object.defineProperty(obj, name, {
@@ -49,16 +50,6 @@ const EVENT_NAMES =
     "on_disconnect" // on disconnectedCallback
   ];
 
-class RootModes {
-
-  static get REGULAR() { return "regular"; }
-
-  static get OPEN() { return "open"; }
-
-  static get CLOSED() { return "closed"; }
-
-}
-
 let RuntimeErrors = {
   onInvalidKey: WuseJsHelpers.noop,
   onInvalidDefinition: WuseJsHelpers.noop,
@@ -66,6 +57,8 @@ let RuntimeErrors = {
 }
 
 export default class BaseElement extends window.HTMLElement {
+
+  // INSTANCE
 
   // PRIVATE
 
@@ -432,7 +425,7 @@ export default class BaseElement extends window.HTMLElement {
 
   constructor(mode) {
     super();
-    this.#root = mode !== BaseElement.RootMode.REGULAR ? this.attachShadow({ mode }) : this;
+    this.#root = mode !== WuseElementModes.REGULAR ? this.attachShadow({ mode }) : this;
     this.#detectHandledEvents();
     this.#trigger("on_create");
     if (this.#options.attributeKeys) this.getAttributeNames().forEach(attr => this[attr] = this.getAttribute(attr));
@@ -707,15 +700,7 @@ export default class BaseElement extends window.HTMLElement {
     return this.makeReactiveField(name, mirror[name] || value, actions => { mirror[name] = this[name]; handler(actions) }, initial);
   }
 
-  static RootMode = RootModes;
-
-  static specializeClass = rootMode => class extends this {
-
-    constructor() {
-      super(rootMode);
-    }
-
-  }
+  // STATIC
 
   static instancesCount = 0;
 
