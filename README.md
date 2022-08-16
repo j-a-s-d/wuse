@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.5.2] 2022-ago-16
+  - extracted `InitializationRoutines` class to an external file
+  - added `Templates_And_Slots` example
 * [0.5.1] 2022-ago-13
   - extracted `ElementModes` class to an external file
   - added `ElementModes` class unit test

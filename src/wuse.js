@@ -1,18 +1,17 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
+import WuseInitializationRoutines from './wuse.initialization-routines.js';
 import WuseJsHelpers from './wuse.javascript-helpers.js';
 import WuseWebHelpers from './wuse.web-helpers.js';
-import WuseRuntimeErrors from './wuse.runtime-errors.js';
-import WuseSimpleStorage from './wuse.simple-storage.js';
-import WuseTemplateImporter from './wuse.template-importer.js';
 import WusePerformanceMeasurement from './wuse.performance-measurement.js';
+import WuseSimpleStorage from './wuse.simple-storage.js';
 import WuseElementClasses from './wuse.element-classes.js';
 import WuseElementModes from './wuse.element-modes.js';
 import WuseBaseElement from './wuse.base-element.js';
 
 window.Wuse = class {
 
-  static get VERSION() { return "0.5.1"; }
+  static get VERSION() { return "0.5.2"; }
 
   static DEBUG = false; // debug mode
 
@@ -63,72 +62,10 @@ window.Wuse = class {
 
   static isShadowElement = WuseJsHelpers.noop; // shadow presence
 
-  // PRIVATE ROUTINES
-
-  static #detectFeatures(instance) {
-    const detectFeature = (flag, msg) => !flag && WuseRuntimeErrors.UNSUPPORTED_FEATURE.emit(msg);
-    try {
-      detectFeature(instance.JsHelpers.isOf(window.document, window.HTMLDocument), "HTML Document");
-      detectFeature(instance.JsHelpers.isOf(window.customElements, window.CustomElementRegistry), "Custom Elements");
-      instance.WebHelpers.onDOMContentLoaded(() => detectFeature(instance.JsHelpers.isOf(window.document.body.attachShadow, window.Function), "Shadow DOM"));
-    } catch (e) {
-      WuseRuntimeErrors.UNKNOWN_ERROR.emit();
-    }
-  }
-
-  static #initializeModules(instance) {
-    instance.PerformanceMeasurement.initialize((stopWatch, event) => instance.debug(JSON.stringify(instance.JsHelpers.buildArray(data => {
-      data.push({ instances: instance.elementCount });
-      data.push(stopWatch.getDebugInfo());
-      switch (event) {
-        case "stop":
-          data.push(instance.PerformanceMeasurement.DOMUpdate.overall.getDebugInfo());
-          break;
-        case "finish":
-          data.push(instance.PerformanceMeasurement.BrowserRender.overall.getDebugInfo());
-          break;
-      }
-    }))));
-    WuseTemplateImporter.initialize({
-      onExtinctTemplate: WuseRuntimeErrors.EXTINCT_TEMPLATE.emit,
-      onInvalidTemplate: WuseRuntimeErrors.INVALID_TEMPLATE.emit
-    });
-    WuseElementClasses.initialize({
-      onMisnamedClass: WuseRuntimeErrors.MISNAMED_CLASS.emit,
-      onUnregistrableClass: WuseRuntimeErrors.UNREGISTRABLE_CLASS.emit,
-      onUnregisteredClass: WuseRuntimeErrors.UNREGISTERED_CLASS.emit,
-      onInvalidClass: WuseRuntimeErrors.INVALID_CLASS.emit,
-      onDeferredInstantiation: instance.WebHelpers.onDOMContentLoaded
-    });
-    WuseBaseElement.initialize({
-      onAllowHTML: WuseRuntimeErrors.ALLOW_HTML.emit,
-      onInvalidKey: WuseRuntimeErrors.INVALID_KEY.emit,
-      onInvalidDefinition: WuseRuntimeErrors.INVALID_DEFINITION.emit,
-      onInexistentTemplate: WuseRuntimeErrors.INEXISTENT_TEMPLATE.emit,
-      onUnespecifiedSlot: WuseRuntimeErrors.UNESPECIFIED_SLOT.emit,
-      onInvalidId: WuseRuntimeErrors.INVALID_ID.emit,
-      onInvalidState: WuseRuntimeErrors.INVALID_STATE.emit,
-      onFetchTemplate: WuseTemplateImporter.fetch
-    });
-  }
-
-  static #declareUnwritableMembers(instance, items) {
-    window.Object.getOwnPropertyNames(items).forEach(name => Object.defineProperty(
-      instance, name, { value: items[name], writable: false, configurable: false, enumerable: false }
-    ));
-  }
-
-  static #initialize(instance, setup) {
-    this.#declareUnwritableMembers(instance, setup.fields);
-    this.#declareUnwritableMembers(instance, setup.methods);
-    this.#detectFeatures(instance);
-    this.#initializeModules(instance);
-  }
-
   // WUSE INITILIZATION
 
   static {
-    this.#initialize(this, {
+    WuseInitializationRoutines.declareUnwritableMembers(this, {
       fields: {
         tmp: new window.Object(),
         WebHelpers: WuseWebHelpers,
@@ -166,6 +103,8 @@ window.Wuse = class {
         }
       }
     });
+    WuseInitializationRoutines.detectFeatures(this);
+    WuseInitializationRoutines.initializeModules(this);
   }
 
 }
