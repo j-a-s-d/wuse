@@ -40,7 +40,7 @@ class ReplacementsScanners {
         x => (x.field === name) && hits.push(child)
       )); // NOTE: in this case is faster to ignore duplication
     };
-    children.forEach(child => child.rendering && processAll(child));
+    children.forEach(child => child.included && processAll(child));
   });
 
 }

@@ -160,7 +160,7 @@ const makeChild = (shorthandNotation, rules) => {
     return RuntimeErrors.onInvalidDefinition(shorthandNotation);
   }
   result.rules = isOf(rules, window.Array) ? rules : new window.Array();
-  result.rendering = true;
+  result.included = true;
   result.cache = null;
   return result;
 }

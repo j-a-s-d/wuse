@@ -13,9 +13,9 @@ export default class RenderingRoutines {
 
     static cacheInvalidator = item => item.cache = null;
 
-    static renderingIncluder = item => item.rendering = true;
+    static renderingIncluder = item => item.included = true;
 
-    static renderingExcluder = item => item.rendering = false;
+    static renderingExcluder = item => item.included = false;
 
     static renderRule = (replacer, rule) => {
       if (isOf(rule.nested, window.Array)) {

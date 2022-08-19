@@ -44,12 +44,12 @@ export default new class {
       typeof r === "object" && r.constructor.name === "Array" && r.length === 1,
       `<u>${name}</u> got scanRulesForReplacements called with a valid value (array with a rule with a replacement): <i>${r}</i>`
     );
-    r = module.scanChildrenForReplacements([{ rendering: false, tag: "span", id: "", style: {}, classes: [], attributes: [], content: "~{blah}~", rules: [], replacements: { contents: [{at: 'contents', field: 'blah', find: '~{blah}~'}], classes: [], styles: [], attributes: [] } }], "blah");
+    r = module.scanChildrenForReplacements([{ included: false, tag: "span", id: "", style: {}, classes: [], attributes: [], content: "~{blah}~", rules: [], replacements: { contents: [{at: 'contents', field: 'blah', find: '~{blah}~'}], classes: [], styles: [], attributes: [] } }], "blah");
     tester.testResult(
       typeof r === "object" && r.constructor.name === "Array" && r.length === 0,
       `<u>${name}</u> got scanChildrenForReplacements called with a valid value (array with a child with a replacement and rendering flag off): <i>${r}</i>`
     );
-    r = module.scanChildrenForReplacements([{ rendering: true, tag: "span", id: "", style: {}, classes: [], attributes: [], content: "~{blah}~", rules: [], replacements: { contents: [{at: 'contents', field: 'blah', find: '~{blah}~'}], classes: [], styles: [], attributes: [] } }], "blah");
+    r = module.scanChildrenForReplacements([{ included: true, tag: "span", id: "", style: {}, classes: [], attributes: [], content: "~{blah}~", rules: [], replacements: { contents: [{at: 'contents', field: 'blah', find: '~{blah}~'}], classes: [], styles: [], attributes: [] } }], "blah");
     tester.testResult(
       typeof r === "object" && r.constructor.name === "Array" && r.length === 1,
       `<u>${name}</u> got scanChildrenForReplacements called with a valid value (array with a child with a replacement and rendering flag on): <i>${r}</i>`

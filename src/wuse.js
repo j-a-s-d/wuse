@@ -11,7 +11,13 @@ import WuseBaseElement from './wuse.base-element.js';
 
 window.Wuse = class {
 
-  static get VERSION() { return "0.5.2"; }
+  // READONLY PROPERTIES
+
+  static get VERSION() { return "0.5.3"; } // version number
+
+  static get elementCount() { return WuseBaseElement.instancesCount; } // element count
+
+  // GLOBAL FLAGS
 
   static DEBUG = false; // debug mode
 
@@ -19,7 +25,9 @@ window.Wuse = class {
 
   static MEASURE = false; // performance monitoring
 
-  static RENDERING = true; // global rendering
+  static RENDERING = true; // committing updates
+
+  // OVERRIDABLE FIELDS
 
   static hashRoutine = str => {
     // NOTE: Java's classic String.hashCode()
@@ -33,8 +41,6 @@ window.Wuse = class {
   }
 
   static elementsStorage = new WuseSimpleStorage(); // wuse elements storage
-
-  static get elementCount() { return WuseBaseElement.instancesCount; } // wuse element count
 
   // UNWRITABLE PLACEHOLDERS
 
@@ -76,7 +82,7 @@ window.Wuse = class {
         ClosedShadowElement: WuseElementModes.specializeClass(WuseBaseElement, WuseElementModes.CLOSED)
       },
       methods: {
-        debug: (msg) => window.console.log("[WUSE:DEBUG]", msg),
+        debug: msg => window.console.log("[WUSE:DEBUG]", msg),
         blockUpdate: (task, arg) => {
           if (WuseJsHelpers.isOf(task, Function)) {
             if (window.Wuse.DEBUG) window.Wuse.debug("blocking");

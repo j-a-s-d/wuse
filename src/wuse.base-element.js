@@ -115,6 +115,7 @@ export default class BaseElement extends window.HTMLElement {
   #shadowed = window.Wuse.isShadowElement(this);
   #inserted = false;
   #binded = false;
+  #rendering = true;
 
   // ELEMENT STATE
   #elementsStore = window.Wuse.elementsStorage;
@@ -163,7 +164,7 @@ export default class BaseElement extends window.HTMLElement {
   #renderingReplacer = (str, rep) => str.replace(rep.find, this[rep.field] !== undefined ? this[rep.field] : WuseJsHelpers.EMPTY_STRING);
   /*#ruleInserters = {
     rule: rule => this.#style.sheet.insertRule(rule.cache ? rule.cache : rule.cache = WuseRenderingRoutines.renderRule(this.#renderingReplacer, rule)),
-    childRule: child => child.rendering && child.rules.forEach(this.#ruleInserters.rule)
+    childRule: child => child.included && child.rules.forEach(this.#ruleInserters.rule)
   }*/
   #bindingPerformers = {
     bind: {
@@ -257,9 +258,7 @@ export default class BaseElement extends window.HTMLElement {
     if ((this.#binded && !value) || (!this.#binded && value)) {
       const bindingHandlers = this.#getBindingHandlers(value ? this.#bindingPerformers.bind : this.#bindingPerformers.unbind);
       this.#children.forEach(child => {
-        if (!child.rendering && value) {
-          return;
-        }
+        if (!child.included && value) return;
         if (bindingHandlers.key) bindingHandlers.key(child);
         child.events.forEach(event => event && bindingHandlers.event(child.id, event.kind, event.capture));
       });
@@ -277,7 +276,7 @@ export default class BaseElement extends window.HTMLElement {
     this.#contents.style.reset(WuseJsHelpers.EMPTY_STRING);
     this.#contents.main.reset(this.#html);
     const r = this.#slotted ? this.#contents.renderizers.children.mixed : this.#contents.renderizers.children.normal;
-    this.#children.forEach(child => child.rendering && r(child));
+    this.#children.forEach(child => child.included && r(child));
     this.#rules.forEach(this.#contents.renderizers.rule);
     this.#contents.main.verify(content => !this.#waste.main.compute(content));
     this.#contents.style.verify(content => !this.#waste.style.compute(content));
@@ -291,7 +290,7 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   #render() {
-    if (!window.Wuse.RENDERING) return;
+    if (!window.Wuse.RENDERING || !this.#rendering) return;
     if (window.Wuse.MEASURE) this.#measurement.partial.start();
     this.#trigger("on_prerender");
     this.#prepareContents();
@@ -662,7 +661,7 @@ export default class BaseElement extends window.HTMLElement {
 
   checkChildElementIsIncludedById(id, yes, no) {
     const fire = cb => WuseJsHelpers.isOf(cb, window.Function) ? cb() : undefined;
-    this.#children.some(child => child.id === id && child.rendering) ? fire(yes) : fire(no);
+    this.#children.some(child => child.id === id && child.included) ? fire(yes) : fire(no);
     return this;
   }
 
@@ -698,6 +697,19 @@ export default class BaseElement extends window.HTMLElement {
 
   makeExternalReactiveField(mirror, name, value, handler, initial = true) {
     return this.makeReactiveField(name, mirror[name] || value, actions => { mirror[name] = this[name]; handler(actions) }, initial);
+  }
+
+  suspendRender() {
+    this.#rendering = false;
+  }
+
+  resumeRender(autorender = true) {
+    this.#rendering = true;
+    if (autorender) this.render();
+  }
+
+  isRenderSuspended() {
+    return !this.#rendering;
   }
 
   // STATIC

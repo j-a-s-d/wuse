@@ -50,10 +50,10 @@ export default new class {
     const x = { cache: "blah", rendering: false };
     r = module.cacheInvalidator(x) === null && x.cache === null;
     tester.testResult(r, `<u>${name}</u> got cacheInvalidator called with a valid value (object with cache field): <i>${r}</i>`);
-    r = module.renderingIncluder(x) === true && x.rendering === true;
-    tester.testResult(r, `<u>${name}</u> got renderingIncluder called with a valid value (object with rendering field): <i>${r}</i>`);
-    r = module.renderingExcluder(x) === false && x.rendering === false;
-    tester.testResult(r, `<u>${name}</u> got renderingExcluder called with a valid value (object with rendering field): <i>${r}</i>`);
+    r = module.renderingIncluder(x) === true && x.included === true;
+    tester.testResult(r, `<u>${name}</u> got renderingIncluder called with a valid value (object with included field): <i>${r}</i>`);
+    r = module.renderingExcluder(x) === false && x.included === false;
+    tester.testResult(r, `<u>${name}</u> got renderingExcluder called with a valid value (object with included field): <i>${r}</i>`);
   }
 
 }

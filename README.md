@@ -39,6 +39,8 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.5.3] 2022-ago-19
+  - added `suspendRender`, `resumeRender` and `isRenderSuspended` to the `BaseElement` class
 * [0.5.2] 2022-ago-16
   - extracted `InitializationRoutines` class to an external file
   - added `Templates_And_Slots` example
