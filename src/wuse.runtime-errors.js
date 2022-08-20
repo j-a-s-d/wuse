@@ -74,4 +74,8 @@ export default class RuntimeErrors {
       return this.#makeError(30, arg => `Unespecified slot: #${arg}.`);
     }
 
+    static get LOCKED_DEFINITION() {
+      return this.#makeError(40, arg => `Locked definition: #${arg}.`);
+    }
+
 }

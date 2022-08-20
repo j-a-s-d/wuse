@@ -52,6 +52,7 @@ export default class InitializationRoutines {
       onAllowHTML: WuseRuntimeErrors.ALLOW_HTML.emit,
       onInvalidKey: WuseRuntimeErrors.INVALID_KEY.emit,
       onInvalidDefinition: WuseRuntimeErrors.INVALID_DEFINITION.emit,
+      onLockedDefinition: WuseRuntimeErrors.LOCKED_DEFINITION.emit,
       onInexistentTemplate: WuseRuntimeErrors.INEXISTENT_TEMPLATE.emit,
       onUnespecifiedSlot: WuseRuntimeErrors.UNESPECIFIED_SLOT.emit,
       onInvalidId: WuseRuntimeErrors.INVALID_ID.emit,

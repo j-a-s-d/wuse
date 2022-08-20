@@ -13,7 +13,7 @@ window.Wuse = class {
 
   // READONLY PROPERTIES
 
-  static get VERSION() { return "0.5.3"; } // version number
+  static get VERSION() { return "0.5.4"; } // version number
 
   static get elementCount() { return WuseBaseElement.instancesCount; } // element count
 

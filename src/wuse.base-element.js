@@ -51,8 +51,10 @@ const EVENT_NAMES =
   ];
 
 let RuntimeErrors = {
+  onInvalidState: WuseJsHelpers.noop,
   onInvalidKey: WuseJsHelpers.noop,
   onInvalidDefinition: WuseJsHelpers.noop,
+  onLockedDefinition: WuseJsHelpers.noop,
   onAllowHTML: WuseJsHelpers.noop
 }
 
@@ -70,6 +72,10 @@ export default class BaseElement extends window.HTMLElement {
       this.last.replacements = WuseTextReplacements.extractReplacementsFromRule(this.last);
       if (window.Wuse.DEBUG) this.owner.#debug(`rules list version change: ${this.version}`);
     }
+    on_forbidden_change() {
+      if (window.Wuse.DEBUG) this.owner.#debug(`rules list is locked and can not be changed`);
+      RuntimeErrors.onLockedDefinition(this.#options.mainDefinition.id);
+    }
   })(this); // CSS RULES
   #children = new (class extends WusePartsHolder {
     on_version_change() {
@@ -78,10 +84,18 @@ export default class BaseElement extends window.HTMLElement {
       this.owner.#slotted |= (this.last.kind === WuseStringConstants.SLOTS_KIND);
       if (window.Wuse.DEBUG) this.owner.#debug(`children list version change: ${this.version}`);
     }
+    on_forbidden_change() {
+      if (window.Wuse.DEBUG) this.owner.#debug(`children list is locked and can not be changed`);
+      RuntimeErrors.onLockedDefinition(this.#options.mainDefinition.id);
+    }
   })(this); // HTML ELEMENTS
   #fields = new (class extends WusePartsHolder {
     on_version_change() {
       if (window.Wuse.DEBUG) this.owner.#debug(`fields list version change: ${this.version}`);
+    }
+    on_forbidden_change() {
+      if (window.Wuse.DEBUG) this.owner.#debug(`fields list is locked and can not be changed`);
+      RuntimeErrors.onLockedDefinition(this.#options.mainDefinition.id);
     }
     snapshot() {
       this.forEach(x => x.value = this.owner[x.name]);
@@ -352,13 +366,6 @@ export default class BaseElement extends window.HTMLElement {
     }
   }
 
-  #makeReactiveField(name, value, handler, initial = true) {
-    createReactiveField(this, name, value, handler, (name, label) => this.#fieldRender(name, label || "$auto"));
-    this.#fields.append({ name, value });
-    if (initial) this.#fieldRender(name, "$init");
-    return this;
-  }
-
   // EVENT ROUTINES
   #trigger(event, argument) {
     this.#events[event] && this[event].call(this, argument);
@@ -459,6 +466,7 @@ export default class BaseElement extends window.HTMLElement {
 
   setElementsStore(storage) {
     this.#elementsStore = storage;
+    return this;
   }
 
   hasElementsStoreKey(key) {
@@ -589,6 +597,16 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
+  lockCSSRules() {
+    this.#rules.locked = true;
+    return this;
+  }
+
+  unlockCSSRules() {
+    this.#rules.locked = false;
+    return this;
+  }
+
   appendCSSRule(selector, properties, nesting) {
     if (nesting) return this.appendCSSNestedRule(selector, properties, nesting);
     const sliced = this.#rules.slice(-1);
@@ -624,6 +642,16 @@ export default class BaseElement extends window.HTMLElement {
     if (!sliced.length || !WuseElementParts.tryToJoinNestedRules(sliced[0], rule)) {
       this.#rules.prepend(rule);
     }
+    return this;
+  }
+
+  lockChildElements() {
+    this.#children.locked = true;
+    return this;
+  }
+
+  unlockChildElements() {
+    this.#children.locked = false;
     return this;
   }
 
@@ -685,6 +713,16 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
+  lockInstanceFields() {
+    this.#fields.locked = true;
+    return this;
+  }
+
+  unlockInstanceFields() {
+    this.#fields.locked = false;
+    return this;
+  }
+
   makeField(name, value) {
     this[name] = value;
     this.#fields.append({ name, value });
@@ -692,7 +730,10 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   makeReactiveField(name, value, handler, initial = true) {
-    return this.#makeReactiveField(name, value, handler, initial);
+    createReactiveField(this, name, value, handler, (name, label) => this.#fieldRender(name, label || "$auto"));
+    this.#fields.append({ name, value });
+    if (initial) this.#fieldRender(name, "$init");
+    return this;
   }
 
   makeExternalReactiveField(mirror, name, value, handler, initial = true) {
@@ -701,11 +742,13 @@ export default class BaseElement extends window.HTMLElement {
 
   suspendRender() {
     this.#rendering = false;
+    return this;
   }
 
   resumeRender(autorender = true) {
     this.#rendering = true;
     if (autorender) this.render();
+    return this;
   }
 
   isRenderSuspended() {
@@ -730,6 +773,9 @@ export default class BaseElement extends window.HTMLElement {
       }
       if (WuseJsHelpers.isOf(options.onInvalidState, window.Function)) {
         RuntimeErrors.onInvalidState = options.onInvalidState;
+      }
+      if (WuseJsHelpers.isOf(options.onLockedDefinition, window.Function)) {
+        RuntimeErrors.onLockedDefinition = options.onLockedDefinition;
       }
       let rte = {
         onInvalidDefinition: WuseJsHelpers.noop,

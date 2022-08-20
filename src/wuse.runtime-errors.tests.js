@@ -20,7 +20,8 @@ export default new class {
       "INEXISTENT_TEMPLATE",
       "EXTINCT_TEMPLATE",
       "INVALID_TEMPLATE",
-      "UNESPECIFIED_SLOT"
+      "UNESPECIFIED_SLOT",
+      "LOCKED_DEFINITION"
     ].forEach(name => tester.testModuleProperty(module, name, ["existence", "type:object"], this[name]));
   }
 
@@ -55,6 +56,8 @@ export default new class {
   INVALID_TEMPLATE = (tester, module, mb) => this.testError(tester, module, mb, 22);
 
   UNESPECIFIED_SLOT = (tester, module, mb) => this.testError(tester, module, mb, 30);
+
+  LOCKED_DEFINITION = (tester, module, mb) => this.testError(tester, module, mb, 40);
 
 }
 

@@ -8,11 +8,7 @@ export default class PartsHolder extends window.Array {
   owner = null;
   last = null;
   version = 0;
-
-  constructor(owner) {
-    super();
-    this.owner = owner;
-  }
+  locked = false;
 
   #roll(item)  {
     this.last = item;
@@ -20,27 +16,36 @@ export default class PartsHolder extends window.Array {
     this.on_version_change();
   }
 
+  constructor(owner) {
+    super();
+    this.owner = owner;
+  }
+
   append(item) {
-    if (isOf(item, window.Object)) {
+    if (this.locked) {
+      this.on_forbidden_change();
+    } else if (isOf(item, window.Object)) {
       this.push(item);
       this.#roll(item);
     }
   }
 
   prepend(item) {
-    if (isOf(item, window.Object)) {
+    if (this.locked) {
+      this.on_forbidden_change();
+    } else if (isOf(item, window.Object)) {
       this.unshift(item);
       this.#roll(item);
     }
   }
 
   replace(index, item) {
-    if ((index > -1) && isOf(item, window.Object)) {
+    if (this.locked) {
+      this.on_forbidden_change();
+    } else if ((index > -1) && isOf(item, window.Object)) {
       this.#roll(this[index] = item);
     }
   }
-
-  on_version_change() {}
 
   persist() {
     return buildArray(result => forEachOwnProperty(this, key => {
@@ -50,6 +55,7 @@ export default class PartsHolder extends window.Array {
         case "length":
           break;
         case "version":
+        case "locked":
           result[key] = this[key];
           break;
         default:
@@ -69,6 +75,7 @@ export default class PartsHolder extends window.Array {
         case "length":
           break;
         case "version":
+        case "locked":
           this[key] = instance[key];
           break;
         default:
@@ -81,6 +88,10 @@ export default class PartsHolder extends window.Array {
       }
     });
   }
+
+  on_version_change() {}
+
+  on_forbidden_change() {}
 
 }
 

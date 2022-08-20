@@ -39,6 +39,10 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.5.4] 2022-ago-20
+  - added `lockChildElements`, `unlockChildElements`, `lockCSSRules`, `unlockCSSRules`, `lockFields` and `unlockFields` to the `BaseElement` class
+  - added `locked` and `on_forbidden_change` to the `PartsHolder` class
+  - added `LOCKED_DEFINITION` error to the `RuntimeErrors` class
 * [0.5.3] 2022-ago-19
   - added `suspendRender`, `resumeRender` and `isRenderSuspended` to the `BaseElement` class
 * [0.5.2] 2022-ago-16
@@ -51,14 +55,14 @@ Wuse does not require any build step to be performed.
 * [0.5.0] 2022-ago-12
   - added `removeFromElementsStore` to the `BaseElement` class
   - removed `keepDataStored` to the `restoreFromElementsStore` method of the `BaseElement` class
-  - added `makeState` to `ElementParts` class
-  - added `INVALID_STATE` error to `RuntimeErrors` class
+  - added `makeState` to the `ElementParts` class
+  - added `INVALID_STATE` error to the `RuntimeErrors` class
   - added `Element_Events` example
 * [0.4.5] 2022-ago-10
   - added `force` argument to the `process` method of the `ContentManager` class
   - refactored `Wuse` class
 * [0.4.4] 2022-ago-08
-  - added `EMPTY_STRING` to `JavascriptHelpers` class
+  - added `EMPTY_STRING` to the `JavascriptHelpers` class
   - improved `BaseElement` class
 * [0.4.3] 2022-ago-05
   - extracted `BaseElement` class to an external file
@@ -66,7 +70,7 @@ Wuse does not require any build step to be performed.
   - added `ElementParts` class unit test
   - added `PartsHolder` class unit test
 * [0.4.1] 2022-ago-02
-  - added `cloneObject` and `forEachOwnProperty` to `JavascriptHelpers` class
+  - added `cloneObject` and `forEachOwnProperty` to the `JavascriptHelpers` class
   - extracted `ElementParts` class to an external file
   - extracted `PartsHolder` class to an external file
 * [0.4.0] 2022-jul-31
@@ -85,8 +89,8 @@ Wuse does not require any build step to be performed.
 * [0.3.7] 2022-jul-26
   - extracted `ElementClasses` class to an external file
   - added `ElementClasses` class unit test
-  - added `ensureFunction`, `isAssignedObject`, `isAssignedArray`, `isNonEmptyArray` and `noop` to `JavascriptHelpers` class
-  - added `UNREGISTRABLE_CLASS` error to `RuntimeErrors` class
+  - added `ensureFunction`, `isAssignedObject`, `isAssignedArray`, `isNonEmptyArray` and `noop` to the `JavascriptHelpers` class
+  - added `UNREGISTRABLE_CLASS` error to the `RuntimeErrors` class
   - improved custom browser tester
   - added `package.json` file
   - published on npm registry
@@ -111,7 +115,7 @@ Wuse does not require any build step to be performed.
 * [0.3.3] 2022-jul-15
   - added support for text nodes in the shorthand notation via `^text^` pseudo-node type (ex. '^text^=this is a text node'; note that this, of course, does not combine with named slots)
   - added support for html encoded text in the shorthand notation via the `&` content prefix (ex. 'label=&<b>this tags will be read as plain text</b>', note if you need start a content with '&' use double '&&')
-  - added `removeChildren` and `htmlEncode` routines to `WebHelpers` class
+  - added `removeChildren` and `htmlEncode` routines to the `WebHelpers` class
   - added `INVALID_TEMPLATE` runtime error
 * [0.3.2] 2022-jul-14
   - extracted `WebHelpers` class to an external file

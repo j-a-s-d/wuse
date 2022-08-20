@@ -32,6 +32,11 @@ export default new class {
     r.push({ number: 0 });
     r = instance.restore(r) === undefined && instance.length === 5;
     tester.testResult(r, `<u>${name}</u> got restore called: <i>${r}</i>`);
+    var x = false;
+    instance.on_forbidden_change = () => x = true;
+    instance.locked = true;
+    r = instance.append({ number: 789 }) === undefined && instance.length === 5 && x === true;
+    tester.testResult(r, `<u>${name}</u> prevented modification after been locked: <i>${r}</i>`);
   }
 
 }
