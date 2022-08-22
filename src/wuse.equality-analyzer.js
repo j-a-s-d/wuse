@@ -1,5 +1,8 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
+import JsHelpers from './wuse.javascript-helpers.js';
+const { ensureFunction } = JsHelpers;
+
 export default class EqualityAnalyzer {
 
   rounds = 0; // EQUAL ROUNDS
@@ -9,7 +12,7 @@ export default class EqualityAnalyzer {
   #analyzer = null; // VALUE ANALYZER
 
   constructor(analyzer) {
-    this.#analyzer = typeof analyzer === "function" ? analyzer : () => {};
+    this.#analyzer = ensureFunction(analyzer);
   }
 
   compute(value) {

@@ -2,18 +2,20 @@
 
 import WuseInitializationRoutines from './wuse.initialization-routines.js';
 import WuseJsHelpers from './wuse.javascript-helpers.js';
+const { noop, isOf } = WuseJsHelpers;
 import WuseWebHelpers from './wuse.web-helpers.js';
 import WusePerformanceMeasurement from './wuse.performance-measurement.js';
 import WuseSimpleStorage from './wuse.simple-storage.js';
 import WuseElementClasses from './wuse.element-classes.js';
 import WuseElementModes from './wuse.element-modes.js';
 import WuseBaseElement from './wuse.base-element.js';
+import WuseStringHashing from './wuse.string-hashing.js';
 
 window.Wuse = class {
 
   // READONLY PROPERTIES
 
-  static get VERSION() { return "0.5.4"; } // version number
+  static get VERSION() { return "0.5.5"; } // version number
 
   static get elementCount() { return WuseBaseElement.instancesCount; } // element count
 
@@ -29,16 +31,7 @@ window.Wuse = class {
 
   // OVERRIDABLE FIELDS
 
-  static hashRoutine = str => {
-    // NOTE: Java's classic String.hashCode()
-    // style, multiplying by the odd prime 31
-    // ('(h << 5) - h' was faster originally)
-    var h = 0;
-    for (let x = 0; x < str.length; x++) {
-      h = (h = ((h << 5) - h) + str.charCodeAt(x)) & h;
-    }
-    return h;
-  }
+  static hashRoutine = WuseStringHashing.defaultRoutine; // wuse string hashing
 
   static elementsStorage = new WuseSimpleStorage(); // wuse elements storage
 
@@ -58,15 +51,15 @@ window.Wuse = class {
 
   static ClosedShadowElement = null; // closed-shadow element class
 
-  static debug = WuseJsHelpers.noop; // wuse console debug
+  static debug = noop; // wuse console debug
 
-  static blockUpdate = WuseJsHelpers.noop; // wuse block update
+  static blockUpdate = noop; // wuse block update
 
-  static register = WuseJsHelpers.noop; // element register
+  static register = noop; // element register
 
-  static instantiate = WuseJsHelpers.noop; // element instantiation
+  static instantiate = noop; // element instantiation
 
-  static isShadowElement = WuseJsHelpers.noop; // shadow presence
+  static isShadowElement = noop; // shadow presence
 
   // WUSE INITILIZATION
 
@@ -84,7 +77,7 @@ window.Wuse = class {
       methods: {
         debug: msg => window.console.log("[WUSE:DEBUG]", msg),
         blockUpdate: (task, arg) => {
-          if (WuseJsHelpers.isOf(task, Function)) {
+          if (isOf(task, Function)) {
             if (window.Wuse.DEBUG) window.Wuse.debug("blocking");
             window.Wuse.RENDERING = false;
             try {
@@ -98,10 +91,10 @@ window.Wuse = class {
           }
         },
         register: classes => WuseElementClasses.registerClasses(
-          WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes)
+          isOf(classes, window.Array) ? classes : new window.Array(classes)
         ),
         instantiate: (classes, target, events) => WuseElementClasses.instantiateClasses(
-          WuseJsHelpers.isOf(classes, window.Array) ? classes : new window.Array(classes), target, events
+          isOf(classes, window.Array) ? classes : new window.Array(classes), target, events
         ),
         isShadowElement: instance => {
           const p = window.Object.getPrototypeOf(instance.constructor);

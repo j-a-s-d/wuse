@@ -10,9 +10,9 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 
 ## CHARACTERISTICS
 
-* no external dependencies
+* no external dependencies (none in runtime and only esbuild if you want to build from source)
 * self-documenting api (descriptive "long" function names)
-* full unit testing [IN-PROGRESS]
+* full unit testing (400+ tests caases)
 * markdown documentation [TODO]
 
 ## FEATURES
@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.5.5] 2022-ago-22
+  - extracted `StringHashing` class to an external file
+  - added `StringHashing` class unit test
 * [0.5.4] 2022-ago-20
   - added `lockChildElements`, `unlockChildElements`, `lockCSSRules`, `unlockCSSRules`, `lockFields` and `unlockFields` to the `BaseElement` class
   - added `locked` and `on_forbidden_change` to the `PartsHolder` class
