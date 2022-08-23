@@ -45,6 +45,7 @@ export default class InitializationRoutines {
       onMisnamedClass: WuseRuntimeErrors.MISNAMED_CLASS.emit,
       onUnregistrableClass: WuseRuntimeErrors.UNREGISTRABLE_CLASS.emit,
       onUnregisteredClass: WuseRuntimeErrors.UNREGISTERED_CLASS.emit,
+      onAlreadyRegistered: WuseRuntimeErrors.ALREADY_REGISTERED.emit,
       onInvalidClass: WuseRuntimeErrors.INVALID_CLASS.emit,
       onDeferredInstantiation: instance.WebHelpers.onDOMContentLoaded
     });

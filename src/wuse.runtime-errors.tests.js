@@ -12,6 +12,7 @@ export default new class {
       "UNREGISTRABLE_CLASS",
       "INVALID_CLASS",
       "MISNAMED_CLASS",
+      "ALREADY_REGISTERED",
       "INVALID_DEFINITION",
       "INVALID_ID",
       "INVALID_KEY",
@@ -38,6 +39,8 @@ export default new class {
   INVALID_CLASS = (tester, module, mb) => this.testError(tester, module, mb, 4);
 
   MISNAMED_CLASS = (tester, module, mb) => this.testError(tester, module, mb, 5);
+
+  ALREADY_REGISTERED = (tester, module, mb) => this.testError(tester, module, mb, 6);
 
   INVALID_DEFINITION = (tester, module, mb) => this.testError(tester, module, mb, 10);
 

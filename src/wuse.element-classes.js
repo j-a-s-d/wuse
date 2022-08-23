@@ -12,6 +12,7 @@ export default class ElementClasses {
   static #onInvalidClass = noop;
   static #onUnregistrableClass = noop;
   static #onUnregisteredClass = noop;
+  static #onAlreadyRegistered = noop;
 
   static #registrationPerformer(klass) {
     window.HTMLElement.isPrototypeOf(klass) ?
@@ -19,13 +20,16 @@ export default class ElementClasses {
       this.#onUnregistrableClass(klass.name);
   }
 
-  static #classRegistrar(klass) {
-    if (klass.name.indexOf("_") > 0) {
-      klass.tag = convertClassNameToKebabCaseTag(klass.name);
+  static #registrationIntender(klass) {
+    window.customElements.get(klass.tag = convertClassNameToKebabCaseTag(klass.name)) ?
+      this.#onAlreadyRegistered(klass.name) :
       this.#registrationPerformer(klass);
-    } else {
+  }
+
+  static #classRegistrar(klass) {
+    klass.name.indexOf("_") > 0 ?
+      this.#registrationIntender(klass) :
       this.#onMisnamedClass(klass.name);
-    }
   }
 
   static registerClasses(classes) {
@@ -68,6 +72,7 @@ export default class ElementClasses {
       this.#onMisnamedClass = ensureFunction(events.onMisnamedClass, this.#onMisnamedClass);
       this.#onUnregistrableClass = ensureFunction(events.onUnregistrableClass, this.#onUnregistrableClass);
       this.#onUnregisteredClass = ensureFunction(events.onUnregisteredClass, this.#onUnregisteredClass);
+      this.#onAlreadyRegistered = ensureFunction(events.onAlreadyRegistered, this.#onAlreadyRegistered);
     }
   }
 

@@ -20,6 +20,7 @@ export default new class {
       onMisnamedClass: () => { flag = "misnamed" },
       onUnregistrableClass: () => { flag = "unregistrable" },
       onUnregisteredClass: () => { flag = "unregistered" },
+      onAlreadyRegistered: () => { flag = "registered" },
       onInvalidClass: () => { flag = "invalid" },
       onDeferredInstantiation: () => { flag = "deferred" }
     }) === undefined;
@@ -44,11 +45,14 @@ export default new class {
     flag = "";
     class A_A extends HTMLElement {}
     r = module.registerClasses([A_A]) === undefined && flag === "";
-    tester.testResult(r, `<u>${name}</u> got registerClasses called with an invalid value (array with a class with HTMLElement proto): <i>${r}</i>`);
+    tester.testResult(r, `<u>${name}</u> got registerClasses called with a valid value (array with a class with HTMLElement proto): <i>${r}</i>`);
     class B_B extends HTMLElement {}
     class C_C extends HTMLElement {}
     r = module.registerClasses([B_B, C_C]) === undefined && flag === "";
-    tester.testResult(r, `<u>${name}</u> got registerClasses called with an invalid value (array with two classes with HTMLElement proto): <i>${r}</i>`);
+    tester.testResult(r, `<u>${name}</u> got registerClasses called with a valid value (array with two classes with HTMLElement proto): <i>${r}</i>`);
+    r = module.registerClasses([A_A]) === undefined && flag === "registered";
+    tester.testResult(r, `<u>${name}</u> got registerClasses called with an invalid value (array with a class with HTMLElement proto but already registered): <i>${r}</i>`);
+    flag = "";
     r = module.instantiateClasses() === undefined;
     tester.testResult(r, `<u>${name}</u> got instantiateClasses called with no value: <i>${r}</i>`);
     r = module.instantiateClasses(null) === undefined;

@@ -10,12 +10,13 @@ import WuseElementClasses from './wuse.element-classes.js';
 import WuseElementModes from './wuse.element-modes.js';
 import WuseBaseElement from './wuse.base-element.js';
 import WuseStringHashing from './wuse.string-hashing.js';
+import { version } from '../package.json';
 
 window.Wuse = class {
 
   // READONLY PROPERTIES
 
-  static get VERSION() { return "0.5.5"; } // version number
+  static get VERSION() { return version; } // version number
 
   static get elementCount() { return WuseBaseElement.instancesCount; } // element count
 

@@ -39,6 +39,10 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.5.6] 2022-ago-23
+  - added `ALREADY_REGISTERED` error to the `RuntimeErrors` class
+  - added `Command_Line` example
+  - now version constant is been taken from the `package.json` file
 * [0.5.5] 2022-ago-22
   - extracted `StringHashing` class to an external file
   - added `StringHashing` class unit test
@@ -88,14 +92,14 @@ Wuse does not require any build step to be performed.
   - extracted `TemplateImporter` class to an external file
   - added `TemplateImporter` class unit test
   - improved custom browser tester
-  - updated `package.json` file
+  - updated the `package.json` file
 * [0.3.7] 2022-jul-26
   - extracted `ElementClasses` class to an external file
   - added `ElementClasses` class unit test
   - added `ensureFunction`, `isAssignedObject`, `isAssignedArray`, `isNonEmptyArray` and `noop` to the `JavascriptHelpers` class
   - added `UNREGISTRABLE_CLASS` error to the `RuntimeErrors` class
   - improved custom browser tester
-  - added `package.json` file
+  - added the `package.json` file
   - published on npm registry
 * [0.3.6] 2022-jul-22
   - extracted `StringConstants` class to an external file

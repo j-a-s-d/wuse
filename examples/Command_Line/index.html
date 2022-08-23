@@ -1,0 +1,38 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wuse | Command_Line example</title>
+  <script src="../../dist/wuse.min.js"></script>
+  <script src="Command_Line.js"></script>
+</head>
+<body>
+  <i>type HELP to see the available commands</i>
+  <hr/>
+  <div id="clInput"></div>
+  <hr/>
+  <pre id="txtOutput"></pre>
+  <script>
+    const txtOutput = document.getElementById("txtOutput");
+    function onProcessCommand(cmd, args) {
+      switch (cmd) {
+        case "HELP":
+          alert(`
+          HELP -- shows this dialog
+          ECHO <text> -- prints the specified text
+          CLEAR -- clears the already printed text
+          `);
+          break;
+        case "ECHO":
+          txtOutput.append(args.join(" ") + "\n");
+          break;
+        case "CLEAR":
+          txtOutput.innerHTML = "";
+          break;
+      }
+    }
+    Wuse.instantiate(Command_Line, "#clInput", { onElementInstantiated: el => el.on_process_command = onProcessCommand });
+  </script>
+</body>
+</html>
+
