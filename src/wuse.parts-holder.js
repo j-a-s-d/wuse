@@ -47,6 +47,15 @@ export default class PartsHolder extends window.Array {
     }
   }
 
+  remove(index) {
+    if (this.locked) {
+      this.on_forbidden_change();
+    } else if (index > -1) {
+      const a = this.splice(index, 1);
+      this.#roll(!!a.length ? a[0] : null);
+    }
+  }
+
   persist() {
     return buildArray(result => forEachOwnProperty(this, key => {
       switch (key) {

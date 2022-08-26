@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.5.7] 2022-ago-26
+  - added `removeChildElementById` to the `BaseElement` class
+  - added `remove` to the `PartsHolder` class
 * [0.5.6] 2022-ago-23
   - added `ALREADY_REGISTERED` error to the `RuntimeErrors` class
   - added `Command_Line` example

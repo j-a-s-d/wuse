@@ -69,8 +69,10 @@ export default class BaseElement extends window.HTMLElement {
   #html = new window.String(); // RAW HTML
   #rules = new (class extends WusePartsHolder {
     on_version_change() {
-      this.last.version = this.version;
-      this.last.replacements = WuseTextReplacements.extractReplacementsFromRule(this.last);
+      if (this.last !== null) {
+        this.last.version = this.version;
+        this.last.replacements = WuseTextReplacements.extractReplacementsFromRule(this.last);
+      }
       if (window.Wuse.DEBUG) this.owner.#debug(`rules list version change: ${this.version}`);
     }
     on_forbidden_change() {
@@ -80,9 +82,11 @@ export default class BaseElement extends window.HTMLElement {
   })(this); // CSS RULES
   #children = new (class extends WusePartsHolder {
     on_version_change() {
-      this.last.version = this.version;
-      this.last.replacements = WuseTextReplacements.extractReplacementsFromChild(this.last);
-      this.owner.#slotted |= (this.last.kind === WuseStringConstants.SLOTS_KIND);
+      if (this.last !== null) {
+        this.last.version = this.version;
+        this.last.replacements = WuseTextReplacements.extractReplacementsFromChild(this.last);
+        this.owner.#slotted |= (this.last.kind === WuseStringConstants.SLOTS_KIND);
+      }
       if (window.Wuse.DEBUG) this.owner.#debug(`children list version change: ${this.version}`);
     }
     on_forbidden_change() {
@@ -685,6 +689,11 @@ export default class BaseElement extends window.HTMLElement {
   replaceChildElementById(id, shorthandNotation, rules) {
     const tmp = WuseElementParts.newChild(shorthandNotation, rules);
     if (tmp !== null) this.#children.replace(this.#children.findIndex(child => child.id === id), tmp);
+    return this;
+  }
+
+  removeChildElementById(id) {
+    this.#children.remove(this.#children.findIndex(child => child.id === id));
     return this;
   }
 
