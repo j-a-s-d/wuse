@@ -1,15 +1,18 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
+import WebHelpers from './wuse.web-helpers.js';
+const { isHTMLTag } = WebHelpers;
 import JsHelpers from './wuse.javascript-helpers.js';
 const { EMPTY_STRING, EMPTY_ARRAY, noop, buildArray, buildObject, isOf, hasObjectKeys, isNonEmptyString, forcedStringSplit } = JsHelpers;
 import StringConstants from './wuse.string-constants.js';
-const { DEFAULT_TAG, DEFAULT_KIND, TEMPLATES_KIND, SLOTS_KIND } = StringConstants;
+const { DEFAULT_TAG, DEFAULT_KIND, TEMPLATES_KIND, SLOTS_KIND, TEXTNODE_TAG } = StringConstants;
 
 const RuntimeErrors = {
   onInvalidDefinition: noop,
   onInexistentTemplate: noop,
   onUnespecifiedSlot: noop,
-  onInvalidId: noop
+  onInvalidId: noop,
+  onUnknownTag: noop
 }
 
 // PARSERS
@@ -175,6 +178,8 @@ const doValidations = child => {
       if (new window.String(child.attributes["slot"]).replaceAll("\"", EMPTY_STRING).replaceAll("\'", EMPTY_STRING).length === 0) {
         return RuntimeErrors.onUnespecifiedSlot(child.id);
       }
+    } else if (child.tag.indexOf('-') === -1 ? (!isHTMLTag(child.tag) && child.tag !== TEXTNODE_TAG) : !window.customElements.get(child.tag)) {
+      return RuntimeErrors.onUnknownTag(child.tag);
     } else if (typeof child.id !== "string" || (isNonEmptyString(child.id) && window.document.getElementById(child.id) !== null)) {
       return RuntimeErrors.onInvalidId(child.id);
     }
@@ -317,6 +322,9 @@ export default class ElementParts {
       }
       if (isOf(options.onInvalidId, window.Function)) {
         RuntimeErrors.onInvalidId = options.onInvalidId;
+      }
+      if (isOf(options.onUnknownTag, window.Function)) {
+        RuntimeErrors.onUnknownTag = options.onUnknownTag;
       }
     }
   }

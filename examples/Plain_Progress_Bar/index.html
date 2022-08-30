@@ -1,0 +1,31 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wuse | Plain_Progress_Bar example</title>
+  <script src="../../dist/wuse.min.js"></script>
+  <script src="Plain_Progress_Bar.js"></script>
+</head>
+<body>
+  <h3>This is a plain progress bar with 33%.</h3>
+  <div id="pb1"></div>
+  <h3>This is a plain progress bar with 8.1% in a right-to-left direction.</h3>
+  <div id="pb2"></div>
+  <script>
+    Wuse.register(Plain_Progress_Bar);
+    Wuse.instantiate(Plain_Progress_Bar, "#pb1", {
+      onElementInstantiated: el => el.percentage = 33
+    });
+    Wuse.instantiate(Plain_Progress_Bar, "#pb2", {
+      onElementInstantiated: el => {
+        el.percentage = 81;
+        el.maximum = 1000;
+        el.direction = "rtl";
+        el.barcolor = "gray";
+        el.valuecolor = "yellow";
+      }
+    });
+  </script>
+</body>
+</html>
+

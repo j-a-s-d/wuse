@@ -11,6 +11,7 @@ import WuseContentManager from './wuse.content-manager.js';
 import WusePartsHolder from './wuse.parts-holder.js';
 import WuseElementParts from './wuse.element-parts.js';
 import WuseElementModes from './wuse.element-modes.js';
+import WuseElementEvents from './wuse.element-events.js';
 
 function createReactiveField(obj, name, value, handler, renderizer) {
   const redefiner = (get, set) => window.Object.defineProperty(obj, name, {
@@ -30,26 +31,6 @@ function createReactiveField(obj, name, value, handler, renderizer) {
     });
   });
 }
-
-const EVENT_NAMES =
-  // NOTE: this are root-level events, that means it does not include other events like
-  // those related to: children (click, mouseoout, etc), slots (change), document, etc.
-  [
-    "on_create", // after element creation and root node definition (after `this` availability and where handled events had been detected for the first time and the shadow attachment performed -basically when isShadowElement(this) is true-, also mention that after on_create returns the attribute keys will be added -if applies-)
-    "on_construct", // after the element state has been created for the first time (if it has a store key, otherwise it's called every time the element is recreated)
-    "on_reconstruct", // after the element state has been loaded from a previous existence (if it has a store key, otherwise it's never called)
-    "on_connect", // on connectedCallback (this event is called right after handled events had been redetected)
-    "on_inject", // right after the elements insertion and before content generation (it's fired both, before on_load and before on_reload)
-    "on_load", // after the initial elements insertion is performed (first moment where you can find the render and redraw methods published, and where you have the element keys binded -if applies-)
-    "on_prerender", // before the render process start
-    "on_update", // after an actual dom update occurs
-    "on_postrender", // after the render process finishes (dom updated or not)
-    "on_refresh", // after the browser paints the content after a render() call
-    "on_unload", // after elements got removed
-    "on_reload", // after any time the elements are reinserted (except the initial time, also by now handled events had been redetected again)
-    "on_repaint", // after the browser paints the content after a redraw() call
-    "on_disconnect" // on disconnectedCallback
-  ];
 
 let RuntimeErrors = {
   onInvalidState: noop,
@@ -119,11 +100,12 @@ export default class BaseElement extends window.HTMLElement {
     attributeKeys: false,
     elementKeys: true
   }
-  #events = new window.Object();
+  #elementEvents = new WuseElementEvents(this);
 
   // CONTENT FLAGS
   #identified = false;
   #slotted = false;
+  #shadowed = window.Wuse.isShadowElement(this);
 
   // INNER ELEMENTS
   #main = undefined;
@@ -131,7 +113,6 @@ export default class BaseElement extends window.HTMLElement {
   #root = null;
 
   // NODE FLAGS
-  #shadowed = window.Wuse.isShadowElement(this);
   #inserted = false;
   #binded = false;
   #rendering = true;
@@ -252,7 +233,7 @@ export default class BaseElement extends window.HTMLElement {
     if (this.#inserted) {
       this.#main.disaffiliate();
       if (this.#style) this.#style.disaffiliate();
-       if (this.#slotted && this.#shadowed) window.Wuse.WebHelpers.removeChildren(this);
+      if (this.#slotted && this.#shadowed) window.Wuse.WebHelpers.removeChildren(this);
     }
     this.#inserted = false;
   }
@@ -311,44 +292,46 @@ export default class BaseElement extends window.HTMLElement {
   #render() {
     if (!window.Wuse.RENDERING || !this.#rendering) return;
     if (window.Wuse.MEASURE) this.#measurement.partial.start();
-    this.#trigger("on_prerender");
+    this.#elementEvents.immediateTrigger("on_prerender");
     this.#prepareContents();
     if (this.#contents.gotModified()) {
       this.#bind(false);
       this.#commitContents(false, false, false);
       this.#bind(true);
       this.info.updatedRounds++;
-      this.#trigger("on_update");
-      this.#committedTrigger("on_refresh");
+      this.#elementEvents.immediateTrigger("on_update");
+      if (this.#keyed) this.persistToElementsStore();
+      this.#elementEvents.committedTrigger("on_refresh");
     } else {
       this.info.unmodifiedRounds++;
     }
     if (window.Wuse.DEBUG) this.#debug(
       `unmodified: ${this.info.unmodifiedRounds} (main: ${this.#waste.main.rounds}, style: ${this.#waste.style.rounds}) | updated: ${this.info.updatedRounds}`
     );
-    this.#trigger("on_postrender");
+    this.#elementEvents.immediateTrigger("on_postrender");
     if (window.Wuse.MEASURE) this.#measurement.partial.stop(window.Wuse.DEBUG);
   }
 
   #inject(event) {
     this.#prepareElements();
     this.#insertElements();
-    this.#trigger("on_inject");
+    this.#elementEvents.immediateTrigger("on_inject");
     this.#prepareContents();
     // NOTE: on injection, due to it's optional nature the style element must be invalidated only if present
     this.#commitContents(false, !!this.#style, true);
     this.#bind(true);
-    this.#trigger(event);
+    this.#elementEvents.immediateTrigger(event);
   }
 
   #redraw() {
     if (window.Wuse.MEASURE) this.#measurement.full.start();
     this.#bind(false);
     this.#extirpateElements();
-    this.#trigger("on_unload");
-    this.#detectHandledEvents();
+    this.#elementEvents.immediateTrigger("on_unload");
+    this.#elementEvents.detect();
     this.#inject("on_reload");
-    this.#committedTrigger("on_repaint");
+    if (this.#keyed) this.persistToElementsStore();
+    this.#elementEvents.committedTrigger("on_repaint");
     if (window.Wuse.MEASURE) this.#measurement.full.stop(window.Wuse.DEBUG);
   }
 
@@ -370,20 +353,6 @@ export default class BaseElement extends window.HTMLElement {
       }
     }
   }
-
-  // EVENT ROUTINES
-  #trigger(event, argument) {
-    this.#events[event] && this[event].call(this, argument);
-  }
-
-  #committedTrigger(event, argument) {
-    if (this.#keyed) this.persistToElementsStore();
-    this.#events[event] && window.requestAnimationFrame(() => this[event].call(this, argument));
-  }
-
-  #detectHandledEvents = () => EVENT_NAMES.forEach(
-    event => this.#events[event] = typeof this[event] === "function"
-  );
 
   // ELEMENT STATE
   #initializeElementState() {
@@ -437,12 +406,12 @@ export default class BaseElement extends window.HTMLElement {
   constructor(mode) {
     super();
     this.#root = mode !== WuseElementModes.REGULAR ? this.attachShadow({ mode }) : this;
-    this.#detectHandledEvents();
-    this.#trigger("on_create");
+    this.#elementEvents.detect();
+    this.#elementEvents.immediateTrigger("on_create");
     if (this.#options.attributeKeys) this.getAttributeNames().forEach(attr => this[attr] = this.getAttribute(attr));
     this.#initializeElementState() && this.#elementState.generation > 1 ?
-      this.#trigger("on_reconstruct", this.#elementState) :
-      this.#trigger("on_construct");
+      this.#elementEvents.immediateTrigger("on_reconstruct", this.#elementState) :
+      this.#elementEvents.immediateTrigger("on_construct");
   }
 
   get render() { return this.#binded ? this.#render : noop }
@@ -451,8 +420,8 @@ export default class BaseElement extends window.HTMLElement {
 
   connectedCallback() {
     if (window.Wuse.MEASURE) this.#measurement.attachment.start();
-    this.#detectHandledEvents();
-    this.#trigger("on_connect");
+    this.#elementEvents.detect();
+    this.#elementEvents.immediateTrigger("on_connect");
     this.#inject("on_load");
     if (this.#keyed) this.persistToElementsStore();
     if (window.Wuse.MEASURE) this.#measurement.attachment.stop(window.Wuse.DEBUG);
@@ -461,7 +430,7 @@ export default class BaseElement extends window.HTMLElement {
   disconnectedCallback() {
     if (window.Wuse.MEASURE) this.#measurement.dettachment.start();
     this.#bind(false);
-    this.#trigger("on_disconnect");
+    this.#elementEvents.immediateTrigger("on_disconnect");
     if (window.Wuse.MEASURE) this.#measurement.dettachment.stop(window.Wuse.DEBUG);
   }
 
@@ -537,8 +506,13 @@ export default class BaseElement extends window.HTMLElement {
     return this.#root.querySelector(x);
   }
 
+  getMainAttribute(key) {
+    return this.#inserted ? this.#main.element.setAttribute(key) : undefined;
+  }
+
   setMainAttribute(key, value) {
     if (this.#inserted) this.#main.element.setAttribute(key, value);
+    return this;
   }
 
   setMainElement(shorthandNotation) {
@@ -791,7 +765,8 @@ export default class BaseElement extends window.HTMLElement {
         onInvalidDefinition: noop,
         onInexistentTemplate: noop,
         onUnespecifiedSlot: noop,
-        onInvalidId: noop
+        onInvalidId: noop,
+        onUnknownTag: noop
       };
       if (isOf(options.onInvalidDefinition, window.Function)) {
         RuntimeErrors.onInvalidDefinition = options.onInvalidDefinition;
@@ -805,6 +780,9 @@ export default class BaseElement extends window.HTMLElement {
       }
       if (isOf(options.onInvalidId, window.Function)) {
         rte.onInvalidId = options.onInvalidId;
+      }
+      if (isOf(options.onUnknownTag, window.Function)) {
+        rte.onUnknownTag = options.onUnknownTag;
       }
       WuseElementParts.initialize(rte);
     }

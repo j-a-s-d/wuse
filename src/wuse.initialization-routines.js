@@ -56,6 +56,7 @@ export default class InitializationRoutines {
       onLockedDefinition: WuseRuntimeErrors.LOCKED_DEFINITION.emit,
       onInexistentTemplate: WuseRuntimeErrors.INEXISTENT_TEMPLATE.emit,
       onUnespecifiedSlot: WuseRuntimeErrors.UNESPECIFIED_SLOT.emit,
+      onUnknownTag: WuseRuntimeErrors.UNKNOWN_TAG.emit,
       onInvalidId: WuseRuntimeErrors.INVALID_ID.emit,
       onInvalidState: WuseRuntimeErrors.INVALID_STATE.emit,
       onFetchTemplate: WuseTemplateImporter.fetch

@@ -12,7 +12,7 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 
 * no external dependencies (none in runtime and only esbuild if you want to build from source)
 * self-documenting api (descriptive "long" function names)
-* full unit testing (400+ tests caases)
+* full unit testing (400+ tests cases)
 * markdown documentation [TODO]
 
 ## FEATURES
@@ -39,6 +39,13 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.5.8] 2022-ago-30
+  - added `isHTMLTag` to the `WebHelpers` class
+  - added `UNKNOWN_TAG` warning to the `RuntimeErrors`
+  - added `getMainAttribute` to the `BaseElement` class
+  - extracted `ElementEvents` class to an external file
+  - added `ElementEvents` class unit test
+  - added `Plain_Progress_Bar` example
 * [0.5.7] 2022-ago-26
   - added `removeChildElementById` to the `BaseElement` class
   - added `remove` to the `PartsHolder` class

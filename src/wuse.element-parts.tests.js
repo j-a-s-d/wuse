@@ -29,6 +29,7 @@ export default new class {
       onInvalidDefinition: _ => null,
       onInexistentTemplate: _ => null,
       onUnespecifiedSlot: _ => null,
+      onUnknownTag: _ => null,
       onInvalidId: _ => null
     }) === undefined;
     tester.testResult(r, `<u>${name}</u> initialized with a valid value (object): <i>${r}</i>`);
@@ -84,7 +85,9 @@ export default new class {
     tester.testResult(r === null, `<u>${name}</u> called with an invalid value (non-existent template): <i>${r}</i>`);
     r = module.performValidations({ kind: "%slots%", attributes: { "slot": "test" }});
     tester.testResult(typeof r === "object" && r.kind === "%slots%", `<u>${name}</u> called with a valid value (non-empty slot): <i>${r}</i>`);
-    r = module.performValidations({ id: "test" });
+    r = module.performValidations({ tag: "invalid" });
+    tester.testResult(r === null, `<u>${name}</u> called with a invalid value (non-existent tag): <i>${r}</i>`);
+    r = module.performValidations({ tag: "div", id: "test" });
     tester.testResult(typeof r === "object" && r.id === "test", `<u>${name}</u> called with a valid value (object with non-existent id): <i>${r}</i>`);
   }
 
