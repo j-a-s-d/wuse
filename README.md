@@ -39,6 +39,8 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.5.9] 2022-ago-31
+  - added `hasField`, `hasCSSRuleBySelector` and `removeCSSRuleBySelector` to the `BaseElement` class
 * [0.5.8] 2022-ago-30
   - added `isHTMLTag` to the `WebHelpers` class
   - added `UNKNOWN_TAG` warning to the `RuntimeErrors`

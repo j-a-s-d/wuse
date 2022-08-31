@@ -624,6 +624,25 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
+  hasCSSRuleBySelector(selector) {
+    for (let idx = 0; idx < this.#rules.length; idx++) {
+      if (this.#rules[idx].selector === selector) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  removeCSSRuleBySelector(selector) {
+    for (let idx = 0; idx < this.#rules.length; idx++) {
+      if (this.#rules[idx].selector === selector) {
+        this.#rules.splice(idx, 1);
+        break;
+      }
+    }
+    return this;
+  }
+
   lockChildElements() {
     this.#children.locked = true;
     return this;
@@ -722,6 +741,15 @@ export default class BaseElement extends window.HTMLElement {
 
   makeExternalReactiveField(mirror, name, value, handler, initial = true) {
     return this.makeReactiveField(name, mirror[name] || value, actions => { mirror[name] = this[name]; handler(actions) }, initial);
+  }
+
+  hasField(name) {
+    for (let idx = 0; idx < this.#fields.length; idx++) {
+      if (this.#fields[idx].name === name) {
+        return true;
+      }
+    }
+    return false;
   }
 
   suspendRender() {
