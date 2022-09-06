@@ -27,6 +27,10 @@ class Plain_Progress_Bar extends Wuse.OpenShadowElement {
     .setMainAttribute("max", this.maximum)
     .setMainAttribute("value", this.percentage);
 
+  on_reconstruct(state) {
+    this.restoreFromElementsStore();
+  }
+
   on_load() {
     this.#updateValues();
   }

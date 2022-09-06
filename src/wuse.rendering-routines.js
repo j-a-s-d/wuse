@@ -51,7 +51,7 @@ export default class RenderingRoutines {
       if (hasObjectKeys(child.style)) {
         var c = " style='";
         for (const property in child.style) {
-          c += property + ": " + child.style[property] + "; ";
+          c += `${property}: ${child.style[property]}; `;
         }
         c += "'";
         child.replacements["styles"].forEach(r => c = replacer(c, r));

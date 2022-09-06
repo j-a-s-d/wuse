@@ -11,7 +11,7 @@ class ReplacementMarkers {
 
   static enclose = match => this.begin + match + this.end;
 
-  static makeRegExp = () => new window.RegExp("(?<=" + this.begin + ").*?(?=" + this.end + ")", "gs");
+  static makeRegExp = () => new window.RegExp(`(?<=${this.begin}).*?(?=${this.end})`, "gs");
 
   static initialize(begin, end) {
     this.begin = begin;

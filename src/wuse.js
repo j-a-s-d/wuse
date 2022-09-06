@@ -12,7 +12,7 @@ import WuseBaseElement from './wuse.base-element.js';
 import WuseStringHashing from './wuse.string-hashing.js';
 import { version } from '../package.json';
 
-window.Wuse = class {
+window.Wuse = window.Wuse || class {
 
   // READONLY PROPERTIES
 

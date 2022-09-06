@@ -356,6 +356,7 @@ export default class BaseElement extends window.HTMLElement {
 
   // ELEMENT STATE
   #initializeElementState() {
+    if (this.dataset.wusekey) this.setElementsStoreKey(this.dataset.wusekey);
     if (this.#keyed) {
       const state = this.#elementsStore.hasItem(this.#key) ?
         this.#elementsStore.getItem(this.#key) : WuseElementParts.newState();
@@ -367,6 +368,9 @@ export default class BaseElement extends window.HTMLElement {
       } else {
         RuntimeErrors.onInvalidState();
       }
+    } else {
+      this.#elementState = WuseElementParts.newState();
+      this.#elementState.generation++;
     }
     return false;
   }
@@ -431,6 +435,7 @@ export default class BaseElement extends window.HTMLElement {
     if (window.Wuse.MEASURE) this.#measurement.dettachment.start();
     this.#bind(false);
     this.#elementEvents.immediateTrigger("on_disconnect");
+    if (this.#keyed) this.persistToElementsStore();
     if (window.Wuse.MEASURE) this.#measurement.dettachment.stop(window.Wuse.DEBUG);
   }
 
@@ -452,7 +457,10 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   setElementsStoreKey(key) {
-    this.#keyed = isNonEmptyString(this.#key = key);
+    if (this.#keyed = isNonEmptyString(this.#key = key)) {
+      this.setAttribute(WuseStringConstants.WUSEKEY_ATTRIBUTE, this.#key);
+      this.persistToElementsStore();
+    }
     return this;
   }
 

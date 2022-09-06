@@ -39,6 +39,10 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.6.0] 2022-sep-06
+  - improved state management
+  - adjusted instantiation process events nomenclature renaming them to `on_element_instantiated` and `on_bad_target`
+  - added `WUSEKEY_ATTRIBUTE` and `WUSENODE_ATTRIBUTE` to the `StringConstants` class
 * [0.5.9] 2022-ago-31
   - added `hasField`, `hasCSSRuleBySelector` and `removeCSSRuleBySelector` to the `BaseElement` class
 * [0.5.8] 2022-ago-30

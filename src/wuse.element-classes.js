@@ -44,12 +44,12 @@ export default class ElementClasses {
     try {
       t = window.document.querySelector(target);
     } catch {
-      if (ensureFunction(events.onBadTarget)(target) === false) return;
+      if (ensureFunction(events.on_bad_target)(target) === false) return;
     } finally {
       t = t || window.document.body;
     }
     const x = window.document.createElement(klass.tag);
-    ensureFunction(events.onElementInstantiated)(x, target);
+    ensureFunction(events.on_element_instantiated)(x, target);
     t.appendChild(x);
   }
 

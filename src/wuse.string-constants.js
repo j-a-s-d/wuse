@@ -20,4 +20,8 @@ export default class StringConstants {
 
   static get DEFAULT_REPLACEMENT_CLOSE() { return "}~"; }
 
+  static get WUSEKEY_ATTRIBUTE() { return "data-wusekey"; }
+
+  static get WUSENODE_ATTRIBUTE() { return "data-wusenode"; }
+
 }

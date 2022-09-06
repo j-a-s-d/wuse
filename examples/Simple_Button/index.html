@@ -14,7 +14,7 @@
     document.getElementsByTagName("simple-button")[0].onclick = e => alert("EN");
 
     Wuse.instantiate(Simple_Button, "body", {
-      onElementInstantiated: el => {
+      on_element_instantiated: el => {
         el.setAttribute("id", "btnES");
         el.backgroundcolor = "red";
         el.foregroundcolor = "yellow";
@@ -24,7 +24,7 @@
     document.getElementById("btnES").onclick = e => alert("ES");
 
     Wuse.instantiate(Simple_Button, "body", {
-      onElementInstantiated: el => {
+      on_element_instantiated: el => {
         el.backgroundcolor = "green";
         el.foregroundcolor = "yellow";
         el.text = "Isto é um botão";
@@ -32,7 +32,7 @@
       }
     });
 
-    Wuse.instantiate(Simple_Button, "", { onBadTarget: target => false });
+    Wuse.instantiate(Simple_Button, "", { on_bad_target: target => false });
   </script>
 </body>
 </html>

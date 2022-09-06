@@ -5,7 +5,7 @@ const { isHTMLTag } = WebHelpers;
 import JsHelpers from './wuse.javascript-helpers.js';
 const { EMPTY_STRING, EMPTY_ARRAY, noop, buildArray, buildObject, isOf, hasObjectKeys, isNonEmptyString, forcedStringSplit } = JsHelpers;
 import StringConstants from './wuse.string-constants.js';
-const { DEFAULT_TAG, DEFAULT_KIND, TEMPLATES_KIND, SLOTS_KIND, TEXTNODE_TAG } = StringConstants;
+const { WUSENODE_ATTRIBUTE, DEFAULT_TAG, DEFAULT_KIND, TEMPLATES_KIND, SLOTS_KIND, TEXTNODE_TAG } = StringConstants;
 
 const RuntimeErrors = {
   onInvalidDefinition: noop,
@@ -180,7 +180,7 @@ const doValidations = child => {
       }
     } else if (child.tag.indexOf('-') === -1 ? (!isHTMLTag(child.tag) && child.tag !== TEXTNODE_TAG) : !window.customElements.get(child.tag)) {
       return RuntimeErrors.onUnknownTag(child.tag);
-    } else if (typeof child.id !== "string" || (isNonEmptyString(child.id) && window.document.getElementById(child.id) !== null)) {
+    } else if (typeof child.id !== "string" /*|| (isNonEmptyString(child.id) && window.document.getElementById(child.id) !== null)*/) {
       return RuntimeErrors.onInvalidId(child.id);
     }
   }
@@ -201,7 +201,7 @@ const createMainNode = mainDefinition => {
   if (hasObjectKeys(mainDefinition.style)) {
     var style = new window.String();
     for (const property in mainDefinition.style) {
-      style += property + ": " + mainDefinition.style[property] + "; ";
+      style += `${property}: ${mainDefinition.style[property]}; `;
     }
     if (!!style.length) {
       const v = style.trim();
@@ -213,6 +213,7 @@ const createMainNode = mainDefinition => {
       result.setAttribute(property, mainDefinition.attributes[property]);
     }
   }
+  result.setAttribute(WUSENODE_ATTRIBUTE, "main");
   return result;
 }
 
@@ -224,6 +225,7 @@ const createStyleNode = (media, type) => {
   if (isNonEmptyString(type)) {
     result.setAttribute("type", type);
   }
+  result.setAttribute(WUSENODE_ATTRIBUTE, "style");
   result.appendChild(window.document.createTextNode(EMPTY_STRING)); // NOTE: check if this webkit hack is still required
   return result;
 }
