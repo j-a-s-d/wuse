@@ -6,6 +6,7 @@ import WuseStringConstants from './wuse.string-constants.js';
 import WuseTextReplacements from './wuse.text-replacements.js';
 import WuseRenderingRoutines from './wuse.rendering-routines.js';
 import WuseEqualityAnalyzer from './wuse.equality-analyzer.js';
+import WuseStateManager from './wuse.state-manager.js';
 import WuseNodeManager from './wuse.node-manager.js';
 import WuseContentManager from './wuse.content-manager.js';
 import WusePartsHolder from './wuse.parts-holder.js';
@@ -118,10 +119,41 @@ export default class BaseElement extends window.HTMLElement {
   #rendering = true;
 
   // ELEMENT STATE
-  #elementsStore = window.Wuse.elementsStorage;
-  #elementState = null;
-  #key = new window.String();
-  #keyed = false;
+  #stateReader = data => {
+    if (data) {
+      this.#options = data.options;
+      this.#slotted = data.slotted;
+      this.#identified = data.identified;
+      this.#html = data.html;
+      this.#children.restore(data.children);
+      this.#children.owner = this;
+      this.#rules.restore(data.rules);
+      this.#rules.owner = this;
+      this.#fields.restore(data.fields);
+      this.#fields.owner = this;
+      this.#fields.recall();
+    }
+  };
+  #stateWriter = () => {
+    this.#fields.snapshot();
+    return {
+      options: this.#options,
+      html: this.#html,
+      children: this.#children.persist(),
+      rules: this.#rules.persist(),
+      fields: this.#fields.persist(),
+      slotted: this.#slotted,
+      identified: this.#identified
+    };
+  };
+  #stateManager = new (class extends WuseStateManager {
+    on_invalid_state() {
+      RuntimeErrors.onInvalidState();
+    }
+    on_invalid_key() {
+      RuntimeErrors.onInvalidKey();
+    }
+  })(WuseElementParts.newState, this.#stateReader, this.#stateWriter, window.Wuse.elementsStorage);
 
   // RENDERING STATE
   #contents = {
@@ -169,7 +201,7 @@ export default class BaseElement extends window.HTMLElement {
   #bindingPerformers = {
     bind: {
       key: () => {
-        const performer = (id) => {
+        const performer = id => {
           if (isNonEmptyString(id)) this[id] = this.#getElementByIdFromRoot(id);
         }
         if (this.#identified) performer(this.#options.mainDefinition.id);
@@ -179,7 +211,7 @@ export default class BaseElement extends window.HTMLElement {
     },
     unbind: {
       key: () => {
-        const performer = (id) => delete this[id];
+        const performer = id => delete this[id];
         if (this.#identified) performer(this.#options.mainDefinition.id);
         return child => performer(child.id);
       },
@@ -211,9 +243,7 @@ export default class BaseElement extends window.HTMLElement {
 
   // DOM ROUTINES
   #insertElements() {
-    if (this.#style) {
-      this.#style.affiliate();
-    }
+    if (this.#style) this.#style.affiliate();
     this.#main.affiliate();
     this.#inserted = true;
   }
@@ -300,7 +330,7 @@ export default class BaseElement extends window.HTMLElement {
       this.#bind(true);
       this.info.updatedRounds++;
       this.#elementEvents.immediateTrigger("on_update");
-      if (this.#keyed) this.persistToElementsStore();
+      this.#stateManager.writeState();
       this.#elementEvents.committedTrigger("on_refresh");
     } else {
       this.info.unmodifiedRounds++;
@@ -330,7 +360,7 @@ export default class BaseElement extends window.HTMLElement {
     this.#elementEvents.immediateTrigger("on_unload");
     this.#elementEvents.detect();
     this.#inject("on_reload");
-    if (this.#keyed) this.persistToElementsStore();
+    this.#stateManager.writeState();
     this.#elementEvents.committedTrigger("on_repaint");
     if (window.Wuse.MEASURE) this.#measurement.full.stop(window.Wuse.DEBUG);
   }
@@ -354,51 +384,6 @@ export default class BaseElement extends window.HTMLElement {
     }
   }
 
-  // ELEMENT STATE
-  #initializeElementState() {
-    if (this.dataset.wusekey) this.setElementsStoreKey(this.dataset.wusekey);
-    if (this.#keyed) {
-      const state = this.#elementsStore.hasItem(this.#key) ?
-        this.#elementsStore.getItem(this.#key) : WuseElementParts.newState();
-      if (isOf(state, window.Object)) {
-        this.#elementState = state;
-        this.#elementState.generation++;
-        this.#persistElementState();
-        return true;
-      } else {
-        RuntimeErrors.onInvalidState();
-      }
-    } else {
-      this.#elementState = WuseElementParts.newState();
-      this.#elementState.generation++;
-    }
-    return false;
-  }
-
-  #persistElementState() {
-    if (window.Wuse.DEBUG) this.#elementState.key = this.#key;
-    this.#elementState.persisted = !!this.#elementState.data;
-    this.#elementsStore.setItem(this.#key, this.#elementState);
-  }
-
-  #eraseFromElementsStore() {
-    const state = this.#elementState;
-    if (isOf(state, window.Object) && state.persisted && state.data) {
-      delete state.data;
-      this.#persistElementState();
-      return true;
-    }
-    return false;
-  }
-
-  #validateElementsStoreKey() {
-    if (!this.#keyed) {
-      RuntimeErrors.onInvalidKey();
-      return false;
-    }
-    return true;
-  }
-
   // PUBLIC
 
   info = {
@@ -413,8 +398,9 @@ export default class BaseElement extends window.HTMLElement {
     this.#elementEvents.detect();
     this.#elementEvents.immediateTrigger("on_create");
     if (this.#options.attributeKeys) this.getAttributeNames().forEach(attr => this[attr] = this.getAttribute(attr));
-    this.#initializeElementState() && this.#elementState.generation > 1 ?
-      this.#elementEvents.immediateTrigger("on_reconstruct", this.#elementState) :
+    if (this.dataset.wusekey) this.setElementsStoreKey(this.dataset.wusekey);
+    this.#stateManager.initializeState() > 1 ?
+      this.#elementEvents.immediateTrigger("on_reconstruct", this.#stateManager.state) :
       this.#elementEvents.immediateTrigger("on_construct");
   }
 
@@ -427,7 +413,7 @@ export default class BaseElement extends window.HTMLElement {
     this.#elementEvents.detect();
     this.#elementEvents.immediateTrigger("on_connect");
     this.#inject("on_load");
-    if (this.#keyed) this.persistToElementsStore();
+    this.#stateManager.writeState();
     if (window.Wuse.MEASURE) this.#measurement.attachment.stop(window.Wuse.DEBUG);
   }
 
@@ -435,79 +421,45 @@ export default class BaseElement extends window.HTMLElement {
     if (window.Wuse.MEASURE) this.#measurement.dettachment.start();
     this.#bind(false);
     this.#elementEvents.immediateTrigger("on_disconnect");
-    if (this.#keyed) this.persistToElementsStore();
+    this.#stateManager.writeState();
     if (window.Wuse.MEASURE) this.#measurement.dettachment.stop(window.Wuse.DEBUG);
   }
 
   getElementsStore() {
-    return this.#elementsStore;
+    return this.#stateManager.getStore();
   }
 
-  setElementsStore(storage) {
-    this.#elementsStore = storage;
+  setElementsStore(store) {
+    this.#stateManager.setStore(store);
     return this;
   }
 
-  hasElementsStoreKey(key) {
-    return this.#keyed;
+  hasElementsStoreKey() {
+    return this.#stateManager.hasKey();
   }
 
   getElementsStoreKey(key) {
-    return this.#key;
+    return this.#stateManager.key;
   }
 
   setElementsStoreKey(key) {
-    if (this.#keyed = isNonEmptyString(this.#key = key)) {
-      this.setAttribute(WuseStringConstants.WUSEKEY_ATTRIBUTE, this.#key);
-      this.persistToElementsStore();
+    if (this.#stateManager.key = key) {
+      this.setAttribute(WuseStringConstants.WUSEKEY_ATTRIBUTE, key);
+      this.#stateManager.writeState();
     }
     return this;
   }
 
   persistToElementsStore() {
-    if (this.#validateElementsStoreKey()) {
-      const state = this.#elementState;
-      if (isOf(state, window.Object)) {
-        this.#fields.snapshot();
-        state.data = new window.Object({
-          options: this.#options,
-          html: this.#html,
-          children: this.#children.persist(),
-          rules: this.#rules.persist(),
-          fields: this.#fields.persist(),
-          slotted: this.#slotted,
-          identified: this.#identified
-        });
-        this.#persistElementState();
-        return true;
-      }
-    }
-    return false;
+    return this.#stateManager.validateKey() && this.#stateManager.writeState();
   }
 
   restoreFromElementsStore() {
-    if (this.#validateElementsStoreKey()) {
-      const state = this.#elementState;
-      if (isOf(state, window.Object) && state.persisted && state.data) {
-        this.#options = state.data.options;
-        this.#slotted = state.data.slotted;
-        this.#identified = state.data.identified;
-        this.#html = state.data.html;
-        this.#children.restore(state.data.children);
-        this.#children.owner = this;
-        this.#rules.restore(state.data.rules);
-        this.#rules.owner = this;
-        this.#fields.restore(state.data.fields);
-        this.#fields.owner = this;
-        this.#fields.recall();
-        return true;
-      }
-    }
-    return false;
+    return this.#stateManager.validateKey() && this.#stateManager.readState();
   }
 
   removeFromElementsStore() {
-    return this.#validateElementsStoreKey() && this.#eraseFromElementsStore();
+    return this.#stateManager.validateKey() && this.#stateManager.eraseState();
   }
 
   selectChildElement(x) {
@@ -639,6 +591,16 @@ export default class BaseElement extends window.HTMLElement {
       }
     }
     return false;
+  }
+
+  replaceCSSRuleBySelector(selector, properties) {
+    for (let idx = 0; idx < this.#rules.length; idx++) {
+      if (this.#rules[idx].selector === selector) {
+        this.#rules[idx] = WuseElementParts.newRule(selector, properties);
+        break;
+      }
+    }
+    return this;
   }
 
   removeCSSRuleBySelector(selector) {

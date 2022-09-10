@@ -39,6 +39,10 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.6.1] 2022-sep-10
+  - extracted `StateManager` class to an external file
+  - added `StateManager` class unit test
+  - added `replaceCSSRuleBySelector` to the `BaseElement` class
 * [0.6.0] 2022-sep-06
   - improved state management
   - adjusted instantiation process events nomenclature renaming them to `on_element_instantiated` and `on_bad_target`
