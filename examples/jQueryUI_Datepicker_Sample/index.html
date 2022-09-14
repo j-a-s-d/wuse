@@ -1,0 +1,53 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+  <title>Wuse | jQueryUI Datepicker Sample example</title>
+  <script src="../../dist/wuse.min.js"></script>
+</head>
+<body>
+  <p>This is a port of the <a href="https://jqueryui.com/datepicker/" target="_blank">jQuery UI Datepicker "Default functionality" example</a>.</p>
+  <hr/>
+  <script>
+    Wuse.instantiate(class jQueryUI_Datepicker_Sample extends Wuse.NonShadowElement {
+
+      static { Wuse.register(this); }
+
+      #setup() {
+        $("#datepicker").datepicker();
+      }
+
+      #clean() {
+        $(".ui-datepicker").remove();
+      }
+  
+      on_create() {
+        this
+          .setMainElement("p")
+          .allowRawContent(true)
+          .setRawContent("Date: ")
+          .appendChildElement("input#datepicker[type=text]");
+      }
+
+      on_connect() {
+        this.#clean();
+      }
+  
+      on_load() {
+        this.#setup();
+      }
+
+      on_reload() {
+        this.#setup();
+      }
+
+    });
+  </script>
+</body>
+</html>
+

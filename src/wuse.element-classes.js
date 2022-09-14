@@ -1,12 +1,13 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
 import JsHelpers from './wuse.javascript-helpers.js';
-const { noop, ensureFunction, isAssignedObject, isAssignedArray, isNonEmptyArray } = JsHelpers;
+const { noop, ensureFunction, isAssignedObject, isAssignedArray, isNonEmptyArray, isOf } = JsHelpers;
 
 const convertClassNameToKebabCaseTag = name => name.toLowerCase().replaceAll("_", "-");
 
 export default class ElementClasses {
-  
+
+  static #onBadTarget = noop;  
   static #onDeferredInstantiation = noop;
   static #onMisnamedClass = noop;
   static #onInvalidClass = noop;
@@ -44,12 +45,16 @@ export default class ElementClasses {
     try {
       t = window.document.querySelector(target);
     } catch {
-      if (ensureFunction(events.on_bad_target)(target) === false) return;
+      // on_bad_target happens when the specified target is not a valid query selector (for ex. a number), if this event is not specified a console warning is emitted
+      if (!isOf(events.on_bad_target, window.Function)) {
+        this.#onBadTarget(target);
+        return;
+      } else if (events.on_bad_target(target) === false) return;
     } finally {
       t = t || window.document.body;
     }
     const x = window.document.createElement(klass.tag);
-    ensureFunction(events.on_element_instantiated)(x, target);
+    ensureFunction(events.on_element_instantiated)(x, target); // on_element_instantiated happens after the creation of an element and before it's addition to it's parent target
     t.appendChild(x);
   }
 
@@ -67,6 +72,7 @@ export default class ElementClasses {
 
   static initialize(events) {
     if (isAssignedObject(events)) {
+      this.#onBadTarget = ensureFunction(events.onBadTarget, this.#onBadTarget);
       this.#onDeferredInstantiation = ensureFunction(events.onDeferredInstantiation, this.#onDeferredInstantiation);
       this.#onInvalidClass = ensureFunction(events.onInvalidClass, this.#onInvalidClass);
       this.#onMisnamedClass = ensureFunction(events.onMisnamedClass, this.#onMisnamedClass);

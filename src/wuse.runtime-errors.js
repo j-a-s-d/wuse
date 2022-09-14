@@ -85,5 +85,9 @@ export default class RuntimeErrors {
     return makeError(80, arg => `Unknown tag: ${arg}.`);
   }
 
+  static get BAD_TARGET() {
+    return makeError(81, arg => `Bad target: ${arg}.`);
+  }
+
 }
 

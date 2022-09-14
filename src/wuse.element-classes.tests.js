@@ -17,6 +17,7 @@ export default new class {
     tester.testResult(r, `<u>${name}</u> got initialized with a valid value (empty object): <i>${r}</i>`);
     var flag = "";
     r = module.initialize({
+      onBadTarget: () => { flag = "untargeted" },
       onMisnamedClass: () => { flag = "misnamed" },
       onUnregistrableClass: () => { flag = "unregistrable" },
       onUnregisteredClass: () => { flag = "unregistered" },
@@ -69,6 +70,8 @@ export default new class {
     tester.testResult(r, `<u>${name}</u> got instantiateClasses called with a valid value (array with a valid registered class): <i>${r}</i>`);
     r = module.instantiateClasses([B_B, C_C]) === undefined && flag === "";
     tester.testResult(r, `<u>${name}</u> got instantiateClasses called with a valid value (array with two valid registered classes): <i>${r}</i>`);
+    r = module.instantiateClasses([A_A], 123) === undefined && flag === "untargeted";
+    tester.testResult(r, `<u>${name}</u> got instantiateClasses called with a valid value but a bad target: <i>${r}</i>`);
   }
 
 }

@@ -42,6 +42,7 @@ export default class InitializationRoutines {
       onInvalidTemplate: WuseRuntimeErrors.INVALID_TEMPLATE.emit
     });
     WuseElementClasses.initialize({
+      onBadTarget: WuseRuntimeErrors.BAD_TARGET.emit,
       onMisnamedClass: WuseRuntimeErrors.MISNAMED_CLASS.emit,
       onUnregistrableClass: WuseRuntimeErrors.UNREGISTRABLE_CLASS.emit,
       onUnregisteredClass: WuseRuntimeErrors.UNREGISTERED_CLASS.emit,
