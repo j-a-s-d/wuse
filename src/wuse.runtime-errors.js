@@ -37,10 +37,6 @@ export default class RuntimeErrors {
     return makeError(5, arg => `Misnamed class: ${arg}.`);
   }
 
-  static get ALREADY_REGISTERED() {
-    return makeError(6, arg => `Already registered: ${arg}.`);
-  }
-
   static get INVALID_DEFINITION() {
     return makeError(10, arg => `Invalid definition: ${arg}.`);
   }
@@ -87,6 +83,10 @@ export default class RuntimeErrors {
 
   static get BAD_TARGET() {
     return makeError(81, arg => `Bad target: ${arg}.`);
+  }
+
+  static get ALREADY_REGISTERED() {
+    return makeError(90, arg => `Already registered: ${arg}.`);
   }
 
 }

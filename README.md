@@ -12,7 +12,7 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 
 * no external dependencies (none in runtime and only esbuild if you want to build from source)
 * self-documenting api (descriptive "long" function names)
-* full unit testing (400+ tests cases)
+* full unit testing (440+ tests cases)
 * markdown documentation [TODO]
 
 ## FEATURES
@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.6.3] 2022-sep-15
+  - added `Bootstrap_Radiogroup_Sample` example
+  - changed `ALREADY_REGISTERED` error to a warning
 * [0.6.2] 2022-sep-14
   - added `BAD_TARGET` warning to the `RuntimeErrors`
   - added `jQueryUI_Datepicker_Sample` example

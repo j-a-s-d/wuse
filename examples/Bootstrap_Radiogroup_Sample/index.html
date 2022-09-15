@@ -1,0 +1,46 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+  <title>Wuse | Bootstrap Radiogroup Sample</title>
+  <script src="../../dist/wuse.min.js"></script>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8" crossorigin="anonymous"></script>
+  <p>This is a port of the <a href="https://getbootstrap.com/docs/5.2/components/list-group/#checkboxes-and-radios" target="_blank">Bootstrap 5.2 Radio Group example</a>.</p>
+  <hr/>
+  <script>
+    Wuse.instantiate(class Bootstrap_Radiogroup_Sample extends Wuse.NonShadowElement {
+
+      static {
+        Wuse.register([class Bootstrap_RadioItem extends Wuse.NonShadowElement {
+          on_create() {
+            this
+              .setAttributesAsKeys(true)
+              .setMainElement("li.list-group-item")
+              .appendChildElements(`
+                input.form-check-input.me-1[id=~{for}~|type=radio|name=listGroupRadio|value='']
+                label.form-check-label[for=~{for}~]=~{caption}~
+              `)
+          }
+        }, this]);
+      }
+
+      on_create() {
+        this
+          .setMainElement("ul.list-group")
+          .appendChildElements(`
+            bootstrap-radioitem[for=firstRadio|caption='First radio']
+            bootstrap-radioitem[for=secondRadio|caption='Second radio']
+            bootstrap-radioitem[for=thirdRadio|caption='Third radio']
+          `);
+      }
+  
+    });
+  </script>
+</body>
+</html>
+

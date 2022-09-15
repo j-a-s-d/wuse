@@ -12,7 +12,6 @@ export default new class {
       "UNREGISTRABLE_CLASS",
       "INVALID_CLASS",
       "MISNAMED_CLASS",
-      "ALREADY_REGISTERED",
       "INVALID_DEFINITION",
       "INVALID_ID",
       "INVALID_KEY",
@@ -22,7 +21,10 @@ export default new class {
       "EXTINCT_TEMPLATE",
       "INVALID_TEMPLATE",
       "UNESPECIFIED_SLOT",
-      "LOCKED_DEFINITION"
+      "LOCKED_DEFINITION",
+      "UNKNOWN_TAG",
+      "BAD_TARGET",
+      "ALREADY_REGISTERED"
     ].forEach(name => tester.testModuleProperty(module, name, ["existence", "type:object"], this[name]));
   }
 
@@ -39,8 +41,6 @@ export default new class {
   INVALID_CLASS = (tester, module, mb) => this.testError(tester, module, mb, 4);
 
   MISNAMED_CLASS = (tester, module, mb) => this.testError(tester, module, mb, 5);
-
-  ALREADY_REGISTERED = (tester, module, mb) => this.testError(tester, module, mb, 6);
 
   INVALID_DEFINITION = (tester, module, mb) => this.testError(tester, module, mb, 10);
 
@@ -61,6 +61,12 @@ export default new class {
   UNESPECIFIED_SLOT = (tester, module, mb) => this.testError(tester, module, mb, 30);
 
   LOCKED_DEFINITION = (tester, module, mb) => this.testError(tester, module, mb, 40);
+
+  UNKNOWN_TAG = (tester, module, mb) => this.testError(tester, module, mb, 80);
+
+  BAD_TARGET = (tester, module, mb) => this.testError(tester, module, mb, 81);
+
+  ALREADY_REGISTERED = (tester, module, mb) => this.testError(tester, module, mb, 90);
 
 }
 
