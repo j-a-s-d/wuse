@@ -50,6 +50,12 @@ export default new class {
     const x = { cache: "blah", rendering: false };
     r = module.cacheInvalidator(x) === null && x.cache === null;
     tester.testResult(r, `<u>${name}</u> got cacheInvalidator called with a valid value (object with cache field): <i>${r}</i>`);
+    r = module.slotsInvalidator(x) === undefined;
+    tester.testResult(r, `<u>${name}</u> got slotsInvalidator called with an invalid value (object without slots kind): <i>${r}</i>`);
+    x.cache = "blah";
+    x.kind = "%slots%";
+    r = module.slotsInvalidator(x) === null && x.cache === null;
+    tester.testResult(r, `<u>${name}</u> got slotInvalidator called with a valid value (object with cache field and slots kind): <i>${r}</i>`);
     r = module.renderingIncluder(x) === true && x.included === true;
     tester.testResult(r, `<u>${name}</u> got renderingIncluder called with a valid value (object with included field): <i>${r}</i>`);
     r = module.renderingExcluder(x) === false && x.included === false;

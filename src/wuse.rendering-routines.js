@@ -5,13 +5,15 @@ const { noop, isOf, hasObjectKeys, isNonEmptyString, isNonEmptyArray, isAssigned
 import WebHelpers from './wuse.web-helpers.js';
 const { htmlEncode } = WebHelpers;
 import StringConstants from './wuse.string-constants.js';
-const { TEMPLATES_KIND, TEXTNODE_TAG } = StringConstants;
+const { SLOTS_KIND, TEMPLATES_KIND, TEXTNODE_TAG } = StringConstants;
 
 export default class RenderingRoutines {
 
     static #onFetchTemplate = noop;
 
     static cacheInvalidator = item => item.cache = null;
+
+    static slotsInvalidator = item => item.kind === SLOTS_KIND ? this.cacheInvalidator(item) : undefined;
 
     static renderingIncluder = item => item.included = true;
 

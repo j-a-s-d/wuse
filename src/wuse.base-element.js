@@ -172,6 +172,10 @@ export default class BaseElement extends window.HTMLElement {
         this.owner.#main.promote(content); // child change
       }
     })(this),
+    verifiers: {
+      main: content => !this.#waste.main.compute(content),
+      style: content => !this.#waste.style.compute(content)
+    },
     renderizers: {
       rule: rule => this.#contents.style.append(rule.cache ? rule.cache : rule.cache = WuseRenderingRoutines.renderRule(this.#renderingReplacer, rule)),
       children: {
@@ -308,8 +312,8 @@ export default class BaseElement extends window.HTMLElement {
     const r = this.#slotted ? this.#contents.renderizers.children.mixed : this.#contents.renderizers.children.normal;
     this.#children.forEach(child => child.included && r(child));
     this.#rules.forEach(this.#contents.renderizers.rule);
-    this.#contents.main.verify(content => !this.#waste.main.compute(content));
-    this.#contents.style.verify(content => !this.#waste.style.compute(content));
+    this.#contents.main.verify(this.#contents.verifiers.main);
+    this.#contents.style.verify(this.#contents.verifiers.style);
   }
 
   #commitContents(forceRoot, forceStyle, forceMain) {
@@ -377,7 +381,7 @@ export default class BaseElement extends window.HTMLElement {
         if (childrenHits.some(x => !!x.kind.length)) {
           // NOTE: when a slot gets invalidated the replaceChild will drop all other slots,
           // so to avoid a full redraw, all other slots are required to be invalidated too.
-          this.#children.forEach(x => x.kind === WuseStringConstants.SLOTS_KIND ? WuseRenderingRoutines.cacheInvalidator(x) : undefined);
+          this.#children.forEach(WuseRenderingRoutines.slotsInvalidator);
         }
         this.render();
       }
@@ -399,9 +403,9 @@ export default class BaseElement extends window.HTMLElement {
     this.#elementEvents.immediateTrigger("on_create");
     if (this.#options.attributeKeys) this.getAttributeNames().forEach(attr => this[attr] = this.getAttribute(attr));
     if (this.dataset.wusekey) this.setElementsStoreKey(this.dataset.wusekey);
-    this.#stateManager.initializeState() > 1 ?
-      this.#elementEvents.immediateTrigger("on_reconstruct", this.#stateManager.state) :
-      this.#elementEvents.immediateTrigger("on_construct");
+    this.#elementEvents.immediateTrigger(
+      this.#stateManager.initializeState() > 1 ? "on_reconstruct" : "on_construct", this.#stateManager.state
+    );
   }
 
   get render() { return this.#binded ? this.#render : noop }

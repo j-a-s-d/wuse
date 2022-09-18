@@ -1,0 +1,100 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@2.1.0/build/pure-min.css" integrity="sha384-yHIFVG6ClnONEA5yB5DJXfW2/KC173DIQrYoZMEtBvGzmf0PKiGyNEqe9N6BNDBH" crossorigin="anonymous">
+  <script src="https://purecss.io/js/menus.js" defer="defer"></script>
+  <title>Wuse | PureCSS DropdownMenu Sample</title>
+  <script src="../../dist/wuse.min.js"></script>
+</head>
+<body>
+  <p>This is a port of the <a href="https://purecss.io/menus/#dropdowns" target="_blank">PureCSS 2.1 Dropdowns example</a>.</p>
+  <hr/>
+  <script>
+    Wuse.instantiate(class PureCSS_DropdownMenu_Sample extends Wuse.NonShadowElement {
+      static appendItems = (target, items, level) => {
+        const makeLevelItemsParser = level => item => {
+          let result = {
+            tag: "purecss-menuitem",
+            caption: item
+          }
+          if (item[0] === '!') {
+            result.tag = "purecss-submenuitem";
+            result.caption = item.replace("!", "");
+            if (result.caption.indexOf(`$${level}$`) > -1) {
+              const p = result.caption.split(`$${level}$`);
+              result.caption = p[0];
+              result.subitems = p[1].replaceAll(`*${level}*`, ",");
+            }
+          }
+          return result;
+        };
+        const itemWriter = it =>
+          `${it.tag}[caption='${it.caption}'${it.subitems ? "|items='" + it.subitems + "'" : ""}]\n`;
+        const processItems = (items, processor) => {
+          var result = "";
+          items.forEach(item => result += itemWriter(processor(item)));
+          return result;
+        };
+        target.appendChildElements(processItems((items || "").split(","), makeLevelItemsParser(level)));
+        target.render();
+      };
+      static {
+        Wuse.register([
+          class PureCSS_MenuItem extends Wuse.NonShadowElement {
+            on_create() {
+              this
+                .setAttributesAsKeys(true)
+                .setMainElement("li.pure-menu-item")
+                .appendChildElement("a.pure-menu-link[href='#']=~{caption}~")
+            }
+          },
+          class PureCSS_SubmenuItems extends Wuse.NonShadowElement {
+            on_create() {
+              this
+                .setMainElement("ul")
+            }
+          },
+          class PureCSS_SubmenuItem extends Wuse.NonShadowElement {
+            on_create() {
+              this
+                .setAttributesAsKeys(true)
+                .setMainElement("li.pure-menu-item.pure-menu-has-children")
+                .appendChildElement("a.pure-menu-link[href='#']=~{caption}~")
+                .appendChildElement("purecss-submenuitems#subitems.pure-menu-children")
+            }
+            on_load() {
+              PureCSS_DropdownMenu_Sample.appendItems(this.subitems, this.items, 2);
+            }
+          }, 
+          class PureCSS_MenuList extends Wuse.NonShadowElement {
+            on_create() {
+              this
+                .setAttributesAsKeys(true)
+                .setMainElement("ul.pure-menu-list")
+            }
+            on_load() {
+              PureCSS_DropdownMenu_Sample.appendItems(this, this.items, 1);
+            }
+          },
+          this
+        ]);
+      }
+      on_create() {
+        this
+          .setMainElement("div.pure-menu.custom-restricted-width")
+          .appendChildElement("purecss-menulist[items=~{items}~]")
+          .appendCSSRule(".custom-restricted-width", "width: 10em")
+          .appendCSSRule("ul", "padding-inline-start: 0px")
+          .makeReactiveField("items", "")
+      }
+    }, "body", {
+      on_element_instantiated: el => 
+        el.items = "English,Spanish,Portuguese,French,!More$1$Italian*1*German*1*!Other$2$Swedish*2*Norwegian*2*Finnish"
+    });
+  </script>
+</body>
+</html>
+

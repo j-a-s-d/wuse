@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.6.4] 2022-sep-18
+  - added `slotsInvalidator` to the `WuseRenderingRoutines` class
+  - added `PureCSS_DropdownMenu_Sample` example
 * [0.6.3] 2022-sep-15
   - added `Bootstrap_Radiogroup_Sample` example
   - changed `ALREADY_REGISTERED` error to a warning

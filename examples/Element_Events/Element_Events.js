@@ -42,7 +42,7 @@ const INFO = `<i>Open the development tools console (usually F12) to see the eve
     <li>on_repaint</li>
   </ul>
   <hr>
-  After clicking <b>FORCE RECONSTRUCTION</b>, render() will be called (in this demo that is done automatically via the reactive field change) after an invalidating modification on the parent element of the buttons panel causing it's reconstruction (in this demo the buttons panel is being persisted/recovered from the elements store), and you will see:<br>
+  After clicking <b>FORCE RECONSTRUCTION (CSS)</b>, render() will be called (in this demo that is done automatically via the reactive field change) after an invalidating modification (CSS element position change) on the parent element of the buttons panel causing it's reconstruction (in this demo the buttons panel is being persisted/recovered from the elements store), and you will see:<br>
   <ul>
     <li><i>on_[element-id]_[event-type] (besides it's not part of the element event cycle, it's printed for your better understanding)</i></li>
     <li>on_create</li>
@@ -51,6 +51,19 @@ const INFO = `<i>Open the development tools console (usually F12) to see the eve
     <li>on_connect</li>
     <li>on_inject</li>
     <li>on_load</li>
+  </ul>
+  <hr>
+  After clicking <b>FORCE RECONSTRUCTION (HTM)</b>, render() will be called (in this demo that is done automatically via the reactive field change) after an invalidating modification (body inner HTML append) on the parent element of the buttons panel causing it's reconstruction (in this demo the buttons panel is being persisted/recovered from the elements store), and you will see:<br>
+  <ul>
+    <li><i>on_[element-id]_[event-type] (besides it's not part of the element event cycle, it's printed for your better understanding)</i></li>
+    <li>on_create</li>
+    <li>on_reconstruct</li>
+    <li>on_connect</li>
+    <li>on_inject</li>
+    <li>on_load</li>
+    <li>on_create</li>
+    <li>on_reconstruct</li>
+    <li>on_disconnect</li>
   </ul>
   <hr>
 `;
@@ -170,19 +183,34 @@ class Element_Events extends Wuse.NonShadowElement {
       .appendChildElement("buttons-panel")
       .appendCSSRule(".rel", "position: relative")
       .appendCSSRule(".abs", "position: absolute")
-      .appendCSSRule("#btnReconstruct", `
+      .appendCSSRule("#btnReconstructViaCSS", `
         cursor: pointer;
         color: white;
         background-color: purple;
         padding: 1em;
       `)
-      .appendChildElement("span#btnReconstruct.~{pos}~!click=FORCE RECONSTRUCTION")
+      .appendCSSRule("#btnReconstructViaHTM", `
+        cursor: pointer;
+        color: white;
+        background-color: maroon;
+        padding: 1em;
+      `)
+      .appendChildElements(`
+        span#btnReconstructViaHTM.~{pos}~!click=FORCE RECONSTRUCTION (VIA HTM)
+        hr[style=margin:2em]
+        span#btnReconstructViaCSS.~{pos}~!click=FORCE RECONSTRUCTION (VIA CSS)
+      `)
       .makeReactiveField("pos", "rel");
   }
 
-  on_btnReconstruct_click = () => {
+  on_btnReconstructViaCSS_click = () => {
     print("on_[element-id]_[event-type]", "on element event");
     this.pos = this.pos === "rel" ? "abs" : "rel";
+  }
+
+  on_btnReconstructViaHTM_click = () => {
+    print("on_[element-id]_[event-type]", "on element event");
+    window.document.body.innerHTML += "<hr style='margin: 2em'/>";
   }
 
 }
