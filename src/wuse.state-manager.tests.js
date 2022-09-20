@@ -56,6 +56,14 @@ export default new class {
     var x = instance.initializeState();
     r = x > -1 && instance.state.a === 123;
     tester.testResult(r, `<u>${name}</u> got state initialized: <i>${r}</i>`);
+    r = instance.nameFiliatedKey(1234567) === "test_1234567";
+    tester.testResult(r, `<u>${name}</u> named a filiated key: <i>${r}</i>`);
+    r = instance.hasFiliatedKey("test_1234567") === true;
+    tester.testResult(r, `<u>${name}</u> remembered successfully a named filiated key: <i>${r}</i>`);
+    r = instance.hasFiliatedKey("test_-987654") === false;
+    tester.testResult(r, `<u>${name}</u> failed to remember an unknown filiated key: <i>${r}</i>`);
+    r = instance.rememberFiliatedKey("test_-987654") === undefined && instance.hasFiliatedKey("test_-987654") === true;
+    tester.testResult(r, `<u>${name}</u> remembered a filiated key: <i>${r}</i>`);
   }
 
 }

@@ -81,14 +81,22 @@ export default new class {
   }
 
   performValidations = (tester, module, name) => {
+    var r = module.performValidations(null);
+    tester.testResult(r === null, `<u>${name}</u> called with an invalid value (null): <i>${r}</i>`);
+    var r = module.performValidations({});
+    tester.testResult(r === null, `<u>${name}</u> called with an invalid value (empty object): <i>${r}</i>`);
     var r = module.performValidations({ kind: "%templates%", id: "test" });
     tester.testResult(r === null, `<u>${name}</u> called with an invalid value (non-existent template): <i>${r}</i>`);
     r = module.performValidations({ kind: "%slots%", attributes: { "slot": "test" }});
     tester.testResult(typeof r === "object" && r.kind === "%slots%", `<u>${name}</u> called with a valid value (non-empty slot): <i>${r}</i>`);
     r = module.performValidations({ tag: "invalid" });
     tester.testResult(r === null, `<u>${name}</u> called with a invalid value (non-existent tag): <i>${r}</i>`);
+    r = module.performValidations({ tag: "invalid-custom" });
+    tester.testResult(r === null, `<u>${name}</u> called with a invalid value (non-existent custom tag): <i>${r}</i>`);
+    r = module.performValidations({ tag: "div", id: "" });
+    tester.testResult(typeof r === "object" && r.id === "", `<u>${name}</u> called with a valid value (valid tag with empty id): <i>${r}</i>`);
     r = module.performValidations({ tag: "div", id: "test" });
-    tester.testResult(typeof r === "object" && r.id === "test", `<u>${name}</u> called with a valid value (object with non-existent id): <i>${r}</i>`);
+    tester.testResult(typeof r === "object" && r.id === "test", `<u>${name}</u> called with a valid value (valid tag with non-existent id): <i>${r}</i>`);
   }
 
   makeMainNode = (tester, module, name) => {

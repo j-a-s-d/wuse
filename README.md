@@ -12,7 +12,7 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 
 * no external dependencies (none in runtime and only esbuild if you want to build from source)
 * self-documenting api (descriptive "long" function names)
-* full unit testing (440+ tests cases)
+* full unit testing (450+ tests cases)
 * markdown documentation [TODO]
 
 ## FEATURES
@@ -39,6 +39,10 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.6.5] 2022-sep-20
+  - added `nameFiliatedKey`, `rememberFiliatedKey` and `hasFiliatedKey` to the `StateManager` class
+  - added `deriveChildrenStoreKey` to the `BaseElement` class
+  - now children custom elements are assumed to be Wuse elements so automatically by default a filiated wusekey is added if not already present
 * [0.6.4] 2022-sep-18
   - added `slotsInvalidator` to the `WuseRenderingRoutines` class
   - added `PureCSS_DropdownMenu_Sample` example

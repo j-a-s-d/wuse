@@ -99,7 +99,8 @@ export default class BaseElement extends window.HTMLElement {
     styleType: WuseStringConstants.DEFAULT_STYLE_TYPE,
     rawContent: false,
     attributeKeys: false,
-    elementKeys: true
+    elementKeys: true,
+    autokeyChildren: true
   }
   #elementEvents = new WuseElementEvents(this);
 
@@ -119,6 +120,16 @@ export default class BaseElement extends window.HTMLElement {
   #rendering = true;
 
   // ELEMENT STATE
+  #filiatedKeys = {
+    tryToName: child => {
+      const wusekey = child.attributes[WuseStringConstants.WUSEKEY_ATTRIBUTE];
+      if (!wusekey) child.attributes[WuseStringConstants.WUSEKEY_ATTRIBUTE] = this.#stateManager.nameFiliatedKey(child.hash);
+    },
+    tryToRemember: child => {
+      const wusekey = child.attributes[WuseStringConstants.WUSEKEY_ATTRIBUTE];
+      if (wusekey) this.#stateManager.rememberFiliatedKey(wusekey);
+    }
+  };
   #stateReader = data => {
     if (data) {
       this.#options = data.options;
@@ -126,6 +137,7 @@ export default class BaseElement extends window.HTMLElement {
       this.#identified = data.identified;
       this.#html = data.html;
       this.#children.restore(data.children);
+      this.#children.forEach(this.#filiatedKeys.tryToRemember);
       this.#children.owner = this;
       this.#rules.restore(data.rules);
       this.#rules.owner = this;
@@ -205,9 +217,7 @@ export default class BaseElement extends window.HTMLElement {
   #bindingPerformers = {
     bind: {
       key: () => {
-        const performer = id => {
-          if (isNonEmptyString(id)) this[id] = this.#getElementByIdFromRoot(id);
-        }
+        const performer = id => isNonEmptyString(id) ? this[id] = this.#getElementByIdFromRoot(id) : undefined;
         if (this.#identified) performer(this.#options.mainDefinition.id);
         return child => performer(child.id);
       },
@@ -369,7 +379,7 @@ export default class BaseElement extends window.HTMLElement {
     if (window.Wuse.MEASURE) this.#measurement.full.stop(window.Wuse.DEBUG);
   }
 
-  // FIELD ROUTINES
+  // ROUTINES
   #fieldRender(name, label = "$none") {
     if (this.#binded) {
       const rulesHits = WuseTextReplacements.scanRulesForReplacements(this.#rules, name);
@@ -386,6 +396,14 @@ export default class BaseElement extends window.HTMLElement {
         this.render();
       }
     }
+  }
+
+  #makeChildElement(shorthandNotation, rules) {
+    const tmp = WuseElementParts.performValidations(WuseElementParts.newChild(shorthandNotation, rules));
+    if (tmp !== null && tmp.custom && this.#options.autokeyChildren && this.#stateManager.hasKey()) {
+      this.#filiatedKeys.tryToName(tmp);
+    }
+    return tmp;
   }
 
   // PUBLIC
@@ -452,6 +470,10 @@ export default class BaseElement extends window.HTMLElement {
       this.#stateManager.writeState();
     }
     return this;
+  }
+
+  deriveChildrenStoreKey(value) {
+    this.#options.autokeyChildren = value;
   }
 
   persistToElementsStore() {
@@ -628,13 +650,13 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   appendChildElement(shorthandNotation, rules) {
-    const tmp = WuseElementParts.performValidations(WuseElementParts.newChild(shorthandNotation, rules));
+    const tmp = this.#makeChildElement(shorthandNotation, rules);
     if (tmp !== null) this.#children.append(tmp);
     return this;
   }
 
   prependChildElement(shorthandNotation, rules) {
-    const tmp = WuseElementParts.performValidations(WuseElementParts.newChild(shorthandNotation, rules));
+    const tmp = this.#makeChildElement(shorthandNotation, rules);
     if (tmp !== null) this.#children.prepend(tmp);
     return this;
   }

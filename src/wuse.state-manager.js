@@ -12,6 +12,15 @@ export default class StateManager {
   #writer = null;
   #state = null;
   #store = null;
+  #filiated = new class extends window.Set {
+    name(parentKey, id) {
+      let key = `${parentKey}_${id}`;
+      var x = 0;
+      while (this.has(key)) key = `${parentKey}_${id}_${++x}`;
+      this.add(key);
+      return key;
+    }
+  }();
 
   #persistState() {
     if (this.#keyed) {
@@ -59,7 +68,20 @@ export default class StateManager {
     return true;
   }
 
+  nameFiliatedKey(id) {
+    return this.#filiated.name(this.#key, id);
+  }
+
+  rememberFiliatedKey(key) {
+    this.#filiated.add(key);
+  }
+
+  hasFiliatedKey(key) {
+    return this.#filiated.has(key);
+  }
+
   initializeState() {
+    this.#filiated.clear();
     if (this.#keyed) {
       const state = this.#store.hasItem(this.key) ?
         this.#store.getItem(this.key) : this.#maker();

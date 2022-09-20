@@ -6,6 +6,8 @@ import JsHelpers from './wuse.javascript-helpers.js';
 const { EMPTY_STRING, EMPTY_ARRAY, noop, buildArray, buildObject, isOf, hasObjectKeys, isNonEmptyString, forcedStringSplit } = JsHelpers;
 import StringConstants from './wuse.string-constants.js';
 const { WUSENODE_ATTRIBUTE, DEFAULT_TAG, DEFAULT_KIND, TEMPLATES_KIND, SLOTS_KIND, TEXTNODE_TAG } = StringConstants;
+import StringHashing from './wuse.string-hashing.js';
+const hash = StringHashing.defaultRoutine;
 
 const RuntimeErrors = {
   onInvalidDefinition: noop,
@@ -14,6 +16,8 @@ const RuntimeErrors = {
   onInvalidId: noop,
   onUnknownTag: noop
 }
+
+const isCustomTag = tag => tag.indexOf('-') > 0 && !isHTMLTag(tag);
 
 // PARSERS
 
@@ -162,6 +166,8 @@ const makeChild = (shorthandNotation, rules) => {
   if (!result) {
     return RuntimeErrors.onInvalidDefinition(shorthandNotation);
   }
+  result.custom = result.kind === DEFAULT_KIND && isCustomTag(result.tag); /*&& result.tag !== TEXTNODE_TAG*/
+  result.hash = hash(shorthandNotation);
   result.rules = isOf(rules, window.Array) ? rules : new window.Array();
   result.included = true;
   result.cache = null;
@@ -178,10 +184,10 @@ const doValidations = child => {
       if (new window.String(child.attributes["slot"]).replaceAll("\"", EMPTY_STRING).replaceAll("\'", EMPTY_STRING).length === 0) {
         return RuntimeErrors.onUnespecifiedSlot(child.id);
       }
-    } else if (child.tag.indexOf('-') === -1 ? (!isHTMLTag(child.tag) && child.tag !== TEXTNODE_TAG) : !window.customElements.get(child.tag)) {
-      return RuntimeErrors.onUnknownTag(child.tag);
     } else if (typeof child.id !== "string" /*|| (isNonEmptyString(child.id) && window.document.getElementById(child.id) !== null)*/) {
       return RuntimeErrors.onInvalidId(child.id);
+    } else if (child.custom && !window.customElements.get(child.tag)) {
+      RuntimeErrors.onUnknownTag(child.tag); // emit warning when a child custom element tag is not registered
     }
   }
   return child;
