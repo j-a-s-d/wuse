@@ -39,6 +39,10 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.6.6] 2022-sep-22
+  - added `dropField` to the `BaseElement` class
+  - extracted `ReactiveField` class to an external file
+  - added `ReactiveField` class unit test
 * [0.6.5] 2022-sep-20
   - added `nameFiliatedKey`, `rememberFiliatedKey` and `hasFiliatedKey` to the `StateManager` class
   - added `deriveChildrenStoreKey` to the `BaseElement` class

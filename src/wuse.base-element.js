@@ -1,8 +1,13 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
-import WuseJsHelpers from './wuse.javascript-helpers.js';
-const { EMPTY_STRING, noop, isOf, isNonEmptyArray, isNonEmptyString, forcedStringSplit } = WuseJsHelpers;
-import WuseStringConstants from './wuse.string-constants.js';
+import JsHelpers from './wuse.javascript-helpers.js';
+const { EMPTY_STRING, noop, isOf, isNonEmptyArray, isNonEmptyString, forcedStringSplit } = JsHelpers;
+import WebHelpers from './wuse.web-helpers.js';
+const { removeChildren } = WebHelpers;
+import StringConstants from './wuse.string-constants.js';
+const { WUSEKEY_ATTRIBUTE, DEFAULT_STYLE_TYPE, DEFAULT_STYLE_MEDIA, DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE, SLOTS_KIND } = StringConstants;
+import ReactiveField from './wuse.reactive-field.js';
+const { createReactiveField } = ReactiveField;
 import WuseTextReplacements from './wuse.text-replacements.js';
 import WuseRenderingRoutines from './wuse.rendering-routines.js';
 import WuseEqualityAnalyzer from './wuse.equality-analyzer.js';
@@ -13,25 +18,6 @@ import WusePartsHolder from './wuse.parts-holder.js';
 import WuseElementParts from './wuse.element-parts.js';
 import WuseElementModes from './wuse.element-modes.js';
 import WuseElementEvents from './wuse.element-events.js';
-
-function createReactiveField(obj, name, value, handler, renderizer) {
-  const redefiner = (get, set) => window.Object.defineProperty(obj, name, {
-    get, set, enumerable: true, configurable: true
-  });
-  const remover = () => delete obj[name];
-  const recreator = (v, maneuverer) => createReactiveField(obj, name, v, maneuverer, renderizer);
-  redefiner(() => value, (v) => {
-    recreator(v, handler);
-    !isOf(handler, window.Function) ? renderizer(name) : handler({
-      renderize: (label) => renderizer(name, label), // manual render
-      automate: () => recreator(v, null), // converts the field into an automatic reactive field (autorenders)
-      freeze: () => redefiner(() => v, (v) => {}), // freeze the field value until calling defreeze()
-      defreeze: () => recreator(v, handler), // defreezes the field after the freeze action
-      dereact: () => redefiner(() => v, (v) => { remover(); obj[name] = v }), // disable reactiveness (convert into a simple field)
-      remove: () => remover() // removes the field enterely
-    });
-  });
-}
 
 let RuntimeErrors = {
   onInvalidState: noop,
@@ -61,19 +47,28 @@ export default class BaseElement extends window.HTMLElement {
       if (window.Wuse.DEBUG) this.owner.#debug(`rules list is locked and can not be changed`);
       RuntimeErrors.onLockedDefinition(this.#options.mainDefinition.id);
     }
+    recall(instance, items) {
+      this.restore(items);
+      this.owner = instance;
+    }
   })(this); // CSS RULES
   #children = new (class extends WusePartsHolder {
     on_version_change() {
       if (this.last !== null) {
         this.last.version = this.version;
         this.last.replacements = WuseTextReplacements.extractReplacementsFromChild(this.last);
-        this.owner.#slotted |= (this.last.kind === WuseStringConstants.SLOTS_KIND);
+        this.owner.#slotted |= (this.last.kind === SLOTS_KIND);
       }
       if (window.Wuse.DEBUG) this.owner.#debug(`children list version change: ${this.version}`);
     }
     on_forbidden_change() {
       if (window.Wuse.DEBUG) this.owner.#debug(`children list is locked and can not be changed`);
       RuntimeErrors.onLockedDefinition(this.#options.mainDefinition.id);
+    }
+    recall(instance, items) {
+      this.restore(items);
+      this.owner = instance;
+      this.forEach(instance.#filiatedKeys.tryToRemember);
     }
   })(this); // HTML ELEMENTS
   #fields = new (class extends WusePartsHolder {
@@ -87,16 +82,18 @@ export default class BaseElement extends window.HTMLElement {
     snapshot() {
       this.forEach(x => x.value = this.owner[x.name]);
     }
-    recall() {
-      this.forEach(x => this.owner[x.name] = x.value);
+    recall(instance, items) {
+      this.restore(items);
+      this.owner = instance;
+      this.forEach(x => instance[x.name] = x.value);
     }
   })(this); // INSTANCE FIELDS
 
   // USER CUSTOMIZATION
   #options = {
     mainDefinition: WuseElementParts.newDefinition(),
-    styleMedia: WuseStringConstants.DEFAULT_STYLE_MEDIA,
-    styleType: WuseStringConstants.DEFAULT_STYLE_TYPE,
+    styleMedia: DEFAULT_STYLE_MEDIA,
+    styleType: DEFAULT_STYLE_TYPE,
     rawContent: false,
     attributeKeys: false,
     elementKeys: true,
@@ -122,11 +119,11 @@ export default class BaseElement extends window.HTMLElement {
   // ELEMENT STATE
   #filiatedKeys = {
     tryToName: child => {
-      const wusekey = child.attributes[WuseStringConstants.WUSEKEY_ATTRIBUTE];
-      if (!wusekey) child.attributes[WuseStringConstants.WUSEKEY_ATTRIBUTE] = this.#stateManager.nameFiliatedKey(child.hash);
+      const wusekey = child.attributes[WUSEKEY_ATTRIBUTE];
+      if (!wusekey) child.attributes[WUSEKEY_ATTRIBUTE] = this.#stateManager.nameFiliatedKey(child.hash);
     },
     tryToRemember: child => {
-      const wusekey = child.attributes[WuseStringConstants.WUSEKEY_ATTRIBUTE];
+      const wusekey = child.attributes[WUSEKEY_ATTRIBUTE];
       if (wusekey) this.#stateManager.rememberFiliatedKey(wusekey);
     }
   };
@@ -136,14 +133,9 @@ export default class BaseElement extends window.HTMLElement {
       this.#slotted = data.slotted;
       this.#identified = data.identified;
       this.#html = data.html;
-      this.#children.restore(data.children);
-      this.#children.forEach(this.#filiatedKeys.tryToRemember);
-      this.#children.owner = this;
-      this.#rules.restore(data.rules);
-      this.#rules.owner = this;
-      this.#fields.restore(data.fields);
-      this.#fields.owner = this;
-      this.#fields.recall();
+      this.#children.recall(this, data.children);
+      this.#rules.recall(this, data.rules);
+      this.#fields.recall(this, data.fields);
     }
   };
   #stateWriter = () => {
@@ -191,7 +183,7 @@ export default class BaseElement extends window.HTMLElement {
     renderizers: {
       rule: rule => this.#contents.style.append(rule.cache ? rule.cache : rule.cache = WuseRenderingRoutines.renderRule(this.#renderingReplacer, rule)),
       children: {
-        mixed: child => this.#shadowed && child.kind === WuseStringConstants.SLOTS_KIND ? this.#contents.renderizers.children.slot(child) : this.#contents.renderizers.children.normal(child),
+        mixed: child => this.#shadowed && child.kind === SLOTS_KIND ? this.#contents.renderizers.children.slot(child) : this.#contents.renderizers.children.normal(child),
         slot: child => {
           if (!child.cache) {
             this.#contents.root.verify(content => true);
@@ -277,7 +269,7 @@ export default class BaseElement extends window.HTMLElement {
     if (this.#inserted) {
       this.#main.disaffiliate();
       if (this.#style) this.#style.disaffiliate();
-      if (this.#slotted && this.#shadowed) window.Wuse.WebHelpers.removeChildren(this);
+      if (this.#slotted && this.#shadowed) removeChildren(this);
     }
     this.#inserted = false;
   }
@@ -466,7 +458,7 @@ export default class BaseElement extends window.HTMLElement {
 
   setElementsStoreKey(key) {
     if (this.#stateManager.key = key) {
-      this.setAttribute(WuseStringConstants.WUSEKEY_ATTRIBUTE, key);
+      this.setAttribute(WUSEKEY_ATTRIBUTE, key);
       this.#stateManager.writeState();
     }
     return this;
@@ -729,7 +721,7 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   makeReactiveField(name, value, handler, initial = true) {
-    createReactiveField(this, name, value, handler, (name, label) => this.#fieldRender(name, label || "$auto"));
+    createReactiveField(this, name, value, handler, (name, label) => this.#fieldRender(name, label || "$auto"), name => this.dropField(name));
     this.#fields.append({ name, value });
     if (initial) this.#fieldRender(name, "$init");
     return this;
@@ -742,6 +734,18 @@ export default class BaseElement extends window.HTMLElement {
   hasField(name) {
     for (let idx = 0; idx < this.#fields.length; idx++) {
       if (this.#fields[idx].name === name) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  dropField(name) {
+    for (let idx = 0; idx < this.#fields.length; idx++) {
+      if (this.#fields[idx].name === name) {
+        if (this.hasOwnProperty(name)) delete this[name];
+        this.#fields.splice(idx, 1);
+        this.#stateManager.writeState();
         return true;
       }
     }
@@ -768,7 +772,7 @@ export default class BaseElement extends window.HTMLElement {
   static instancesCount = 0;
 
   static initialize(options) {
-    WuseTextReplacements.initialize(WuseStringConstants.DEFAULT_REPLACEMENT_OPEN, WuseStringConstants.DEFAULT_REPLACEMENT_CLOSE);
+    WuseTextReplacements.initialize(DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE);
     if (isOf(options, window.Object)) {
       if (isOf(options.onFetchTemplate, window.Function)) {
         WuseRenderingRoutines.initialize({ onFetchTemplate: options.onFetchTemplate });
