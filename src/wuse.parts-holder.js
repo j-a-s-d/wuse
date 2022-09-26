@@ -57,6 +57,7 @@ export default class PartsHolder extends window.Array {
   }
 
   persist() {
+    this.forEach(this.on_snapshot_part);
     return buildArray(result => forEachOwnProperty(this, key => {
       switch (key) {
         case "owner":
@@ -78,7 +79,8 @@ export default class PartsHolder extends window.Array {
     }));
   }
 
-  restore(instance) {
+  restore(owner, instance) {
+    this.owner = owner;
     forEachOwnProperty(instance, key => {
       switch (key) {
         case "length":
@@ -96,7 +98,12 @@ export default class PartsHolder extends window.Array {
           break;
       }
     });
+    this.forEach(this.on_recall_part);
   }
+
+  on_snapshot_part() {}
+
+  on_recall_part() {}
 
   on_version_change() {}
 

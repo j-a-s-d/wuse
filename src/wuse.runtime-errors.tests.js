@@ -17,6 +17,7 @@ export default new class {
       "INVALID_KEY",
       "ALLOW_HTML",
       "INVALID_STATE",
+      "TAKEN_ID",
       "INEXISTENT_TEMPLATE",
       "EXTINCT_TEMPLATE",
       "INVALID_TEMPLATE",
@@ -51,6 +52,8 @@ export default new class {
   ALLOW_HTML = (tester, module, mb) => this.testError(tester, module, mb, 13);
 
   INVALID_STATE = (tester, module, mb) => this.testError(tester, module, mb, 14);
+
+  TAKEN_ID = (tester, module, mb) => this.testError(tester, module, mb, 15);
 
   INEXISTENT_TEMPLATE = (tester, module, mb) => this.testError(tester, module, mb, 20);
 

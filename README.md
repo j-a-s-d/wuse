@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.6.7] 2022-sep-26
+  - added `on_snapshot_part` and `on_recall_part` to the `PartsHolder` class
+  - added `TAKEN_ID` error to the `RuntimeErrors` class
 * [0.6.6] 2022-sep-22
   - added `dropField` to the `BaseElement` class
   - extracted `ReactiveField` class to an external file
@@ -54,7 +57,7 @@ Wuse does not require any build step to be performed.
   - added `Bootstrap_Radiogroup_Sample` example
   - changed `ALREADY_REGISTERED` error to a warning
 * [0.6.2] 2022-sep-14
-  - added `BAD_TARGET` warning to the `RuntimeErrors`
+  - added `BAD_TARGET` warning to the `RuntimeErrors` class
   - added `jQueryUI_Datepicker_Sample` example
 * [0.6.1] 2022-sep-10
   - extracted `StateManager` class to an external file
@@ -68,7 +71,7 @@ Wuse does not require any build step to be performed.
   - added `hasField`, `hasCSSRuleBySelector` and `removeCSSRuleBySelector` to the `BaseElement` class
 * [0.5.8] 2022-ago-30
   - added `isHTMLTag` to the `WebHelpers` class
-  - added `UNKNOWN_TAG` warning to the `RuntimeErrors`
+  - added `UNKNOWN_TAG` warning to the `RuntimeErrors` class
   - added `getMainAttribute` to the `BaseElement` class
   - extracted `ElementEvents` class to an external file
   - added `ElementEvents` class unit test

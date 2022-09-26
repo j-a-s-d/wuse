@@ -59,6 +59,7 @@ export default class InitializationRoutines {
       onUnespecifiedSlot: WuseRuntimeErrors.UNESPECIFIED_SLOT.emit,
       onUnknownTag: WuseRuntimeErrors.UNKNOWN_TAG.emit,
       onInvalidId: WuseRuntimeErrors.INVALID_ID.emit,
+      onTakenId: WuseRuntimeErrors.TAKEN_ID.emit,
       onInvalidState: WuseRuntimeErrors.INVALID_STATE.emit,
       onFetchTemplate: WuseTemplateImporter.fetch
     });

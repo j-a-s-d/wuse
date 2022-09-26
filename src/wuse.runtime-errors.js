@@ -57,6 +57,10 @@ export default class RuntimeErrors {
     return makeError(14, arg => `Invalid state.`);
   }
 
+  static get TAKEN_ID() {
+    return makeError(15, arg => `Taken id: ${arg}.`);
+  }
+
   static get INEXISTENT_TEMPLATE() {
     return makeError(20, arg => `Inexistent template: #${arg}.`);
   }

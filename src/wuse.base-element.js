@@ -24,8 +24,11 @@ let RuntimeErrors = {
   onInvalidKey: noop,
   onInvalidDefinition: noop,
   onLockedDefinition: noop,
+  onTakenId: noop,
   onAllowHTML: noop
 }
+
+const parseElement = (shorthandNotation, rules) => WuseElementParts.performValidations(WuseElementParts.newChild(shorthandNotation, rules));
 
 export default class BaseElement extends window.HTMLElement {
 
@@ -47,45 +50,36 @@ export default class BaseElement extends window.HTMLElement {
       if (window.Wuse.DEBUG) this.owner.#debug(`rules list is locked and can not be changed`);
       RuntimeErrors.onLockedDefinition(this.#options.mainDefinition.id);
     }
-    recall(instance, items) {
-      this.restore(items);
-      this.owner = instance;
-    }
   })(this); // CSS RULES
   #children = new (class extends WusePartsHolder {
+    detectSlots() {
+      var result = this.owner.#slotted;
+      this.forEach(child => result |= (child.kind === SLOTS_KIND));
+      this.owner.#slotted = result;
+    }
+    on_recall_part = part => this.owner.#filiatedKeys.tryToRemember(part);
     on_version_change() {
       if (this.last !== null) {
         this.last.version = this.version;
         this.last.replacements = WuseTextReplacements.extractReplacementsFromChild(this.last);
-        this.owner.#slotted |= (this.last.kind === SLOTS_KIND);
       }
+      this.detectSlots();
       if (window.Wuse.DEBUG) this.owner.#debug(`children list version change: ${this.version}`);
     }
     on_forbidden_change() {
       if (window.Wuse.DEBUG) this.owner.#debug(`children list is locked and can not be changed`);
       RuntimeErrors.onLockedDefinition(this.#options.mainDefinition.id);
     }
-    recall(instance, items) {
-      this.restore(items);
-      this.owner = instance;
-      this.forEach(instance.#filiatedKeys.tryToRemember);
-    }
   })(this); // HTML ELEMENTS
   #fields = new (class extends WusePartsHolder {
+    on_snapshot_part = part => part.value = this.owner[part.name];
+    on_recall_part = part => this.owner[part.name] = part.value;
     on_version_change() {
       if (window.Wuse.DEBUG) this.owner.#debug(`fields list version change: ${this.version}`);
     }
     on_forbidden_change() {
       if (window.Wuse.DEBUG) this.owner.#debug(`fields list is locked and can not be changed`);
       RuntimeErrors.onLockedDefinition(this.#options.mainDefinition.id);
-    }
-    snapshot() {
-      this.forEach(x => x.value = this.owner[x.name]);
-    }
-    recall(instance, items) {
-      this.restore(items);
-      this.owner = instance;
-      this.forEach(x => instance[x.name] = x.value);
     }
   })(this); // INSTANCE FIELDS
 
@@ -102,6 +96,7 @@ export default class BaseElement extends window.HTMLElement {
   #elementEvents = new WuseElementEvents(this);
 
   // CONTENT FLAGS
+  #initialized = false;
   #identified = false;
   #slotted = false;
   #shadowed = window.Wuse.isShadowElement(this);
@@ -133,13 +128,12 @@ export default class BaseElement extends window.HTMLElement {
       this.#slotted = data.slotted;
       this.#identified = data.identified;
       this.#html = data.html;
-      this.#children.recall(this, data.children);
-      this.#rules.recall(this, data.rules);
-      this.#fields.recall(this, data.fields);
+      this.#children.restore(this, data.children);
+      this.#rules.restore(this, data.rules);
+      this.#fields.restore(this, data.fields);
     }
   };
   #stateWriter = () => {
-    this.#fields.snapshot();
     return {
       options: this.#options,
       html: this.#html,
@@ -390,10 +384,14 @@ export default class BaseElement extends window.HTMLElement {
     }
   }
 
-  #makeChildElement(shorthandNotation, rules) {
-    const tmp = WuseElementParts.performValidations(WuseElementParts.newChild(shorthandNotation, rules));
-    if (tmp !== null && tmp.custom && this.#options.autokeyChildren && this.#stateManager.hasKey()) {
-      this.#filiatedKeys.tryToName(tmp);
+  #filiateChild(tmp) {
+    if (tmp !== null) {
+      if (this.#initialized && this.#getElementByIdFromRoot(tmp.id)) {
+        return RuntimeErrors.onTakenId(tmp.id);
+      }
+      if (tmp.custom && this.#options.autokeyChildren && this.#stateManager.hasKey()) {
+        this.#filiatedKeys.tryToName(tmp);
+      }
     }
     return tmp;
   }
@@ -416,6 +414,7 @@ export default class BaseElement extends window.HTMLElement {
     this.#elementEvents.immediateTrigger(
       this.#stateManager.initializeState() > 1 ? "on_reconstruct" : "on_construct", this.#stateManager.state
     );
+    this.#initialized = true;
   }
 
   get render() { return this.#binded ? this.#render : noop }
@@ -494,7 +493,7 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   setMainElement(shorthandNotation) {
-    const tmp = WuseElementParts.performValidations(WuseElementParts.newChild(shorthandNotation));
+    const tmp = parseElement(shorthandNotation);
     if (tmp !== null) {
       if (isNonEmptyString(tmp.content) || isNonEmptyArray(tmp.events)) {
         return RuntimeErrors.onInvalidDefinition(shorthandNotation);
@@ -642,13 +641,13 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   appendChildElement(shorthandNotation, rules) {
-    const tmp = this.#makeChildElement(shorthandNotation, rules);
+    const tmp = this.#filiateChild(parseElement(shorthandNotation, rules));
     if (tmp !== null) this.#children.append(tmp);
     return this;
   }
 
   prependChildElement(shorthandNotation, rules) {
-    const tmp = this.#makeChildElement(shorthandNotation, rules);
+    const tmp = this.#filiateChild(parseElement(shorthandNotation, rules));
     if (tmp !== null) this.#children.prepend(tmp);
     return this;
   }
@@ -668,7 +667,7 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   replaceChildElementById(id, shorthandNotation, rules) {
-    const tmp = WuseElementParts.newChild(shorthandNotation, rules);
+    const tmp = parseElement(shorthandNotation, rules);
     if (tmp !== null) this.#children.replace(this.#children.findIndex(child => child.id === id), tmp);
     return this;
   }
@@ -788,6 +787,9 @@ export default class BaseElement extends window.HTMLElement {
       }
       if (isOf(options.onLockedDefinition, window.Function)) {
         RuntimeErrors.onLockedDefinition = options.onLockedDefinition;
+      }
+      if (isOf(options.onTakenId, window.Function)) {
+        RuntimeErrors.onTakenId = options.onTakenId;
       }
       let rte = {
         onInvalidDefinition: noop,

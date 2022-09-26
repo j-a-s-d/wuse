@@ -184,7 +184,7 @@ const doValidations = child => {
       if (new window.String(child.attributes["slot"]).replaceAll("\"", EMPTY_STRING).replaceAll("\'", EMPTY_STRING).length === 0) {
         return RuntimeErrors.onUnespecifiedSlot(child.id);
       }
-    } else if (typeof child.id !== "string" /*|| (isNonEmptyString(child.id) && window.document.getElementById(child.id) !== null)*/) {
+    } else if (typeof child.id !== "string") {
       return RuntimeErrors.onInvalidId(child.id);
     } else if (child.custom && !window.customElements.get(child.tag)) {
       RuntimeErrors.onUnknownTag(child.tag); // emit warning when a child custom element tag is not registered

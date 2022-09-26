@@ -12,7 +12,8 @@ export default new class {
     var instance = new module(null);
     var r = instance !== undefined && instance.owner == null;
     tester.testResult(r, `<u>${name}</u> got instantiated with a null owner: <i>${r}</i>`);
-    instance = new module({ dummy: true });
+    var o = { dummy: true };
+    instance = new module(o);
     r = instance !== undefined && typeof instance.owner === "object";
     tester.testResult(r, `<u>${name}</u> got instantiated with an object owner: <i>${r}</i>`);
     r = instance.append(123) === undefined && instance.length === 0;
@@ -30,7 +31,7 @@ export default new class {
     r = instance.persist();
     tester.testResult(r && typeof r === "object" && r.length === 2, `<u>${name}</u> got persist called: <i>${r}</i>`);
     r.push({ number: 0 });
-    r = instance.restore(r) === undefined && instance.length === 5;
+    r = instance.restore(o, r) === undefined && instance.length === 5;
     tester.testResult(r, `<u>${name}</u> got restore called: <i>${r}</i>`);
     r = instance.remove(0) === undefined && instance.length === 4;
     tester.testResult(r, `<u>${name}</u> got remove called with a valid index: <i>${r}</i>`);
