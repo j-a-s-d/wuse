@@ -39,48 +39,43 @@ export default class BaseElement extends window.HTMLElement {
   // CONTENT HOLDERS
   #html = new window.String(); // RAW HTML
   #rules = new (class extends WusePartsHolder {
-    on_version_change() {
+    on_version_change = () => {
       if (this.last !== null) {
         this.last.version = this.version;
         this.last.replacements = WuseTextReplacements.extractReplacementsFromRule(this.last);
       }
       if (window.Wuse.DEBUG) this.owner.#debug(`rules list version change: ${this.version}`);
     }
-    on_forbidden_change() {
+    on_forbidden_change = () => {
       if (window.Wuse.DEBUG) this.owner.#debug(`rules list is locked and can not be changed`);
       RuntimeErrors.onLockedDefinition(this.#options.mainDefinition.id);
     }
   })(this); // CSS RULES
   #children = new (class extends WusePartsHolder {
-    detectSlots() {
-      var result = this.owner.#slotted;
-      this.forEach(child => result |= (child.kind === SLOTS_KIND));
-      this.owner.#slotted = result;
-    }
-    on_recall_part = part => this.owner.#filiatedKeys.tryToRemember(part);
-    on_version_change() {
+    on_version_change = () => {
       if (this.last !== null) {
         this.last.version = this.version;
         this.last.replacements = WuseTextReplacements.extractReplacementsFromChild(this.last);
       }
-      this.detectSlots();
+      if (!this.owner.#slotted) this.owner.#slotted |= this.some(child => child.kind === SLOTS_KIND);
       if (window.Wuse.DEBUG) this.owner.#debug(`children list version change: ${this.version}`);
     }
-    on_forbidden_change() {
+    on_forbidden_change = () => {
       if (window.Wuse.DEBUG) this.owner.#debug(`children list is locked and can not be changed`);
       RuntimeErrors.onLockedDefinition(this.#options.mainDefinition.id);
     }
+    on_recall_part = part => this.owner.#filiatedKeys.tryToRemember(part);
   })(this); // HTML ELEMENTS
   #fields = new (class extends WusePartsHolder {
-    on_snapshot_part = part => part.value = this.owner[part.name];
-    on_recall_part = part => this.owner[part.name] = part.value;
-    on_version_change() {
+    on_version_change = () => {
       if (window.Wuse.DEBUG) this.owner.#debug(`fields list version change: ${this.version}`);
     }
-    on_forbidden_change() {
+    on_forbidden_change = () => {
       if (window.Wuse.DEBUG) this.owner.#debug(`fields list is locked and can not be changed`);
       RuntimeErrors.onLockedDefinition(this.#options.mainDefinition.id);
     }
+    on_snapshot_part = part => part.value = this.owner[part.name];
+    on_recall_part = part => this.owner[part.name] = part.value;
   })(this); // INSTANCE FIELDS
 
   // USER CUSTOMIZATION

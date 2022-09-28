@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.6.8] 2022-sep-28
+  - added `isIntegerNumber` to the `JavascriptHelpers` class
+  - added `Regular_vs_Reactive` example
 * [0.6.7] 2022-sep-26
   - added `on_snapshot_part` and `on_recall_part` to the `PartsHolder` class
   - added `TAKEN_ID` error to the `RuntimeErrors` class

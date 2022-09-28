@@ -1,7 +1,29 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
 import JsHelpers from './wuse.javascript-helpers.js';
-const { isOf, cloneObject, forEachOwnProperty, buildArray } = JsHelpers;
+const { isIntegerNumber, isOf, cloneObject, forEachOwnProperty, buildArray } = JsHelpers;
+
+const partsLooper = (holder, partCallback, metaCallback) => forEachOwnProperty(holder, key => {
+  switch (key) {
+    case "owner":
+    case "last":
+    case "length":
+      break;
+    case "version":
+    case "locked":
+      metaCallback(key);
+      break;
+    default:
+      if (isIntegerNumber(key)) partCallback(key);
+  }
+});
+
+const partProcessor = (collection, part, event) => {
+  event(part);
+  const item = cloneObject(part);
+  item.cache = null;
+  collection.push(item);
+}
 
 export default class PartsHolder extends window.Array {
 
@@ -57,48 +79,18 @@ export default class PartsHolder extends window.Array {
   }
 
   persist() {
-    this.forEach(this.on_snapshot_part);
-    return buildArray(result => forEachOwnProperty(this, key => {
-      switch (key) {
-        case "owner":
-        case "last":
-        case "length":
-          break;
-        case "version":
-        case "locked":
-          result[key] = this[key];
-          break;
-        default:
-          if (window.Number.isInteger(window.Number(key))) {
-            const item = cloneObject(this[key]);
-            if (item.cache) item.cache = null;
-            result.push(item);
-          }
-          break;
-      }
-    }));
+    return buildArray(result => partsLooper(this,
+      key => partProcessor(result, this[key], this.on_snapshot_part),
+      key => result[key] = this[key]
+    ));
   }
 
   restore(owner, instance) {
     this.owner = owner;
-    forEachOwnProperty(instance, key => {
-      switch (key) {
-        case "length":
-          break;
-        case "version":
-        case "locked":
-          this[key] = instance[key];
-          break;
-        default:
-          if (window.Number.isInteger(window.Number(key))) {
-            const item = cloneObject(instance[key]);
-            if (item.cache) item.cache = null;
-            this.push(item);
-          }
-          break;
-      }
-    });
-    this.forEach(this.on_recall_part);
+    partsLooper(instance,
+      key => partProcessor(this, instance[key], this.on_recall_part),
+      key => this[key] = instance[key]
+    );
   }
 
   on_snapshot_part() {}

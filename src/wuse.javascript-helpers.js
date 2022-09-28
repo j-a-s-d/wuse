@@ -69,4 +69,8 @@ export default class JavascriptHelpers {
     return typeof instance === "object" && instance !== null && instance.constructor.name === "Array" && !!instance.length;
   }
 
+  static isIntegerNumber(x) {
+    return (typeof x === "number" || (typeof x === "string" && !!x.length)) && window.Number.isInteger(window.Number(x));
+  }
+
 }

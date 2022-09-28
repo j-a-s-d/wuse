@@ -20,6 +20,7 @@ export default new class {
     tester.testModuleFunction(module, "isAssignedObject", ["existence", "type:boolean"], this.isAssignedObject);
     tester.testModuleFunction(module, "isAssignedArray", ["existence", "type:boolean"], this.isAssignedArray);
     tester.testModuleFunction(module, "isNonEmptyArray", ["existence", "type:boolean"], this.isNonEmptyArray);
+    tester.testModuleFunction(module, "isIntegerNumber", ["existence", "type:boolean"], this.isIntegerNumber);
   }
 
   EMPTY_STRING = (tester, module, name) => {
@@ -148,6 +149,23 @@ export default new class {
     tester.testInvokationWithArgsResult(module, fn, [null], "with invalid argument (null)", result => !result);
     tester.testInvokationWithArgsResult(module, fn, [[]], "with invalid argument (empty array)", result => !result);
     tester.testInvokationWithArgsResult(module, fn, [[1,2,3]], "with valid argument (non-empty array)", result => result);
+  }
+
+  isIntegerNumber = (tester, module, fn) => {
+    tester.testInvokationResult(module, fn, "without args", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [null], "with null argument", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [{}], "with object argument", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [[]], "with array argument", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [true], "with true bool argument", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [false], "with false bool argument", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [NaN], "with literal not-a-number argument", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [1.2], "with literal float number argument", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [1], "with literal int number argument", result => result);
+    tester.testInvokationWithArgsResult(module, fn, [0x7], "with literal hex int number argument", result => result);
+    tester.testInvokationWithArgsResult(module, fn, ["0x123"], "with hex int number string argument", result => result);
+    tester.testInvokationWithArgsResult(module, fn, ["456"], "with int number string argument", result => result);
+    tester.testInvokationWithArgsResult(module, fn, ["text"], "with non-number string argument", result => !result);
+    tester.testInvokationWithArgsResult(module, fn, [""], "with non-number empty string argument", result => !result);
   }
 
 }
