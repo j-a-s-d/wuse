@@ -1,0 +1,56 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <title>Wuse | Bulma Breadcrumb Sample example</title>
+  <script src="../../dist/wuse.min.js"></script>
+</head>
+<body>
+  <p>This is a port of the <a href="https://bulma.io/documentation/components/breadcrumb/" target="_blank">Bulma 0.9.4 Breadcrumb example</a>.</p>
+  <hr/>
+  <script>
+    class Bulma_Breadcrumb_Items extends Wuse.NonShadowElement {
+
+      static { Wuse.register(this); }
+
+      on_create() {
+        this
+          .setMainElement("ul")
+      }
+
+      add = (href, caption, active) => this.appendChildElement(active ?
+        `li.is-active=<a href='${href}' aria-current='page'>${caption}</a>` :
+        `li=<a href='${href}'>${caption}</a>`
+      );
+
+    }
+
+    class Bulma_Breadcrumb_Sample extends Wuse.NonShadowElement {
+
+      static { Wuse.register(this); }
+
+      on_create() {
+        this
+          .setMainElement("nav.breadcrumb[aria-label='breadcrumbs']")
+          .appendChildElement("bulma-breadcrumb-items#items")
+      }
+
+      on_load() {
+        this.items
+          .add("#", "Bulma")
+          .add("#", "Documentation")
+          .add("#", "Components")
+          .add("#", "Breadcrumb", true)
+          .redraw()
+      }
+
+    }
+
+    Wuse.instantiate(Bulma_Breadcrumb_Sample);
+  </script>
+</body>
+</html>
+

@@ -172,7 +172,7 @@ export default class BaseElement extends window.HTMLElement {
     renderizers: {
       rule: rule => this.#contents.style.append(rule.cache ? rule.cache : rule.cache = WuseRenderingRoutines.renderRule(this.#renderingReplacer, rule)),
       children: {
-        mixed: child => this.#shadowed && child.kind === SLOTS_KIND ? this.#contents.renderizers.children.slot(child) : this.#contents.renderizers.children.normal(child),
+        mixed: child => child.kind === SLOTS_KIND ? this.#contents.renderizers.children.slot(child) : this.#contents.renderizers.children.normal(child),
         slot: child => {
           if (!child.cache) {
             this.#contents.root.verify(content => true);
@@ -287,7 +287,7 @@ export default class BaseElement extends window.HTMLElement {
         if (bindingHandlers.key) bindingHandlers.key(child);
         child.events.forEach(event => event && bindingHandlers.event(child.id, event.kind, event.capture));
       });
-      if (this.#slotted) bindingHandlers.slots();
+      if (this.#slotted && this.#shadowed) bindingHandlers.slots();
       this.#binded = value;
     }
   }
@@ -300,7 +300,7 @@ export default class BaseElement extends window.HTMLElement {
     this.#contents.root.reset(EMPTY_STRING);
     this.#contents.style.reset(EMPTY_STRING);
     this.#contents.main.reset(this.#html);
-    const r = this.#slotted ? this.#contents.renderizers.children.mixed : this.#contents.renderizers.children.normal;
+    const r = this.#slotted && this.#shadowed ? this.#contents.renderizers.children.mixed : this.#contents.renderizers.children.normal;
     this.#children.forEach(child => child.included && r(child));
     this.#rules.forEach(this.#contents.renderizers.rule);
     this.#contents.main.verify(this.#contents.verifiers.main);
@@ -346,6 +346,7 @@ export default class BaseElement extends window.HTMLElement {
     this.#commitContents(false, !!this.#style, true);
     this.#bind(true);
     this.#elementEvents.immediateTrigger(event);
+    this.#stateManager.writeState();
   }
 
   #redraw() {
@@ -355,7 +356,6 @@ export default class BaseElement extends window.HTMLElement {
     this.#elementEvents.immediateTrigger("on_unload");
     this.#elementEvents.detect();
     this.#inject("on_reload");
-    this.#stateManager.writeState();
     this.#elementEvents.committedTrigger("on_repaint");
     if (window.Wuse.MEASURE) this.#measurement.full.stop(window.Wuse.DEBUG);
   }
@@ -377,6 +377,22 @@ export default class BaseElement extends window.HTMLElement {
         this.render();
       }
     }
+  }
+
+  #setField(name, value) {
+    for (let idx = 0; idx < this.#fields.length; idx++) {
+      if (this.#fields[idx].name === name) {
+        this.#fields[idx].value = value;
+        return;
+      }
+    }
+    this.#fields.append({ name, value });
+  }
+
+  #createField(name, value, writable) {
+    window.Object.defineProperty(this, name, { value, writable });
+    this.#setField(name, value);
+    return this;
   }
 
   #filiateChild(tmp) {
@@ -401,7 +417,7 @@ export default class BaseElement extends window.HTMLElement {
 
   constructor(mode) {
     super();
-    this.#root = mode !== WuseElementModes.REGULAR ? this.attachShadow({ mode }) : this;
+    this.#root = mode === WuseElementModes.REGULAR ? this : this.shadowRoot || this.attachShadow({ mode });
     this.#elementEvents.detect();
     this.#elementEvents.immediateTrigger("on_create");
     if (this.#options.attributeKeys) this.getAttributeNames().forEach(attr => this[attr] = this.getAttribute(attr));
@@ -421,7 +437,6 @@ export default class BaseElement extends window.HTMLElement {
     this.#elementEvents.detect();
     this.#elementEvents.immediateTrigger("on_connect");
     this.#inject("on_load");
-    this.#stateManager.writeState();
     if (window.Wuse.MEASURE) this.#measurement.attachment.stop(window.Wuse.DEBUG);
   }
 
@@ -709,14 +724,16 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   makeField(name, value) {
-    this[name] = value;
-    this.#fields.append({ name, value });
-    return this;
+    return this.#createField(name, value, true);
+  }
+
+  makeReadonlyField(name, value) {
+    return this.#createField(name, value, false);
   }
 
   makeReactiveField(name, value, handler, initial = true) {
     createReactiveField(this, name, value, handler, (name, label) => this.#fieldRender(name, label || "$auto"), name => this.dropField(name));
-    this.#fields.append({ name, value });
+    this.#setField(name, value);
     if (initial) this.#fieldRender(name, "$init");
     return this;
   }

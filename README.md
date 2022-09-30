@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.6.9] 2022-sep-30
+  - added `makeReadonlyField` to the `BaseElement` class
+  - added `Bulma_Breadcrumb_Sample` example
 * [0.6.8] 2022-sep-28
   - added `isIntegerNumber` to the `JavascriptHelpers` class
   - added `Regular_vs_Reactive` example
