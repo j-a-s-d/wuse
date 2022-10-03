@@ -14,9 +14,7 @@
   <p>This is a port of the <a href="https://jqueryui.com/datepicker/" target="_blank">jQuery UI Datepicker "Default functionality" example</a>.</p>
   <hr/>
   <script>
-    Wuse.instantiate(class jQueryUI_Datepicker_Sample extends Wuse.NonShadowElement {
-
-      static { Wuse.register(this); }
+    class jQueryUI_Datepicker_Sample extends Wuse.NonShadowElement {
 
       #setup() {
         $("#datepicker").datepicker();
@@ -25,7 +23,7 @@
       #clean() {
         $(".ui-datepicker").remove();
       }
-  
+
       on_create() {
         this
           .setMainElement("p")
@@ -37,7 +35,7 @@
       on_connect() {
         this.#clean();
       }
-  
+
       on_load() {
         this.#setup();
       }
@@ -46,6 +44,13 @@
         this.#setup();
       }
 
+    }
+
+    Wuse.create({
+      element: {
+        type: jQueryUI_Datepicker_Sample,
+        register: true
+      }
     });
   </script>
 </body>

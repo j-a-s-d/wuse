@@ -1,0 +1,98 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" rel="stylesheet">
+  <title>Wuse | Skeleton Grid Sample example</title>
+  <script src="../../dist/wuse.min.js"></script>
+</head>
+<body>
+  <p>This is a port of the <a href="http://getskeleton.com/#grid" target="_blank">Skeleton 2.0.4 Grid example</a>.</p>
+  <hr/>
+  <script>
+    class Skeleton_Grid_Sample extends Wuse.NonShadowElement {
+
+      static {
+        Wuse.register([class Skeleton_Grid_Row extends Wuse.NonShadowElement {
+
+          on_create() {
+            this
+              .setMainElement("div.row")
+          }
+
+          addColumn = (colwidth, colklass, caption) => this
+            .appendChildElement(`div.${colwidth}.${colklass}=${caption}`)
+
+        }, class Skeleton_Grid extends Wuse.NonShadowElement {
+
+          on_create() {
+            this
+              .setMainElement("div.container")
+              .appendCSSRule(".column, .columns", `
+                background: #EEE;
+                text-align: center;
+                border-radius: 4px;
+                font-size: 1rem;
+                text-transform: uppercase;
+                height: 30px;
+                line-height: 30px;
+                margin-bottom: 0.75rem;
+                font-weight: 600;
+                letter-spacing: .1rem;
+              `)
+              .makeField("items", [])
+          }
+
+          get rows() {
+            return this.items;
+          }
+
+          set rows(items) {
+            let x = 0;
+            (this.items = items || []).forEach(row => this.appendChildElement("skeleton-grid-row#row" + (row.number = ++x)));
+            this.redraw();
+          }
+
+          on_reload() {
+            this.items.forEach(row => this["row" + row.number]
+              .addColumn(...row.col1)
+              .addColumn(...row.col2)
+              .redraw()
+            );
+          }
+
+        }, this]);
+      }
+
+      on_create() {
+        this
+          .setMainElement("skeleton-grid#grid")
+      }
+
+      on_load() {
+        this.grid.rows = this.items;
+      }
+
+    }
+
+    Skeleton_Grid_Sample.create({
+      items: [{
+        col1: ["one", "column", "One"],
+        col2: ["eleven", "columns", "Eleven"]
+      }, {
+        col1: ["two", "columns", "two"],
+        col2: ["ten", "columns", "ten"]
+      }, {
+        col1: ["one-third", "column", "1/3"],
+        col2: ["two-thirds", "column", "2/3"]
+      }, {
+        col1: ["one-half", "column", "1/2"],
+        col2: ["one-half", "column", "1/2"]
+      }]
+    });
+  </script>
+</body>
+</html>
+

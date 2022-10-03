@@ -11,8 +11,8 @@ const setReactiveField = (name, value, handler, renderizer, redefiner, recreator
     isNotFunction(handler) ? renderizer(name) : handler({
       renderize: label => renderizer(name, label), // manual render (accepting a debug label)
       automate: () => recreator(v, null), // converts the field into an automatic reactive field (autorenders)
-      freeze: () => redefiner(() => v, noop), // freeze the field value until calling defreeze()
-      defreeze: () => recreator(v, handler), // defreezes the field after the freeze action
+      //freeze: () => redefiner(() => v, noop), // freeze the field value until calling defreeze()
+      //defreeze: () => recreator(v, handler), // defreezes the field after the freeze action
       dereact: () => redefiner(() => v, dereactor), // disable reactiveness (convert into a simple field)
       remove: () => remover(name) // removes the field enterely
     });

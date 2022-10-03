@@ -93,6 +93,8 @@ export default class PartsHolder extends window.Array {
     );
   }
 
+  getIndexOf(value) {}
+
   on_snapshot_part() {}
 
   on_recall_part() {}

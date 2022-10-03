@@ -38,6 +38,9 @@
           .appendChildElement("bulma-breadcrumb-items#items")
       }
 
+    }
+
+    Bulma_Breadcrumb_Sample.create({
       on_load() {
         this.items
           .add("#", "Bulma")
@@ -46,10 +49,7 @@
           .add("#", "Breadcrumb", true)
           .redraw()
       }
-
-    }
-
-    Wuse.instantiate(Bulma_Breadcrumb_Sample);
+    });
   </script>
 </body>
 </html>

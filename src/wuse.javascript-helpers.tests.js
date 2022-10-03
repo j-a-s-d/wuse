@@ -14,6 +14,7 @@ export default new class {
     tester.testModuleFunction(module, "buildObject", ["existence", "type:object"], this.buildObject);
     tester.testModuleFunction(module, "ensureFunction", ["existence", "type:function"], this.ensureFunction);
     tester.testModuleFunction(module, "isOf", ["existence", "type:boolean"], this.isOf);
+    tester.testModuleFunction(module, "areOf", ["existence", "type:boolean"], this.areOf);
     tester.testModuleFunction(module, "cloneObject", ["existence", "type:object"], this.cloneObject);
     tester.testModuleFunction(module, "forEachOwnProperty", ["existence", "type:undefined"], this.forEachOwnProperty);
     tester.testModuleFunction(module, "hasObjectKeys", ["existence", "type:boolean"], this.hasObjectKeys);
@@ -78,6 +79,22 @@ export default new class {
     testValueAndType(new TestClass(), "TestClass", true);
     testValueAndType(class {}, "Function", true);
     tester.testInvokationResult(module, fn, "without args", result => result === false);
+  }
+
+  areOf = (tester, module, fn) => {
+    const testValueAndType = (value, type, expected) => tester.testInvokationWithArgsResult(
+      module, fn, [value, window[type]], `${type} (${value})`, result => result === expected
+    );
+    testValueAndType(undefined, "Any", false);
+    testValueAndType(null, "Any", false);
+    testValueAndType(new Array(), "Any", false);
+    testValueAndType([], "Any", false);
+    testValueAndType([42], "String", false);
+    testValueAndType(["foo", 42], "String", false);
+    testValueAndType(["foo", null, "bar"], "String", false);
+    testValueAndType(["foo", undefined, "bar"], "String", false);
+    testValueAndType(["foo"], "String", true);
+    testValueAndType(["foo", "bar"], "String", true);
   }
 
   hasObjectKeys = (tester, module, fn) => {

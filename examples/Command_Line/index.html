@@ -13,25 +13,25 @@
   <hr/>
   <pre id="txtOutput"></pre>
   <script>
-    const txtOutput = document.getElementById("txtOutput");
-    function onProcessCommand(cmd, args) {
-      switch (cmd) {
-        case "HELP":
-          alert(`
-          HELP -- shows this dialog
-          ECHO <text> -- prints the specified text
-          CLEAR -- clears the already printed text
-          `);
-          break;
-        case "ECHO":
-          txtOutput.append(args.join(" ") + "\n");
-          break;
-        case "CLEAR":
-          txtOutput.innerHTML = "";
-          break;
+    Command_Line.create({
+      on_process_command(cmd, args) {
+        switch (cmd) {
+          case "HELP":
+            alert(`
+            HELP -- shows this dialog
+            ECHO <text> -- prints the specified text
+            CLEAR -- clears the already printed text
+            `);
+            break;
+          case "ECHO":
+            this.txtOutput.append(args.join(" ") + "\n");
+            break;
+          case "CLEAR":
+            this.txtOutput.innerHTML = "";
+            break;
+        }
       }
-    }
-    Wuse.instantiate(Command_Line, "#clInput", { on_element_instantiated: el => el.on_process_command = onProcessCommand });
+    });
   </script>
 </body>
 </html>

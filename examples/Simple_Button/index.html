@@ -10,7 +10,7 @@
   <script>
     Wuse.register(Simple_Button);
 
-    Wuse.instantiate(Simple_Button);
+    Simple_Button.create();
     document.getElementsByTagName("simple-button")[0].onclick = e => alert("EN");
 
     Wuse.instantiate(Simple_Button, "body", {
@@ -23,16 +23,25 @@
     });
     document.getElementById("btnES").onclick = e => alert("ES");
 
-    Wuse.instantiate(Simple_Button, "body", {
-      on_element_instantiated: el => {
-        el.backgroundcolor = "green";
-        el.foregroundcolor = "yellow";
-        el.text = "Isto é um botão";
-        el.onclick = e => alert("PT");
+    Wuse.create({
+      element: { type: Simple_Button },
+      target: { selector: "body" },
+      instance: {
+        parameters: {
+          backgroundcolor: "green",
+          foregroundcolor: "yellow",
+          text: "Isto é um botão"
+        },
+        on_element_instantiated: el => el.onclick = e => alert("PT")
       }
     });
 
     Wuse.instantiate(Simple_Button, "", { on_bad_target: target => false });
+    
+    Wuse.create({
+      element: { type: Simple_Button },
+      target: { selector: "", on_bad_target: target => false }
+    });
   </script>
 </body>
 </html>

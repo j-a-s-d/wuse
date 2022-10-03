@@ -91,16 +91,20 @@ window.Wuse = window.Wuse || class {
             }
           }
         },
+        isShadowElement: instance => {
+          const p = window.Object.getPrototypeOf(instance.constructor);
+          return p === window.Wuse.OpenShadowElement || p === window.Wuse.ClosedShadowElement;
+        },
         register: classes => WuseElementClasses.registerClasses(
           isOf(classes, window.Array) ? classes : new window.Array(classes)
         ),
         instantiate: (classes, target, events) => WuseElementClasses.instantiateClasses(
           isOf(classes, window.Array) ? classes : new window.Array(classes), target, events
         ),
-        isShadowElement: instance => {
-          const p = window.Object.getPrototypeOf(instance.constructor);
-          return p === window.Wuse.OpenShadowElement || p === window.Wuse.ClosedShadowElement;
-        }
+        create: (configuration, option) => isOf(configuration, window.Object) ?
+          WuseElementClasses.createInstance(
+            configuration.element, configuration.target, configuration.instance
+          ) : undefined
       }
     });
     WuseInitializationRoutines.detectFeatures(this);

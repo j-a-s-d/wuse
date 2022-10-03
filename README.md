@@ -12,7 +12,7 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 
 * no external dependencies (none in runtime and only esbuild if you want to build from source)
 * self-documenting api (descriptive "long" function names)
-* full unit testing (450+ tests cases)
+* full unit testing (520+ tests cases)
 * markdown documentation [TODO]
 
 ## FEATURES
@@ -39,6 +39,15 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.7.0] 2022-oct-03
+  - added `create` to the `Wuse` class
+  - added static `register` and `create` to the `BaseElement` class
+  - added `createInstance` to the `ElementClasses` class
+  - now you can pass parameters to manually instantiated elements
+  - added `areOf` to the `JavascriptHelpers` class
+  - added `getIndexOf` to the `PartsHolder` class
+  - removed freeze and defreeze from the reactive field actions
+  - added `Skeleton_Grid_Sample` example
 * [0.6.9] 2022-sep-30
   - added `makeReadonlyField` to the `BaseElement` class
   - added `Bulma_Breadcrumb_Sample` example

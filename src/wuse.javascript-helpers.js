@@ -45,6 +45,22 @@ export default class JavascriptHelpers {
     );
   }
 
+  static areOf(instances, c) {
+    var result = !!(instances && instances.constructor === window.Array && !!instances.length);
+    if (result) for (var x in instances) {
+      const instance = instances[x];
+      if (!(instance !== undefined && instance !== null && (
+        instance.constructor === c || (
+          c !== undefined && c !== null && instance.constructor.name === c.name
+        ))
+      )) {
+        result = false;
+        break;
+      }
+    }
+    return result;
+  }
+
   static hasObjectKeys(obj) {
     return !!(obj && !!window.Object.keys(obj).length);
   }

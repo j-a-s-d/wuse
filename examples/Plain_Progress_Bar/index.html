@@ -11,24 +11,36 @@
   <div id="pb1holder"></div>
   <h3>This is a plain progress bar with 8.1% in a right-to-left direction.</h3>
   <div id="pb2holder"></div>
+  <h3>This is a plain progress bar with 50% again in the default left-to-right direction.</h3>
+  <div id="pb3holder"></div>
   <script>
     Wuse.register(Plain_Progress_Bar);
+
     Wuse.instantiate(Plain_Progress_Bar, "#pb1holder", {
       on_element_instantiated: el => {
         el.percentage = 33;
         el.setElementsStoreKey("pb1");
       }
     });
-    Wuse.instantiate(Plain_Progress_Bar, "#pb2holder", {
-      on_element_instantiated: el => {
-        el.percentage = 81;
-        el.maximum = 1000;
-        el.direction = "rtl";
-        el.barcolor = "gray";
-        el.valuecolor = "yellow";
-        el.setElementsStoreKey("pb2");
+
+    Wuse.create({
+      element: { type: Plain_Progress_Bar },
+      target: { selector: "#pb2holder" },
+      instance: {
+        parameters: {
+          percentage: 81,
+          maximum: 1000,
+          direction: "rtl",
+          barcolor: "gray",
+          valuecolor: "yellow"
+        },
+        on_element_instantiated: el => {
+          el.setElementsStoreKey("pb2");
+        }
       }
     });
+
+    Plain_Progress_Bar.create({ percentage: 50, barcolor: "black", valuecolor: "red" }, "#pb3holder").setElementsStoreKey("pb3");
   </script>
 </body>
 </html>

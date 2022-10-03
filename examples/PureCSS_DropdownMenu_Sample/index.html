@@ -13,7 +13,7 @@
   <p>This is a port of the <a href="https://purecss.io/menus/#dropdowns" target="_blank">PureCSS 2.1 Dropdowns example</a>.</p>
   <hr/>
   <script>
-    Wuse.instantiate(class PureCSS_DropdownMenu_Sample extends Wuse.NonShadowElement {
+    (class PureCSS_DropdownMenu_Sample extends Wuse.NonShadowElement {
       static appendItems = (target, items, level) => {
         const makeLevelItemsParser = level => item => {
           let result = {
@@ -90,9 +90,8 @@
           .appendCSSRule("ul", "padding-inline-start: 0px")
           .makeReactiveField("items", "")
       }
-    }, "body", {
-      on_element_instantiated: el => 
-        el.items = "English,Spanish,Portuguese,French,!More$1$Italian*1*German*1*!Other$2$Swedish*2*Norwegian*2*Finnish"
+    }).create({
+      items: "English,Spanish,Portuguese,French,!More$1$Italian*1*German*1*!Other$2$Swedish*2*Norwegian*2*Finnish"
     });
   </script>
 </body>

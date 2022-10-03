@@ -7,11 +7,8 @@
 </head>
 <body>
   <script>
-    Wuse.register(Card_Content_Template);
-    Wuse.instantiate(Card_Content_Template);
-    Wuse.register(Sample_Card);
-    Wuse.register(Templates_And_Slots);
-    Wuse.instantiate(Templates_And_Slots);
+    Wuse.register([Card_Content_Template, Sample_Card, Templates_And_Slots]);
+    Wuse.instantiate([Card_Content_Template, Templates_And_Slots]);
   </script>
 </body>
 </html>
