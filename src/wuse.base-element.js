@@ -1,7 +1,7 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
 import JsHelpers from './wuse.javascript-helpers.js';
-const { EMPTY_STRING, noop, isOf, isAssignedObject, isNonEmptyArray, isNonEmptyString, forcedStringSplit, forEachOwnProperty } = JsHelpers;
+const { EMPTY_STRING, noop, ensureFunction, isOf, isAssignedObject, isNonEmptyArray, isNonEmptyString, forcedStringSplit, forEachOwnProperty } = JsHelpers;
 import WebHelpers from './wuse.web-helpers.js';
 const { removeChildren } = WebHelpers;
 import StringConstants from './wuse.string-constants.js';
@@ -183,45 +183,63 @@ export default class BaseElement extends window.HTMLElement {
     }
   })(WuseElementParts.newState, this.#stateReader, this.#stateWriter, window.Wuse.elementsStorage);
 
+  // ELEMENTS BINDING
+  #binding = {
+    binder: id => isNonEmptyString(id) && (this[id] = this.#getElementByIdFromRoot(id)),
+    unbinder: id => delete this[id],
+    makePerformers: (event, doer) => ({
+      event, key: () => {
+        if (this.#identified) doer(this.#options.mainDefinition.id);
+        return child => doer(child.id);
+      }
+    }),
+    makeHandlers: performers => ({
+      key: this.#options.elementKeys && performers.key(),
+      event: (id, event, capture) => {
+        const handler = this[`on_${id}_${event}`];
+        if (handler) {
+          const el = this.#getElementByIdFromRoot(id);
+          if (el) el[performers.event](event, handler, capture);
+        }
+      },
+      slots: () => this.on_slot_change && this.#root.querySelectorAll("slot").forEach(
+        slot => slot[performers.event]("slotchange", this.on_slot_change)
+      )
+    }),
+    getHandlers: value => this.#binding.makeHandlers(value ?
+      this.#binding.makePerformers("addEventListener", this.#binding.binder) :
+      this.#binding.makePerformers("removeEventListener", this.#binding.unbinder)
+    )
+  }
+
   // RENDERING STATE
   #contents = {
-    root: new (class extends WuseContentManager {
-      on_content_invalidation(content) {
-        this.owner.innerHTML = content; // slot change
-      }
-    })(this),
-    style: new (class extends WuseContentManager {
-      on_content_invalidation(content) {
-        this.owner.#style.promote(content); // rule change
-      }
-    })(this),
-    main: new (class extends WuseContentManager {
-      on_content_invalidation(content) {
-        this.owner.#main.promote(content); // child change
-      }
-    })(this),
-    verifiers: {
-      main: content => !this.#waste.main.compute(content),
-      style: content => !this.#waste.style.compute(content)
-    },
+    root: new WuseContentManager(
+      content => this.innerHTML = content, // slot change promoter
+      content => true
+    ),
+    style: new WuseContentManager(
+      content => this.#style.promote(content), // rule change promoter
+      content => !this.#waste.style.compute(content)
+    ),
+    main: new WuseContentManager(
+      content => this.#main.promote(content), // child change promoter
+      content => !this.#waste.main.compute(content)
+    ),
     renderizers: {
-      rule: rule => this.#contents.style.append(rule.cache ? rule.cache : rule.cache = WuseRenderingRoutines.renderRule(this.#contents.replacer, rule)),
+      replacer: (str, rep) => str.replace(rep.find, this[rep.field] !== undefined ? this[rep.field] : EMPTY_STRING),
+      rule: rule => this.#contents.style.append(rule.cache ? rule.cache : rule.cache = WuseRenderingRoutines.renderRule(this.#contents.renderizers.replacer, rule)),
       children: {
         mixed: child => child.kind === SLOTS_KIND ? this.#contents.renderizers.children.slot(child) : this.#contents.renderizers.children.normal(child),
-        slot: child => {
-          if (!child.cache) {
-            this.#contents.root.verify(content => true);
-            this.#contents.root.append(child.cache = WuseRenderingRoutines.renderChild(this.#contents.replacer, child));
-          }
-        },
+        slot: child => !child.cache && this.#contents.root.append(
+          child.cache = WuseRenderingRoutines.renderChild(this.#contents.renderizers.replacer, child), this.#contents.root.verify()
+        ),
         normal: child => {
-          this.#contents.main.append(child.cache ? child.cache : child.cache = WuseRenderingRoutines.renderChild(this.#contents.replacer, child));
+          this.#contents.main.append(child.cache ? child.cache : child.cache = WuseRenderingRoutines.renderChild(this.#contents.renderizers.replacer, child));
           child.rules.forEach(this.#contents.renderizers.rule);
         }
       }
     },
-    replacer: (str, rep) => str.replace(rep.find, this[rep.field] !== undefined ? this[rep.field] : EMPTY_STRING),
-    gotModified: () => this.#contents.root.invalidated || this.#contents.main.invalidated || this.#contents.style.invalidated,
     getDebugInfo: () => `updated (root: ${this.#contents.root.invalidated}, main: ${this.#contents.main.invalidated}, style: ${this.#contents.style.invalidated})`
   }
 
@@ -235,60 +253,27 @@ export default class BaseElement extends window.HTMLElement {
 
   // DOM ROUTINES
   #insertElements() {
-    if (this.#style) this.#style.affiliate();
-    this.#main.affiliate();
-    this.#inserted = true;
-  }
-
-  #prepareElements() {
-    this.#style = !!this.#rules.length ? new WuseNodeManager(
+    if (this.#style = !this.#rules.length ? null : new WuseNodeManager(
       this.#root, WuseElementParts.makeStyleNode(this.#options.styleMedia, this.#options.styleType)
-    ) : null;
-    this.#main = new WuseNodeManager(
+    )) this.#style.affiliate();
+    (this.#main = new WuseNodeManager(
       this.#root, WuseElementParts.makeMainNode(this.#options.mainDefinition)
-    );
+    )).affiliate();
+    this.#inserted = true;
   }
 
   #extirpateElements() {
     if (this.#inserted) {
       this.#main.disaffiliate();
       if (this.#style) this.#style.disaffiliate();
-      if (this.#slotted && this.#shadowed) removeChildren(this);
+      if (this.#slotted && this.#shadowed) removeChildren(this.#root);
     }
     this.#inserted = false;
   }
 
-  #getBindingPerformers(event, doer) {
-    return {
-      event, key: () => {
-        if (this.#identified) doer(this.#options.mainDefinition.id);
-        return child => doer(child.id);
-      }
-    }
-  }
-
-  #getBindingHandlers(performers) {
-    return {
-      key: this.#options.elementKeys && performers.key(),
-      event: (id, event, capture) => {
-        const handler = this[`on_${id}_${event}`];
-        if (handler) {
-          const el = this.#getElementByIdFromRoot(id);
-          if (el) el[performers.event](event, handler, capture);
-        }
-      },
-      slots: () => this.on_slot_change && this.#root.querySelectorAll("slot").forEach(
-        slot => slot[performers.event]("slotchange", this.on_slot_change)
-      )
-    };
-  }
-
   #bind(value) {
     if ((this.#binded && !value) || (!this.#binded && value)) {
-      const bindingHandlers = this.#getBindingHandlers(value ?
-        this.#getBindingPerformers("addEventListener", id => isNonEmptyString(id) && (this[id] = this.#getElementByIdFromRoot(id))) :
-        this.#getBindingPerformers("removeEventListener", id => delete this[id])
-      );
+      const bindingHandlers = this.#binding.getHandlers(value);
       this.#children.forEach(child => {
         if (!child.included && value) return;
         if (bindingHandlers.key) bindingHandlers.key(child);
@@ -315,8 +300,8 @@ export default class BaseElement extends window.HTMLElement {
     const r = this.#slotted && this.#shadowed ? this.#contents.renderizers.children.mixed : this.#contents.renderizers.children.normal;
     this.#children.forEach(child => child.included && r(child));
     this.#rules.forEach(this.#contents.renderizers.rule);
-    this.#contents.main.verify(this.#contents.verifiers.main);
-    this.#contents.style.verify(this.#contents.verifiers.style);
+    this.#contents.main.verify();
+    this.#contents.style.verify();
   }
 
   #commitContents(forceRoot, forceStyle, forceMain) {
@@ -331,7 +316,7 @@ export default class BaseElement extends window.HTMLElement {
     if (window.Wuse.MEASURE) this.#measurement.partial.start();
     this.#elementEvents.immediateTrigger("on_prerender");
     this.#prepareContents();
-    if (this.#contents.gotModified()) {
+    if (this.#contents.root.invalidated || this.#contents.main.invalidated || this.#contents.style.invalidated) {
       this.#bind(false);
       this.#commitContents(false, false, false);
       this.#bind(true);
@@ -351,7 +336,6 @@ export default class BaseElement extends window.HTMLElement {
 
   #inject(event) {
     this.#clearContents();
-    this.#prepareElements();
     this.#insertElements();
     this.#elementEvents.immediateTrigger("on_inject");
     this.#prepareContents();
@@ -508,7 +492,7 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   getMainAttribute(key) {
-    return this.#inserted ? this.#main.element.setAttribute(key) : undefined;
+    return this.#inserted ? this.#main.element.getAttribute(key) : undefined;
   }
 
   setMainAttribute(key, value) {
@@ -784,48 +768,20 @@ export default class BaseElement extends window.HTMLElement {
   static initialize(options) {
     WuseTextReplacements.initialize(DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE);
     if (isOf(options, window.Object)) {
-      if (isOf(options.onFetchTemplate, window.Function)) {
-        WuseRenderingRoutines.initialize({ onFetchTemplate: options.onFetchTemplate });
-      }
-      if (isOf(options.onAllowHTML, window.Function)) {
-        RuntimeErrors.onAllowHTML = options.onAllowHTML;
-      }
-      if (isOf(options.onInvalidKey, window.Function)) {
-        RuntimeErrors.onInvalidKey = options.onInvalidKey;
-      }
-      if (isOf(options.onInvalidState, window.Function)) {
-        RuntimeErrors.onInvalidState = options.onInvalidState;
-      }
-      if (isOf(options.onLockedDefinition, window.Function)) {
-        RuntimeErrors.onLockedDefinition = options.onLockedDefinition;
-      }
-      if (isOf(options.onTakenId, window.Function)) {
-        RuntimeErrors.onTakenId = options.onTakenId;
-      }
-      let rte = {
-        onInvalidDefinition: noop,
-        onInexistentTemplate: noop,
-        onUnespecifiedSlot: noop,
-        onInvalidId: noop,
-        onUnknownTag: noop
-      };
-      if (isOf(options.onInvalidDefinition, window.Function)) {
-        RuntimeErrors.onInvalidDefinition = options.onInvalidDefinition;
-        rte.onInvalidDefinition = options.onInvalidDefinition;
-      }
-      if (isOf(options.onInexistentTemplate, window.Function)) {
-        rte.onInexistentTemplate = options.onInexistentTemplate;
-      }
-      if (isOf(options.onUnespecifiedSlot, window.Function)) {
-        rte.onUnespecifiedSlot = options.onUnespecifiedSlot;
-      }
-      if (isOf(options.onInvalidId, window.Function)) {
-        rte.onInvalidId = options.onInvalidId;
-      }
-      if (isOf(options.onUnknownTag, window.Function)) {
-        rte.onUnknownTag = options.onUnknownTag;
-      }
-      WuseElementParts.initialize(rte);
+      WuseRenderingRoutines.initialize({ onFetchTemplate: options.onFetchTemplate });
+      WuseElementParts.initialize({
+        onInvalidDefinition: options.onInvalidDefinition,
+        onInexistentTemplate: options.onInexistentTemplate,
+        onUnespecifiedSlot: options.onUnespecifiedSlot,
+        onInvalidId: options.onInvalidId,
+        onUnknownTag: options.onUnknownTag
+      });
+      RuntimeErrors.onAllowHTML = ensureFunction(options.onAllowHTML);
+      RuntimeErrors.onInvalidKey = ensureFunction(options.onInvalidKey);
+      RuntimeErrors.onInvalidState = ensureFunction(options.onInvalidState);
+      RuntimeErrors.onInvalidDefinition = ensureFunction(options.onInvalidDefinition);
+      RuntimeErrors.onLockedDefinition = ensureFunction(options.onLockedDefinition);
+      RuntimeErrors.onTakenId = ensureFunction(options.onTakenId);
     }
   }
 

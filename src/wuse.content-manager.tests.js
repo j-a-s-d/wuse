@@ -9,19 +9,21 @@ export default new class {
   }
 
   ContentManager = (tester, module, name) => {
-    var instance = new module(null);
-    var r = instance !== undefined && instance.owner == null;
-    tester.testResult(r, `<u>${name}</u> got instantiated with a null owner: <i>${r}</i>`);
-    instance = new module({ dummy: true });
-    r = instance !== undefined && typeof instance.owner === "object";
-    tester.testResult(r, `<u>${name}</u> got instantiated with an object owner: <i>${r}</i>`);
+    var instance = new module(null, null);
+    var r = instance !== undefined && instance.on_content_verification !== null && instance.on_content_invalidation !== null;
+    tester.testResult(r, `<u>${name}</u> got instantiated with a null values: <i>${r}</i>`);
+    const data = "test";
+    const promoter = content => r = content == data;
+    const verifier = content => content == data;
+    instance = new module(promoter, verifier);
+    r = instance !== undefined && instance.on_content_invalidation === promoter;
+    tester.testResult(r, `<u>${name}</u> got instantiated with a valid values: <i>${r}</i>`);
     r = !instance.invalidated;
     tester.testResult(r, `<u>${name}</u> got content not invalidated yet: <i>${r}</i>`);
-    instance.append("test");
-    instance.verify(content => content == "test");
+    instance.append(data);
+    instance.verify();
     r = instance.invalidated;
     tester.testResult(r, `<u>${name}</u> got content, verified and invalidated: <i>${r}</i>`);
-    instance.on_content_invalidation = content => r = content == "test";
     instance.process();
     tester.testResult(r, `<u>${name}</u> got content processed: <i>${r}</i>`);
     instance.reset("");

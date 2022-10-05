@@ -56,9 +56,11 @@ window.Wuse = window.Wuse || class {
 
   static blockUpdate = noop; // wuse block update
 
-  static register = noop; // element register
+  static register = noop; // element registration
 
   static instantiate = noop; // element instantiation
+
+  static create = noop; // element creation
 
   static isShadowElement = noop; // shadow presence
 
@@ -111,5 +113,5 @@ window.Wuse = window.Wuse || class {
     WuseInitializationRoutines.initializeModules(this);
   }
 
-}
+};
 

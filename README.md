@@ -31,7 +31,7 @@ Wuse gives you the power to control everything in your web development:
 
 	- allows all-in-one markup, styles and scripting definitions: you can define your custom element in a single es6 class file
 	- allows to retain control on the Element lifecycle: you can hook 14 different events
-	- allows optional field reactivity with free control on the behaviour
+	- allows optional field reactivity with free control on the behaviour: you can structure the code the way you want
 
 `#NO-BUILDS`
 
@@ -39,6 +39,10 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.7.1] 2022-oct-05
+  - added `on_content_verification` to the `ContentManager` class
+  - added `wuse.dbg.js` to the build generation and distribution directory (comes unmified and with DEBUG and MEASURE flags turned on by default)
+  - added `Milligram_Form_Sample` example
 * [0.7.0] 2022-oct-03
   - added `create` to the `Wuse` class
   - added static `register` and `create` to the `BaseElement` class

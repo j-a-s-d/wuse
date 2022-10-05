@@ -1,0 +1,71 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
+  <title>Wuse | Milligram Form Sample example</title>
+  <script src="../../dist/wuse.min.js"></script>
+</head>
+<body>
+  <p>This is a port of the <a href="https://milligram.io/forms.html" target="_blank">Milligram 1.4.1 Form example</a>.</p>
+  <hr/>
+  <div id="divContainer" style="width: 90%; margin-left: 5%"></div>
+  <script>
+    class Milligram_Form_RightCheckbox extends Wuse.NonShadowElement {
+
+      on_create() {
+        this
+          .setMainElement("div.float-right")
+          .appendChildElement("input#confirmField[type=checkbox]")
+          .appendChildElement("label.label-inline[for=confirmField]=Send a copy to yourself")
+      }
+
+    }
+    Milligram_Form_RightCheckbox.register();
+
+    class Milligram_Form_Fieldset extends Wuse.NonShadowElement {
+
+      on_create() {
+        this
+          .setMainElement("fieldset")
+          .appendChildElement("label[for=nameField]=Name")
+          .appendChildElement("input#nameField[type=text|placeholder='John Doe']")
+          .appendChildElement("label[for=ageRangeField]=Age Range")
+          .appendChildElement("select#ageRangeField")
+          .appendChildElement("label[for=commentField]=Comment")
+          .appendChildElement("textarea#commentField[placeholder='Hi John']")
+          .appendChildElement(Milligram_Form_RightCheckbox.tag)
+          .appendChildElement("input.button-primary[type=submit|value=Send]")
+      }
+
+      #inlineRangeOption = range =>
+        this.ageRangeField.innerHTML += `<option value="${range}">${range}</option>`;
+
+      on_load() {
+        (this.ageRanges || []).forEach(this.#inlineRangeOption);
+      }
+
+    }
+    Milligram_Form_Fieldset.register();
+
+    class Milligram_Form_Sample extends Wuse.NonShadowElement {
+
+      on_create() {
+        this
+          .setMainElement("form#" + Wuse.WebHelpers.getUniqueId())
+      }
+
+      on_load() {
+        Milligram_Form_Fieldset.create(this.parameters, "#" + this.getMainAttribute("id"));
+      }
+
+    }
+    Milligram_Form_Sample.register();
+
+    Milligram_Form_Sample.create({ ageRanges: ["0-17", "18-24", "25+"] }, "#divContainer");
+  </script>
+</body>
+</html>
+

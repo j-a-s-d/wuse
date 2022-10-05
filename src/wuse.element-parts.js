@@ -3,7 +3,7 @@
 import WebHelpers from './wuse.web-helpers.js';
 const { isHTMLTag } = WebHelpers;
 import JsHelpers from './wuse.javascript-helpers.js';
-const { EMPTY_STRING, EMPTY_ARRAY, noop, buildArray, buildObject, isOf, hasObjectKeys, isNonEmptyString, forcedStringSplit } = JsHelpers;
+const { EMPTY_STRING, EMPTY_ARRAY, noop, buildArray, buildObject, isOf, ensureFunction, hasObjectKeys, isNonEmptyString, forcedStringSplit } = JsHelpers;
 import StringConstants from './wuse.string-constants.js';
 const { WUSENODE_ATTRIBUTE, DEFAULT_TAG, DEFAULT_KIND, TEMPLATES_KIND, SLOTS_KIND, TEXTNODE_TAG } = StringConstants;
 import StringHashing from './wuse.string-hashing.js';
@@ -225,12 +225,8 @@ const createMainNode = mainDefinition => {
 
 const createStyleNode = (media, type) => {
   let result = window.document.createElement("style");
-  if (isNonEmptyString(media)) {
-    result.setAttribute("media", media);
-  }
-  if (isNonEmptyString(type)) {
-    result.setAttribute("type", type);
-  }
+  if (isNonEmptyString(media)) result.setAttribute("media", media);
+  if (isNonEmptyString(type)) result.setAttribute("type", type);
   result.setAttribute(WUSENODE_ATTRIBUTE, "style");
   result.appendChild(window.document.createTextNode(EMPTY_STRING)); // NOTE: check if this webkit hack is still required
   return result;
@@ -281,9 +277,7 @@ const nestedRulesJoiner = (lr, rule) => {
           break;
         }
       }
-      if (!found) {
-        lr.nested.push(n);
-      }
+      if (!found) lr.nested.push(n);
     });
     lr.cache = null;
     return true;
@@ -319,21 +313,11 @@ export default class ElementParts {
 
   static initialize(options) {
     if (isOf(options, window.Object)) {
-      if (isOf(options.onInvalidDefinition, window.Function)) {
-        RuntimeErrors.onInvalidDefinition = options.onInvalidDefinition;
-      }
-      if (isOf(options.onInexistentTemplate, window.Function)) {
-        RuntimeErrors.onInexistentTemplate = options.onInexistentTemplate;
-      }
-      if (isOf(options.onUnespecifiedSlot, window.Function)) {
-        RuntimeErrors.onUnespecifiedSlot = options.onUnespecifiedSlot;
-      }
-      if (isOf(options.onInvalidId, window.Function)) {
-        RuntimeErrors.onInvalidId = options.onInvalidId;
-      }
-      if (isOf(options.onUnknownTag, window.Function)) {
-        RuntimeErrors.onUnknownTag = options.onUnknownTag;
-      }
+      RuntimeErrors.onInvalidDefinition = ensureFunction(options.onInvalidDefinition);
+      RuntimeErrors.onInexistentTemplate = ensureFunction(options.onInexistentTemplate);
+      RuntimeErrors.onUnespecifiedSlot = ensureFunction(options.onUnespecifiedSlot);
+      RuntimeErrors.onInvalidId = ensureFunction(options.onInvalidId);
+      RuntimeErrors.onUnknownTag = ensureFunction(options.onUnknownTag);
     }
   }
 
