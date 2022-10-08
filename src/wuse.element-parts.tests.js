@@ -83,9 +83,9 @@ export default new class {
   performValidations = (tester, module, name) => {
     var r = module.performValidations(null);
     tester.testResult(r === null, `<u>${name}</u> called with an invalid value (null): <i>${r}</i>`);
-    var r = module.performValidations({});
+    r = module.performValidations({});
     tester.testResult(r === null, `<u>${name}</u> called with an invalid value (empty object): <i>${r}</i>`);
-    var r = module.performValidations({ kind: "%templates%", id: "test" });
+    r = module.performValidations({ kind: "%templates%", id: "test" });
     tester.testResult(r === null, `<u>${name}</u> called with an invalid value (non-existent template): <i>${r}</i>`);
     r = module.performValidations({ kind: "%slots%", attributes: { "slot": "test" }});
     tester.testResult(typeof r === "object" && r.kind === "%slots%", `<u>${name}</u> called with a valid value (non-empty slot): <i>${r}</i>`);
@@ -109,8 +109,10 @@ export default new class {
   newChild = (tester, module, name) => {
     var r = module.newChild(undefined, undefined);
     tester.testResult(r === null, `<u>${name}</u> called with invalid values: <i>${r}</i>`);
-    var r = module.newChild("p#test.class1", []);
-    tester.testResult(typeof r === "object" && r.id === "test" && r.classes.length === 1, `<u>${name}</u> called with valid values: <i>${r}</i>`);
+    r = module.newChild("p#test.class1", []);
+    tester.testResult(typeof r === "object" && r.id === "test" && r.classes.length === 1, `<u>${name}</u> called with valid values (tag and class): <i>${r}</i>`);
+    r = module.newChild("p#test.class1[attribute1=test1|attribute2]", []);
+    tester.testResult(typeof r === "object" && r.id === "test" && r.classes.length === 1 && Object.keys(r.attributes).length == 2, `<u>${name}</u> called with valid values (tag, class and attributes): <i>${r}</i>`);
   }
 
   newDefinition = (tester, module, name) => {

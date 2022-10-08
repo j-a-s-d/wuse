@@ -3,7 +3,7 @@
 import WebHelpers from './wuse.web-helpers.js';
 const { isHTMLTag } = WebHelpers;
 import JsHelpers from './wuse.javascript-helpers.js';
-const { EMPTY_STRING, EMPTY_ARRAY, noop, buildArray, buildObject, isOf, ensureFunction, hasObjectKeys, isNonEmptyString, forcedStringSplit } = JsHelpers;
+const { EMPTY_STRING, EMPTY_ARRAY, noop, buildArray, buildObject, isAssignedObject, isAssignedArray, ensureFunction, hasObjectKeys, isNonEmptyString, forcedStringSplit } = JsHelpers;
 import StringConstants from './wuse.string-constants.js';
 const { WUSENODE_ATTRIBUTE, DEFAULT_TAG, DEFAULT_KIND, TEMPLATES_KIND, SLOTS_KIND, TEXTNODE_TAG } = StringConstants;
 import StringHashing from './wuse.string-hashing.js';
@@ -40,7 +40,7 @@ class ShorthandNotationParser {
             }
           });
         } else {
-          result.attributes[x[0]] = x[1];
+          result.attributes[x[0]] = x[1] || "";
         }
       }
       return input.replace(ip, EMPTY_STRING);
@@ -140,7 +140,7 @@ class CSSPropertiesParser {
 
   static parse(content) {
     return buildObject(result => (
-      isOf(content, window.Array) ? content : forcedStringSplit(content, "\n").map(x => x.trim()).join(EMPTY_STRING).split(";")
+      isAssignedArray(content) ? content : forcedStringSplit(content, "\n").map(x => x.trim()).join(EMPTY_STRING).split(";")
     ).forEach(item => isNonEmptyString(item) && this.#process(result, item.trim())));
   }
 
@@ -168,7 +168,7 @@ const makeChild = (shorthandNotation, rules) => {
   }
   result.custom = result.kind === DEFAULT_KIND && isCustomTag(result.tag); /*&& result.tag !== TEXTNODE_TAG*/
   result.hash = hash(shorthandNotation);
-  result.rules = isOf(rules, window.Array) ? rules : new window.Array();
+  result.rules = isAssignedArray(rules) ? rules : new window.Array();
   result.included = true;
   result.cache = null;
   return result;
@@ -194,7 +194,7 @@ const doValidations = child => {
 }
 
 const createMainNode = mainDefinition => {
-  if (!isOf(mainDefinition, window.Object)) {
+  if (!isAssignedObject(mainDefinition)) {
     return null;
   }
   let result = window.document.createElement(mainDefinition.tag);
@@ -233,22 +233,22 @@ const createStyleNode = (media, type) => {
 }
 
 const makeRule = (selector, properties) => {
-  const s = isOf(selector, window.Array) ? selector.join(",") : (isNonEmptyString(selector) ? selector : EMPTY_STRING);
+  const s = isAssignedArray(selector) ? selector.join(",") : (isNonEmptyString(selector) ? selector : EMPTY_STRING);
   return !s.length ? null : {
     selector: s,
-    properties: isOf(properties, window.Object) ? properties : CSSPropertiesParser.parse(properties),
+    properties: isAssignedObject(properties) ? properties : CSSPropertiesParser.parse(properties),
     cache: null
   };
 }
 
 const makeNestedRule = (selector, sub, properties) => {
-  const s = isOf(selector, window.Array) ? selector.join(",") : (isNonEmptyString(selector) ? selector : EMPTY_STRING);
-  const b = isOf(sub, window.Array) ? sub.join(",") : (isNonEmptyString(sub) ? sub : EMPTY_STRING);
+  const s = isAssignedArray(selector) ? selector.join(",") : (isNonEmptyString(selector) ? selector : EMPTY_STRING);
+  const b = isAssignedArray(sub) ? sub.join(",") : (isNonEmptyString(sub) ? sub : EMPTY_STRING);
   return !s.length || !b.length ? null : {
     selector: s,
     nested: [{
       selector: b,
-      properties: isOf(properties, window.Object) ? properties : CSSPropertiesParser.parse(properties)
+      properties: isAssignedObject(properties) ? properties : CSSPropertiesParser.parse(properties)
     }],
     cache: null
   };
@@ -266,7 +266,7 @@ const rulesJoiner = (lr, rule) => {
 }
 
 const nestedRulesJoiner = (lr, rule) => {
-  if (isOf(lr.nested, window.Array) && lr.selector === rule.selector) {
+  if (isAssignedArray(lr.nested) && lr.selector === rule.selector) {
     rule.nested.forEach(n => {
       var found = false;
       for (const x in lr.nested) {
@@ -312,7 +312,7 @@ export default class ElementParts {
   static newState = makeState;
 
   static initialize(options) {
-    if (isOf(options, window.Object)) {
+    if (isAssignedObject(options)) {
       RuntimeErrors.onInvalidDefinition = ensureFunction(options.onInvalidDefinition);
       RuntimeErrors.onInexistentTemplate = ensureFunction(options.onInexistentTemplate);
       RuntimeErrors.onUnespecifiedSlot = ensureFunction(options.onUnespecifiedSlot);

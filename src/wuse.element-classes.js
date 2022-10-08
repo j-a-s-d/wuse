@@ -41,22 +41,23 @@ export default class ElementClasses {
   }
 
   static #immediateClassInstantiator(klass, target, events, parameters) {
-    let t = null;
-    try {
-      t = window.document.querySelector(target);
+    let selector = target.selector;
+    let parent = target.node;
+    if (parent instanceof window.HTMLElement === false) try {
+      parent = window.document.querySelector(selector);
     } catch {
       // on_bad_target happens when the specified target is not a valid query selector (for ex. a number), if this event is not specified a console warning is emitted
       if (!isOf(events.on_bad_target, window.Function)) {
-        this.#onBadTarget(target);
+        this.#onBadTarget(selector);
         return;
-      } else if (events.on_bad_target(target) === false) return;
+      } else if (events.on_bad_target(selector) === false) return;
     } finally {
-      t = t || window.document.body;
+      parent = parent || window.document.body;
     }
     const element = window.document.createElement(klass.tag);
     element.parameters = parameters;
-    ensureFunction(events.on_element_instantiated)(element, target); // on_element_instantiated happens after the creation of an element and before it's addition to it's parent target
-    t.appendChild(element);
+    ensureFunction(events.on_element_instantiated)(element, selector); // on_element_instantiated happens after the creation of an element and before it's addition to it's parent target
+    parent.appendChild(element);
     return element;
   }
 
@@ -70,17 +71,19 @@ export default class ElementClasses {
   static instantiateClasses(classes, target, events, parameters) {
     if (isNonEmptyArray(classes)) window.Array.prototype.forEach.call(
       classes, klass => this.#instantiateClass(
-        klass, target, isAssignedObject(events) ? events : new window.Object(), parameters
+        klass, isAssignedObject(target) ? target : (
+          target instanceof window.HTMLElement ? { node: target } : { selector: target }
+        ), isAssignedObject(events) ? events : new window.Object(), parameters
       )
     );
   }
 
   static createInstance(element, target, instance) {
-    if (isOf(element, window.Object) && isOf(element.type, window.Function)) {
+    if (isAssignedObject(element) && isOf(element.type, window.Function)) {
       if (element.register === true) this.#classRegistrar(element.type);
-      target = isOf(target, window.Object) ? target : { selector: "body" };
-      instance = isOf(instance, window.Object) ? instance : new window.Object();
-      return this.#instantiateClass(element.type, target.selector, {
+      target = isAssignedObject(target) ? target : new window.Object();
+      instance = isAssignedObject(instance) ? instance : new window.Object();
+      return this.#instantiateClass(element.type, target, {
         on_bad_target: target.on_bad_target,
         on_element_instantiated: instance.on_element_instantiated
       }, instance.parameters);

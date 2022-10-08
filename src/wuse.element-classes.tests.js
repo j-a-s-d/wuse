@@ -73,6 +73,8 @@ export default new class {
     r = module.instantiateClasses([A_A], 123) === undefined && flag === "untargeted";
     tester.testResult(r, `<u>${name}</u> got instantiateClasses called with a valid value but a bad target: <i>${r}</i>`);
     flag = "";
+    r = module.instantiateClasses([A_A], window.document.body) === undefined && flag === "";
+    tester.testResult(r, `<u>${name}</u> got instantiateClasses called with a valid value (array with a valid registered class and body as parent): <i>${r}</i>`);
     r = module.createInstance() === undefined;
     tester.testResult(r, `<u>${name}</u> got createInstance called with no value: <i>${r}</i>`);
     r = module.createInstance(123) === undefined;
@@ -98,6 +100,7 @@ export default new class {
     tester.testResult(r, `<u>${name}</u> got createInstance called with a valid value (object with a registered element type): <i>${r}</i>`);
     r = module.createInstance({ type: X_X }, 123) !== undefined;
     tester.testResult(r, `<u>${name}</u> got createInstance called with a valid value (no object as target): <i>${r}</i>`);
+    flag = "";
     r = module.createInstance({ type: X_X }, null) !== undefined;
     tester.testResult(r, `<u>${name}</u> got createInstance called with a valid value (null target object): <i>${r}</i>`);
     r = module.createInstance({ type: X_X }, {}) !== undefined;
@@ -131,6 +134,9 @@ export default new class {
     l = module.createInstance({ type: X_X }, { selector: "body" }, { parameters: { test: 456 }, on_element_instantiated: el => flag = "instantiated" });
     r = l !== undefined && l.parameters.test === 456 && flag === "instantiated";
     tester.testResult(r, `<u>${name}</u> got createInstance called with a valid value (instance parameters with a value and hooked instantiation): <i>${r}</i>`);
+    flag = "";
+    r = module.createInstance({ type: X_X }, { node: window.document.body }) !== undefined && flag === "";
+    tester.testResult(r, `<u>${name}</u> got createInstance called with a valid value (body element as target node): <i>${r}</i>`);
   }
 
 }

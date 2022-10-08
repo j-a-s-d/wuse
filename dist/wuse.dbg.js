@@ -213,15 +213,15 @@
     }
     static instantiateClasses(classes, target, events, parameters) {
       if (isNonEmptyArray(classes))
-        window.Array.prototype.forEach.call(classes, (klass) => __privateMethod(this, _instantiateClass, instantiateClass_fn).call(this, klass, target, isAssignedObject2(events) ? events : new window.Object(), parameters));
+        window.Array.prototype.forEach.call(classes, (klass) => __privateMethod(this, _instantiateClass, instantiateClass_fn).call(this, klass, isAssignedObject2(target) ? target : target instanceof window.HTMLElement ? { node: target } : { selector: target }, isAssignedObject2(events) ? events : new window.Object(), parameters));
     }
     static createInstance(element, target, instance) {
-      if (isOf(element, window.Object) && isOf(element.type, window.Function)) {
+      if (isAssignedObject2(element) && isOf(element.type, window.Function)) {
         if (element.register === true)
           __privateMethod(this, _classRegistrar, classRegistrar_fn).call(this, element.type);
-        target = isOf(target, window.Object) ? target : { selector: "body" };
-        instance = isOf(instance, window.Object) ? instance : new window.Object();
-        return __privateMethod(this, _instantiateClass, instantiateClass_fn).call(this, element.type, target.selector, {
+        target = isAssignedObject2(target) ? target : new window.Object();
+        instance = isAssignedObject2(instance) ? instance : new window.Object();
+        return __privateMethod(this, _instantiateClass, instantiateClass_fn).call(this, element.type, target, {
           on_bad_target: target.on_bad_target,
           on_element_instantiated: instance.on_element_instantiated
         }, instance.parameters);
@@ -261,22 +261,24 @@
   };
   _immediateClassInstantiator = new WeakSet();
   immediateClassInstantiator_fn = function(klass, target, events, parameters) {
-    let t = null;
-    try {
-      t = window.document.querySelector(target);
-    } catch (e) {
-      if (!isOf(events.on_bad_target, window.Function)) {
-        __privateGet(this, _onBadTarget).call(this, target);
-        return;
-      } else if (events.on_bad_target(target) === false)
-        return;
-    } finally {
-      t = t || window.document.body;
-    }
+    let selector = target.selector;
+    let parent = target.node;
+    if (parent instanceof window.HTMLElement === false)
+      try {
+        parent = window.document.querySelector(selector);
+      } catch (e) {
+        if (!isOf(events.on_bad_target, window.Function)) {
+          __privateGet(this, _onBadTarget).call(this, selector);
+          return;
+        } else if (events.on_bad_target(selector) === false)
+          return;
+      } finally {
+        parent = parent || window.document.body;
+      }
     const element = window.document.createElement(klass.tag);
     element.parameters = parameters;
-    ensureFunction2(events.on_element_instantiated)(element, target);
-    t.appendChild(element);
+    ensureFunction2(events.on_element_instantiated)(element, selector);
+    parent.appendChild(element);
     return element;
   };
   _instantiateClass = new WeakSet();
@@ -561,7 +563,7 @@
 
   // src/wuse.text-replacements.js
   var _regExp, _addReplacement, _includeMatches, _includeStringMatches, _includeKeysMatches;
-  var { EMPTY_ARRAY, buildArray, buildObject, isNonEmptyString: isNonEmptyString2, isOf: isOf3 } = JavascriptHelpers;
+  var { EMPTY_ARRAY, buildArray, buildObject, isNonEmptyString: isNonEmptyString2, isAssignedArray: isAssignedArray2 } = JavascriptHelpers;
   var _ReplacementMarkers = class {
     static initialize(begin, end) {
       this.begin = begin;
@@ -629,7 +631,7 @@
   }));
   __publicField(ReplacementsExtractors, "rule", (rule) => buildArray((result) => {
     var _a3;
-    if (isOf3(rule.nested, window.Array)) {
+    if (isAssignedArray2(rule.nested)) {
       return rule.nested.map((r) => _ReplacementsExtractors.rule(r));
     }
     var c = "";
@@ -651,7 +653,7 @@
 
   // src/wuse.rendering-routines.js
   var _onFetchTemplate;
-  var { noop: noop4, isOf: isOf4, hasObjectKeys, isNonEmptyString: isNonEmptyString3, isNonEmptyArray: isNonEmptyArray2, isAssignedObject: isAssignedObject3, ensureFunction: ensureFunction3 } = JavascriptHelpers;
+  var { noop: noop4, isAssignedArray: isAssignedArray3, hasObjectKeys, isNonEmptyString: isNonEmptyString3, isNonEmptyArray: isNonEmptyArray2, isAssignedObject: isAssignedObject3, ensureFunction: ensureFunction3 } = JavascriptHelpers;
   var { htmlEncode } = WebHelpers;
   var { SLOTS_KIND, TEMPLATES_KIND, TEXTNODE_TAG } = StringConstants;
   var _RenderingRoutines = class {
@@ -669,7 +671,7 @@
   __publicField(RenderingRoutines, "renderingIncluder", (item) => item.included = true);
   __publicField(RenderingRoutines, "renderingExcluder", (item) => item.included = false);
   __publicField(RenderingRoutines, "renderRule", (replacer, rule) => {
-    if (isOf4(rule.nested, window.Array)) {
+    if (isAssignedArray3(rule.nested)) {
       return `${rule.selector}{${rule.nested.map((r) => _RenderingRoutines.renderRule(replacer, r)).join("\n")}}`;
     } else if (isNonEmptyString3(rule.selector) && !rule.nested) {
       var c = new window.String();
@@ -751,7 +753,7 @@
 
   // src/wuse.state-manager.js
   var _key, _keyed, _maker, _reader, _writer, _state, _store, _filiated, _persistState, persistState_fn;
-  var { ensureFunction: ensureFunction5, isNonEmptyString: isNonEmptyString4, isOf: isOf5 } = JavascriptHelpers;
+  var { ensureFunction: ensureFunction5, isNonEmptyString: isNonEmptyString4, isAssignedObject: isAssignedObject4 } = JavascriptHelpers;
   var StateManager = class {
     constructor(maker, reader, writer, store = {}) {
       __privateAdd(this, _persistState);
@@ -815,7 +817,7 @@
       __privateGet(this, _filiated).clear();
       if (__privateGet(this, _keyed)) {
         const state = __privateGet(this, _store).hasItem(this.key) ? __privateGet(this, _store).getItem(this.key) : __privateGet(this, _maker).call(this);
-        if (isOf5(state, window.Object)) {
+        if (isAssignedObject4(state)) {
           __privateSet(this, _state, state);
           __privateGet(this, _state).generation++;
           __privateMethod(this, _persistState, persistState_fn).call(this);
@@ -831,7 +833,7 @@
     }
     writeState() {
       const state = __privateGet(this, _state);
-      if (isOf5(state, window.Object)) {
+      if (isAssignedObject4(state)) {
         state.data = __privateGet(this, _writer).call(this);
         __privateMethod(this, _persistState, persistState_fn).call(this);
         return true;
@@ -840,7 +842,7 @@
     }
     readState() {
       const state = __privateGet(this, _state);
-      if (isOf5(state, window.Object) && state.persisted) {
+      if (isAssignedObject4(state) && state.persisted) {
         __privateGet(this, _reader).call(this, state.data);
         return true;
       }
@@ -848,7 +850,7 @@
     }
     eraseState() {
       const state = __privateGet(this, _state);
-      if (isOf5(state, window.Object) && state.persisted && state.data) {
+      if (isAssignedObject4(state) && state.persisted && state.data) {
         delete state.data;
         __privateMethod(this, _persistState, persistState_fn).call(this);
         return true;
@@ -886,13 +888,16 @@
       __privateAdd(this, _parent, null);
       __privateAdd(this, _actual, null);
       __privateAdd(this, _clone, null);
-      if (parent instanceof Node && original instanceof Node) {
+      if (parent instanceof window.Node && original instanceof window.Node) {
         __privateSet(this, _parent, parent);
-        __privateMethod(this, _drop, drop_fn).call(this, original.getAttribute(WUSENODE_ATTRIBUTE));
-        __privateSet(this, _actual, original);
-        __privateSet(this, _clone, original.cloneNode(false));
+        this.element = original;
       } else
         throw new Error("[WUSE:ERROR] Wrong arguments supplied.");
+    }
+    set element(original) {
+      __privateMethod(this, _drop, drop_fn).call(this, original.getAttribute(WUSENODE_ATTRIBUTE));
+      __privateSet(this, _actual, original);
+      __privateSet(this, _clone, original.cloneNode(false));
     }
     get element() {
       return __privateGet(this, _actual);
@@ -927,14 +932,14 @@
 
   // src/wuse.content-manager.js
   var _invalidated, _content;
-  var { isOf: isOf6 } = JavascriptHelpers;
+  var { isOf: isOf3 } = JavascriptHelpers;
   var ContentManager = class {
     constructor(promoter, verifier) {
       __privateAdd(this, _invalidated, false);
       __privateAdd(this, _content, "");
-      if (isOf6(promoter, window.Function))
+      if (isOf3(promoter, window.Function))
         this.on_content_invalidation = promoter;
-      if (isOf6(verifier, window.Function))
+      if (isOf3(verifier, window.Function))
         this.on_content_verification = verifier;
     }
     get invalidated() {
@@ -964,7 +969,7 @@
 
   // src/wuse.parts-holder.js
   var _roll2, roll_fn2;
-  var { isIntegerNumber, isOf: isOf7, cloneObject, forEachOwnProperty: forEachOwnProperty2, buildArray: buildArray2 } = JavascriptHelpers;
+  var { isIntegerNumber, isAssignedObject: isAssignedObject5, cloneObject, forEachOwnProperty: forEachOwnProperty2, buildArray: buildArray2 } = JavascriptHelpers;
   var partsLooper = (holder, partCallback, metaCallback) => forEachOwnProperty2(holder, (key) => {
     switch (key) {
       case "owner":
@@ -999,7 +1004,7 @@
     append(item) {
       if (this.locked) {
         this.on_forbidden_change();
-      } else if (isOf7(item, window.Object)) {
+      } else if (isAssignedObject5(item)) {
         this.push(item);
         __privateMethod(this, _roll2, roll_fn2).call(this, item);
       }
@@ -1007,7 +1012,7 @@
     prepend(item) {
       if (this.locked) {
         this.on_forbidden_change();
-      } else if (isOf7(item, window.Object)) {
+      } else if (isAssignedObject5(item)) {
         this.unshift(item);
         __privateMethod(this, _roll2, roll_fn2).call(this, item);
       }
@@ -1015,7 +1020,7 @@
     replace(index, item) {
       if (this.locked) {
         this.on_forbidden_change();
-      } else if (index > -1 && isOf7(item, window.Object)) {
+      } else if (index > -1 && isAssignedObject5(item)) {
         __privateMethod(this, _roll2, roll_fn2).call(this, this[index] = item);
       }
     }
@@ -1025,6 +1030,14 @@
       } else if (index > -1) {
         const a = this.splice(index, 1);
         __privateMethod(this, _roll2, roll_fn2).call(this, !!a.length ? a[0] : null);
+      }
+    }
+    clear() {
+      if (this.locked) {
+        this.on_forbidden_change();
+      } else {
+        this.length = 0;
+        __privateMethod(this, _roll2, roll_fn2).call(this, null);
       }
     }
     persist() {
@@ -1055,7 +1068,7 @@
   // src/wuse.element-parts.js
   var _extractAttributes, extractAttributes_fn, _extractContent, extractContent_fn, _extractEvents, extractEvents_fn, _extractClasses, extractClasses_fn, _extractIdAndTag, extractIdAndTag_fn, _extractData, extractData_fn, _process, process_fn;
   var { isHTMLTag } = WebHelpers;
-  var { EMPTY_STRING, EMPTY_ARRAY: EMPTY_ARRAY2, noop: noop5, buildArray: buildArray3, buildObject: buildObject2, isOf: isOf8, ensureFunction: ensureFunction6, hasObjectKeys: hasObjectKeys2, isNonEmptyString: isNonEmptyString5, forcedStringSplit } = JavascriptHelpers;
+  var { EMPTY_STRING, EMPTY_ARRAY: EMPTY_ARRAY2, noop: noop5, buildArray: buildArray3, buildObject: buildObject2, isAssignedObject: isAssignedObject6, isAssignedArray: isAssignedArray4, ensureFunction: ensureFunction6, hasObjectKeys: hasObjectKeys2, isNonEmptyString: isNonEmptyString5, forcedStringSplit } = JavascriptHelpers;
   var { WUSENODE_ATTRIBUTE: WUSENODE_ATTRIBUTE2, DEFAULT_TAG, DEFAULT_KIND, TEMPLATES_KIND: TEMPLATES_KIND2, SLOTS_KIND: SLOTS_KIND2, TEXTNODE_TAG: TEXTNODE_TAG2 } = StringConstants;
   var hash2 = StringHashing.defaultRoutine;
   var RuntimeErrors2 = {
@@ -1104,7 +1117,7 @@
             }
           });
         } else {
-          result.attributes[x[0]] = x[1];
+          result.attributes[x[0]] = x[1] || "";
         }
       }
       return input.replace(ip, EMPTY_STRING);
@@ -1167,7 +1180,7 @@
   __privateAdd(ShorthandNotationParser, _extractData);
   var CSSPropertiesParser = class {
     static parse(content) {
-      return buildObject2((result) => (isOf8(content, window.Array) ? content : forcedStringSplit(content, "\n").map((x) => x.trim()).join(EMPTY_STRING).split(";")).forEach((item) => isNonEmptyString5(item) && __privateMethod(this, _process, process_fn).call(this, result, item.trim())));
+      return buildObject2((result) => (isAssignedArray4(content) ? content : forcedStringSplit(content, "\n").map((x) => x.trim()).join(EMPTY_STRING).split(";")).forEach((item) => isNonEmptyString5(item) && __privateMethod(this, _process, process_fn).call(this, result, item.trim())));
     }
   };
   _process = new WeakSet();
@@ -1202,7 +1215,7 @@
     }
     result.custom = result.kind === DEFAULT_KIND && isCustomTag(result.tag);
     result.hash = hash2(shorthandNotation);
-    result.rules = isOf8(rules, window.Array) ? rules : new window.Array();
+    result.rules = isAssignedArray4(rules) ? rules : new window.Array();
     result.included = true;
     result.cache = null;
     return result;
@@ -1226,7 +1239,7 @@
     return child;
   };
   var createMainNode = (mainDefinition) => {
-    if (!isOf8(mainDefinition, window.Object)) {
+    if (!isAssignedObject6(mainDefinition)) {
       return null;
     }
     let result = window.document.createElement(mainDefinition.tag);
@@ -1265,21 +1278,21 @@
     return result;
   };
   var makeRule = (selector, properties) => {
-    const s = isOf8(selector, window.Array) ? selector.join(",") : isNonEmptyString5(selector) ? selector : EMPTY_STRING;
+    const s = isAssignedArray4(selector) ? selector.join(",") : isNonEmptyString5(selector) ? selector : EMPTY_STRING;
     return !s.length ? null : {
       selector: s,
-      properties: isOf8(properties, window.Object) ? properties : CSSPropertiesParser.parse(properties),
+      properties: isAssignedObject6(properties) ? properties : CSSPropertiesParser.parse(properties),
       cache: null
     };
   };
   var makeNestedRule = (selector, sub, properties) => {
-    const s = isOf8(selector, window.Array) ? selector.join(",") : isNonEmptyString5(selector) ? selector : EMPTY_STRING;
-    const b = isOf8(sub, window.Array) ? sub.join(",") : isNonEmptyString5(sub) ? sub : EMPTY_STRING;
+    const s = isAssignedArray4(selector) ? selector.join(",") : isNonEmptyString5(selector) ? selector : EMPTY_STRING;
+    const b = isAssignedArray4(sub) ? sub.join(",") : isNonEmptyString5(sub) ? sub : EMPTY_STRING;
     return !s.length || !b.length ? null : {
       selector: s,
       nested: [{
         selector: b,
-        properties: isOf8(properties, window.Object) ? properties : CSSPropertiesParser.parse(properties)
+        properties: isAssignedObject6(properties) ? properties : CSSPropertiesParser.parse(properties)
       }],
       cache: null
     };
@@ -1295,7 +1308,7 @@
     return false;
   };
   var nestedRulesJoiner = (lr, rule) => {
-    if (isOf8(lr.nested, window.Array) && lr.selector === rule.selector) {
+    if (isAssignedArray4(lr.nested) && lr.selector === rule.selector) {
       rule.nested.forEach((n) => {
         var found = false;
         for (const x in lr.nested) {
@@ -1316,7 +1329,7 @@
   };
   var ElementParts = class {
     static initialize(options) {
-      if (isOf8(options, window.Object)) {
+      if (isAssignedObject6(options)) {
         RuntimeErrors2.onInvalidDefinition = ensureFunction6(options.onInvalidDefinition);
         RuntimeErrors2.onInexistentTemplate = ensureFunction6(options.onInexistentTemplate);
         RuntimeErrors2.onUnespecifiedSlot = ensureFunction6(options.onUnespecifiedSlot);
@@ -1394,7 +1407,7 @@
 
   // src/wuse.base-element.js
   var _html, _rules, _children, _fields, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binding, _contents, _waste, _measurement, _insertElements, insertElements_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _getElementByIdFromRoot, getElementByIdFromRoot_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _fieldRender, fieldRender_fn, _setField, setField_fn, _createField, createField_fn, _filiateChild, filiateChild_fn;
-  var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf9, isAssignedObject: isAssignedObject4, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3 } = JavascriptHelpers;
+  var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3 } = JavascriptHelpers;
   var { removeChildren } = WebHelpers;
   var { WUSEKEY_ATTRIBUTE, DEFAULT_STYLE_TYPE, DEFAULT_STYLE_MEDIA, DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE, SLOTS_KIND: SLOTS_KIND3 } = StringConstants;
   var { createReactiveField } = ReactiveField;
@@ -1637,17 +1650,17 @@
       __privateGet(this, _elementEvents).immediateTrigger(__privateGet(this, _stateManager).initializeState() > 1 ? "on_reconstruct" : "on_construct", __privateGet(this, _stateManager).state);
       __privateSet(this, _initialized, true);
     }
-    get render() {
-      return __privateGet(this, _binded) ? __privateMethod(this, _render, render_fn) : noop6;
+    render() {
+      window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _render, render_fn).call(this);
     }
-    get redraw() {
-      return __privateGet(this, _binded) ? __privateMethod(this, _redraw, redraw_fn) : noop6;
+    redraw() {
+      window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _redraw, redraw_fn).call(this);
     }
     get parameters() {
       return __privateGet(this, _parameters);
     }
     set parameters(value) {
-      if (isAssignedObject4(__privateSet(this, _parameters, value)))
+      if (isAssignedObject7(__privateSet(this, _parameters, value)))
         forEachOwnProperty3(value, (name) => this[name] = value[name]);
     }
     connectedCallback() {
@@ -1704,9 +1717,10 @@
       return __privateGet(this, _root).querySelector(x);
     }
     getMainAttribute(key) {
-      return __privateGet(this, _inserted) ? __privateGet(this, _main).element.getAttribute(key) : void 0;
+      return key === "id" && __privateGet(this, _identified) ? __privateGet(this, _options).mainDefinition.id : __privateGet(this, _options).mainDefinition.attributes[key];
     }
     setMainAttribute(key, value) {
+      __privateGet(this, _options).mainDefinition.attributes[key] = value;
       if (__privateGet(this, _inserted))
         __privateGet(this, _main).element.setAttribute(key, value);
       return this;
@@ -1726,10 +1740,10 @@
         if (isNonEmptyArray3(tmp.classes)) {
           __privateGet(this, _options).mainDefinition.classes = tmp.classes;
         }
-        if (isOf9(tmp.style, window.Object)) {
+        if (isAssignedObject7(tmp.style)) {
           __privateGet(this, _options).mainDefinition.style = tmp.style;
         }
-        if (isOf9(tmp.attributes, window.Array)) {
+        if (isAssignedObject7(tmp.attributes)) {
           __privateGet(this, _options).mainDefinition.attributes = tmp.attributes;
         }
       }
@@ -1823,6 +1837,10 @@
         __privateGet(this, _rules).splice(idx, 1);
       return this;
     }
+    removeAllCSSRules() {
+      __privateGet(this, _rules).clear();
+      return this;
+    }
     lockChildElements() {
       __privateGet(this, _children).locked = true;
       return this;
@@ -1844,11 +1862,11 @@
       return this;
     }
     appendChildElements(items) {
-      (isOf9(items, window.Array) ? items : forcedStringSplit2(items, "\n")).forEach((item) => typeof item === "string" && !!item.trim().length && this.appendChildElement(item));
+      (isAssignedArray5(items) ? items : forcedStringSplit2(items, "\n")).forEach((item) => typeof item === "string" && !!item.trim().length && this.appendChildElement(item));
       return this;
     }
     prependChildElements(items) {
-      (isOf9(items, window.Array) ? items : forcedStringSplit2(items, "\n")).forEach((item) => typeof item === "string" && !!item.trim().length && this.prependChildElement(item));
+      (isAssignedArray5(window.Array) ? items : forcedStringSplit2(items, "\n")).forEach((item) => typeof item === "string" && !!item.trim().length && this.prependChildElement(item));
       return this;
     }
     replaceChildElementById(id, shorthandNotation, rules) {
@@ -1866,8 +1884,12 @@
         __privateGet(this, _children).remove(idx);
       return this;
     }
+    removeAllChildElements() {
+      __privateGet(this, _children).clear();
+      return this;
+    }
     checkChildElementIsIncludedById(id, yes, no) {
-      const fire = (cb) => isOf9(cb, window.Function) ? cb() : void 0;
+      const fire = (cb) => isOf4(cb, window.Function) ? cb() : void 0;
       __privateGet(this, _children).some((child) => child.id === id && child.included) ? fire(yes) : fire(no);
       return this;
     }
@@ -1884,7 +1906,7 @@
       return this;
     }
     invalidateChildElements(childs) {
-      if (isOf9(childs, window.Array))
+      if (isAssignedArray5(childs))
         childs.forEach(RenderingRoutines.cacheInvalidator);
       return this;
     }
@@ -1944,7 +1966,7 @@
     }
     static initialize(options) {
       TextReplacements.initialize(DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE);
-      if (isOf9(options, window.Object)) {
+      if (isAssignedObject7(options)) {
         RenderingRoutines.initialize({ onFetchTemplate: options.onFetchTemplate });
         ElementParts.initialize({
           onInvalidDefinition: options.onInvalidDefinition,
@@ -1965,7 +1987,8 @@
       return Wuse.register(this);
     }
     static create(parameters, at = "body") {
-      return Wuse.create({ element: { type: this }, target: { selector: at }, instance: { parameters } });
+      const target = at instanceof window.HTMLElement ? { node: at } : typeof at === "string" ? { selector: at } : at;
+      return Wuse.create({ element: { type: this }, target, instance: { parameters } });
     }
   };
   var BaseElement = _BaseElement;
@@ -2058,8 +2081,6 @@
   };
   _render = new WeakSet();
   render_fn = function() {
-    if (!window.Wuse.RENDERING || !__privateGet(this, _rendering))
-      return;
     if (window.Wuse.MEASURE)
       __privateGet(this, _measurement).partial.start();
     __privateGet(this, _elementEvents).immediateTrigger("on_prerender");
@@ -2354,11 +2375,11 @@
   };
 
   // package.json
-  var version = "0.7.1";
+  var version = "0.7.2";
 
   // src/wuse.js
   var _a2;
-  var { noop: noop7, isOf: isOf10 } = JavascriptHelpers;
+  var { noop: noop7, isOf: isOf5 } = JavascriptHelpers;
   window.Wuse = window.Wuse || (_a2 = class {
     static get VERSION() {
       return version;
@@ -2380,7 +2401,7 @@
       methods: {
         debug: (msg) => window.console.log("[WUSE:DEBUG]", msg),
         blockUpdate: (task, arg) => {
-          if (isOf10(task, Function)) {
+          if (isOf5(task, Function)) {
             if (window.Wuse.DEBUG)
               window.Wuse.debug("blocking");
             window.Wuse.RENDERING = false;
@@ -2399,9 +2420,9 @@
           const p = window.Object.getPrototypeOf(instance.constructor);
           return p === window.Wuse.OpenShadowElement || p === window.Wuse.ClosedShadowElement;
         },
-        register: (classes) => ElementClasses.registerClasses(isOf10(classes, window.Array) ? classes : new window.Array(classes)),
-        instantiate: (classes, target, events) => ElementClasses.instantiateClasses(isOf10(classes, window.Array) ? classes : new window.Array(classes), target, events),
-        create: (configuration, option) => isOf10(configuration, window.Object) ? ElementClasses.createInstance(configuration.element, configuration.target, configuration.instance) : void 0
+        register: (classes) => ElementClasses.registerClasses(isOf5(classes, window.Array) ? classes : new window.Array(classes)),
+        instantiate: (classes, target, events) => ElementClasses.instantiateClasses(isOf5(classes, window.Array) ? classes : new window.Array(classes), target, events),
+        create: (configuration, option) => isOf5(configuration, window.Object) ? ElementClasses.createInstance(configuration.element, configuration.target, configuration.instance) : void 0
       }
     });
     InitializationRoutines.detectFeatures(_a2);

@@ -1,7 +1,7 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
 import JsHelpers from './wuse.javascript-helpers.js';
-const { noop, isOf, hasObjectKeys, isNonEmptyString, isNonEmptyArray, isAssignedObject, ensureFunction } = JsHelpers;
+const { noop, isAssignedArray, hasObjectKeys, isNonEmptyString, isNonEmptyArray, isAssignedObject, ensureFunction } = JsHelpers;
 import WebHelpers from './wuse.web-helpers.js';
 const { htmlEncode } = WebHelpers;
 import StringConstants from './wuse.string-constants.js';
@@ -20,7 +20,7 @@ export default class RenderingRoutines {
     static renderingExcluder = item => item.included = false;
 
     static renderRule = (replacer, rule) => {
-      if (isOf(rule.nested, window.Array)) {
+      if (isAssignedArray(rule.nested)) {
         return `${rule.selector}{${rule.nested.map(r => this.renderRule(replacer, r)).join("\n")}}`;
       } else if (isNonEmptyString(rule.selector) && !rule.nested) {
         var c = new window.String();

@@ -37,10 +37,12 @@ export default new class {
     tester.testResult(r, `<u>${name}</u> got remove called with a valid index: <i>${r}</i>`);
     r = instance.remove(10) === undefined && instance.length === 4;
     tester.testResult(r, `<u>${name}</u> got remove called with an invalid index: <i>${r}</i>`);
+    r = instance.clear() === undefined && instance.length === 0;
+    tester.testResult(r, `<u>${name}</u> clear called: <i>${r}</i>`);
     var x = false;
     instance.on_forbidden_change = () => x = true;
     instance.locked = true;
-    r = instance.append({ number: 789 }) === undefined && instance.length === 4 && x === true;
+    r = instance.append({ number: 789 }) === undefined && instance.length === 0 && x === true;
     tester.testResult(r, `<u>${name}</u> prevented modification after been locked: <i>${r}</i>`);
   }
 

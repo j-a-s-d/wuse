@@ -1,7 +1,7 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
 import JsHelpers from './wuse.javascript-helpers.js';
-const { EMPTY_ARRAY, buildArray, buildObject, isNonEmptyString, isOf } = JsHelpers;
+const { EMPTY_ARRAY, buildArray, buildObject, isNonEmptyString, isAssignedArray } = JsHelpers;
 
 class ReplacementMarkers {
 
@@ -79,7 +79,7 @@ class ReplacementsExtractors {
   });
 
   static rule = rule => buildArray(result => {
-    if (isOf(rule.nested, window.Array)) {
+    if (isAssignedArray(rule.nested)) {
       return rule.nested.map(r => this.rule(r));
     }
     var c = "";

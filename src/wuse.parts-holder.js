@@ -1,7 +1,7 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
 import JsHelpers from './wuse.javascript-helpers.js';
-const { isIntegerNumber, isOf, cloneObject, forEachOwnProperty, buildArray } = JsHelpers;
+const { isIntegerNumber, isAssignedObject, cloneObject, forEachOwnProperty, buildArray } = JsHelpers;
 
 const partsLooper = (holder, partCallback, metaCallback) => forEachOwnProperty(holder, key => {
   switch (key) {
@@ -46,7 +46,7 @@ export default class PartsHolder extends window.Array {
   append(item) {
     if (this.locked) {
       this.on_forbidden_change();
-    } else if (isOf(item, window.Object)) {
+    } else if (isAssignedObject(item)) {
       this.push(item);
       this.#roll(item);
     }
@@ -55,7 +55,7 @@ export default class PartsHolder extends window.Array {
   prepend(item) {
     if (this.locked) {
       this.on_forbidden_change();
-    } else if (isOf(item, window.Object)) {
+    } else if (isAssignedObject(item)) {
       this.unshift(item);
       this.#roll(item);
     }
@@ -64,7 +64,7 @@ export default class PartsHolder extends window.Array {
   replace(index, item) {
     if (this.locked) {
       this.on_forbidden_change();
-    } else if ((index > -1) && isOf(item, window.Object)) {
+    } else if ((index > -1) && isAssignedObject(item)) {
       this.#roll(this[index] = item);
     }
   }
@@ -75,6 +75,15 @@ export default class PartsHolder extends window.Array {
     } else if (index > -1) {
       const a = this.splice(index, 1);
       this.#roll(!!a.length ? a[0] : null);
+    }
+  }
+
+  clear() {
+    if (this.locked) {
+      this.on_forbidden_change();
+    } else {
+      this.length = 0;
+      this.#roll(null);
     }
   }
 

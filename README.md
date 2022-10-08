@@ -39,6 +39,12 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.7.2] 2022-oct-08
+  - added `removeAllChildElements` and `removeAllCSSRules` to the `BaseElement` class
+  - added `clear` to the `PartsHolder` class
+  - added `element` setter to the `NodeManager` class
+  - now the instantiators methods accept an HTMLElement node as the targeted parent
+  - added `Foundation_Accordion_Sample` example
 * [0.7.1] 2022-oct-05
   - added `on_content_verification` to the `ContentManager` class
   - added `wuse.dbg.js` to the build generation and distribution directory (comes unmified and with DEBUG and MEASURE flags turned on by default)

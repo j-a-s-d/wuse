@@ -1,7 +1,7 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
 import JsHelpers from './wuse.javascript-helpers.js';
-const { EMPTY_STRING, noop, ensureFunction, isOf, isAssignedObject, isNonEmptyArray, isNonEmptyString, forcedStringSplit, forEachOwnProperty } = JsHelpers;
+const { EMPTY_STRING, noop, ensureFunction, isOf, isAssignedObject, isAssignedArray, isNonEmptyArray, isNonEmptyString, forcedStringSplit, forEachOwnProperty } = JsHelpers;
 import WebHelpers from './wuse.web-helpers.js';
 const { removeChildren } = WebHelpers;
 import StringConstants from './wuse.string-constants.js';
@@ -131,7 +131,7 @@ export default class BaseElement extends window.HTMLElement {
   #slotted = false;
   #shadowed = window.Wuse.isShadowElement(this);
 
-  // INNER ELEMENTS
+  // INNER STRUCTURE
   #main = undefined;
   #style = undefined;
   #root = null;
@@ -312,7 +312,6 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   #render() {
-    if (!window.Wuse.RENDERING || !this.#rendering) return;
     if (window.Wuse.MEASURE) this.#measurement.partial.start();
     this.#elementEvents.immediateTrigger("on_prerender");
     this.#prepareContents();
@@ -420,11 +419,17 @@ export default class BaseElement extends window.HTMLElement {
     this.#initialized = true;
   }
 
-  get render() { return this.#binded ? this.#render : noop }
+  render() {
+    window.Wuse.RENDERING && this.#rendering && this.#binded && this.#render();
+  }
 
-  get redraw() { return this.#binded ? this.#redraw : noop }
+  redraw() {
+    window.Wuse.RENDERING && this.#rendering && this.#binded && this.#redraw();
+  }
 
-  get parameters() { return this.#parameters; }
+  get parameters() {
+    return this.#parameters;
+  }
 
   set parameters(value) {
     if (isAssignedObject(this.#parameters = value)) forEachOwnProperty(value, name => this[name] = value[name]);
@@ -492,10 +497,13 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   getMainAttribute(key) {
-    return this.#inserted ? this.#main.element.getAttribute(key) : undefined;
+    return key === "id" && this.#identified ?
+      this.#options.mainDefinition.id :
+      this.#options.mainDefinition.attributes[key];
   }
 
   setMainAttribute(key, value) {
+    this.#options.mainDefinition.attributes[key] = value;
     if (this.#inserted) this.#main.element.setAttribute(key, value);
     return this;
   }
@@ -515,10 +523,10 @@ export default class BaseElement extends window.HTMLElement {
       if (isNonEmptyArray(tmp.classes)) {
         this.#options.mainDefinition.classes = tmp.classes;
       }
-      if (isOf(tmp.style, window.Object)) {
+      if (isAssignedObject(tmp.style)) {
         this.#options.mainDefinition.style = tmp.style;
       }
-      if (isOf(tmp.attributes, window.Array)) {
+      if (isAssignedObject(tmp.attributes)) {
         this.#options.mainDefinition.attributes = tmp.attributes;
       }
     }
@@ -625,6 +633,11 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
+  removeAllCSSRules() {
+    this.#rules.clear();
+    return this;
+  }
+
   lockChildElements() {
     this.#children.locked = true;
     return this;
@@ -648,14 +661,14 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   appendChildElements(items) {
-    (isOf(items, window.Array) ? items : forcedStringSplit(items, "\n")).forEach(
+    (isAssignedArray(items) ? items : forcedStringSplit(items, "\n")).forEach(
       item => typeof item === "string" && !!item.trim().length && this.appendChildElement(item)
     );
     return this;
   }
 
   prependChildElements(items) {
-    (isOf(items, window.Array) ? items : forcedStringSplit(items, "\n")).forEach(
+    (isAssignedArray(window.Array) ? items : forcedStringSplit(items, "\n")).forEach(
       item => typeof item === "string" && !!item.trim().length && this.prependChildElement(item)
     );
     return this;
@@ -673,6 +686,11 @@ export default class BaseElement extends window.HTMLElement {
   removeChildElementById(id) {
     const idx = this.#children.getIndexOf(id);
     if (idx >-1) this.#children.remove(idx);
+    return this;
+  }
+
+  removeAllChildElements() {
+    this.#children.clear();
     return this;
   }
 
@@ -698,7 +716,7 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   invalidateChildElements(childs) {
-    if (isOf(childs, window.Array)) childs.forEach(WuseRenderingRoutines.cacheInvalidator);
+    if (isAssignedArray(childs)) childs.forEach(WuseRenderingRoutines.cacheInvalidator);
     return this;
   }
 
@@ -767,7 +785,7 @@ export default class BaseElement extends window.HTMLElement {
 
   static initialize(options) {
     WuseTextReplacements.initialize(DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE);
-    if (isOf(options, window.Object)) {
+    if (isAssignedObject(options)) {
       WuseRenderingRoutines.initialize({ onFetchTemplate: options.onFetchTemplate });
       WuseElementParts.initialize({
         onInvalidDefinition: options.onInvalidDefinition,
@@ -790,7 +808,8 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   static create(parameters, at = "body") {
-    return Wuse.create({ element: { type: this }, target: { selector: at }, instance: { parameters } });
+    const target = at instanceof window.HTMLElement ? { node: at } : (typeof at === "string" ? { selector: at } : at);
+    return Wuse.create({ element: { type: this }, target, instance: { parameters } });
   }
 
 }

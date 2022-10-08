@@ -21,15 +21,21 @@ export default class NodeManager {
   }
 
   constructor(parent, original) {
-    if (parent instanceof Node && original instanceof Node) {
+    if (parent instanceof window.Node && original instanceof window.Node) {
       this.#parent = parent;
-      this.#drop(original.getAttribute(WUSENODE_ATTRIBUTE));
-      this.#actual = original;
-      this.#clone = original.cloneNode(false);
+      this.element = original;
     } else throw new Error("[WUSE:ERROR] Wrong arguments supplied.");
   }
 
-  get element() { return this.#actual; }
+  set element(original) {
+    this.#drop(original.getAttribute(WUSENODE_ATTRIBUTE));
+    this.#actual = original;
+    this.#clone = original.cloneNode(false);
+  }
+
+  get element() {
+    return this.#actual;
+  }
 
   affiliate() {
     this.#parent.appendChild(this.#actual);

@@ -1,7 +1,7 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
 import JsHelpers from './wuse.javascript-helpers.js';
-const { ensureFunction, isNonEmptyString, isOf } = JsHelpers;
+const { ensureFunction, isNonEmptyString, isAssignedObject } = JsHelpers;
 
 export default class StateManager {
 
@@ -85,7 +85,7 @@ export default class StateManager {
     if (this.#keyed) {
       const state = this.#store.hasItem(this.key) ?
         this.#store.getItem(this.key) : this.#maker();
-      if (isOf(state, window.Object)) {
+      if (isAssignedObject(state)) {
         this.#state = state;
         this.#state.generation++;
         this.#persistState();
@@ -102,7 +102,7 @@ export default class StateManager {
 
   writeState() {
     const state = this.#state;
-    if (isOf(state, window.Object)) {
+    if (isAssignedObject(state)) {
       state.data = this.#writer();
       this.#persistState();
       return true;
@@ -112,7 +112,7 @@ export default class StateManager {
 
   readState() {
     const state = this.#state;
-    if (isOf(state, window.Object) && state.persisted) {
+    if (isAssignedObject(state) && state.persisted) {
       this.#reader(state.data);
       return true;
     }
@@ -121,7 +121,7 @@ export default class StateManager {
 
   eraseState() {
     const state = this.#state;
-    if (isOf(state, window.Object) && state.persisted && state.data) {
+    if (isAssignedObject(state) && state.persisted && state.data) {
       delete state.data;
       this.#persistState();
       return true;

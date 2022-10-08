@@ -1,0 +1,66 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.1/dist/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/foundation-sites@6.7.5/dist/css/foundation.min.css" crossorigin="anonymous">
+  <title>Wuse | Foundation Accordion Sample</title>
+  <script src="../../dist/wuse.min.js"></script>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/foundation-sites@6.7.5/dist/js/foundation.min.js" crossorigin="anonymous"></script>
+  <p>This is a port of the <a href="https://get.foundation/sites/docs/accordion.html" target="_blank">Foundation 6.7.5 Accordion example</a>.</p>
+  <hr/>
+  <script>
+    class Foundation_Accordion_Sample extends Wuse.NonShadowElement {
+
+      static {
+        Wuse.register([class Foundation_Accordion_Accordion extends Wuse.NonShadowElement {
+
+          on_create() {
+            this
+              .setMainElement("ul.accordion[data-accordion]")
+          }
+
+          #appendAccordionItem = item => this.appendChildElement(
+            `li.accordion-item${item.active ? ".is-active" : ""}[data-accordion-item]=<a href="#" class="accordion-title">${item.title}</a><div class="accordion-content" data-tab-content>${item.content}</div>`
+          )
+
+          loadItems(items) {
+            this.removeAllChildElements();
+            (items || []).forEach(this.#appendAccordionItem);
+            this.render();
+          }
+
+        }, this]);
+      }
+
+      on_create() {
+        this
+          .setMainElement("div.row")
+          .appendChildElements(`
+            h2=Accordion
+            p=Accordions lets you organize and navigate multiple documents in a single container. Highly useful for switching between items in the container specially when you have a large amount of content.
+            div.columns=<foundation-accordion-accordion/>
+          `)
+          .appendCSSRule("body", "padding: 2rem 1rem")
+      }
+
+      loadItems(items) {
+        this.selectChildElement("foundation-accordion-accordion").loadItems(items);
+      }
+
+    }
+    const sampleApp = Foundation_Accordion_Sample.create();
+    sampleApp.loadItems([
+      { active: true, title: "Accordion 1", content: "<p>Panel 1. Lorem ipsum dolor</p><a href='#'>Nowhere to Go</a>" },
+      { active: false, title: "Accordion 2", content: "<textarea></textarea><button class='button'>I do nothing!</button>" },
+      { active: false, title: "Accordion 3", content: "Type your name!<input type='text'></input>" }
+    ]);
+    $(document).foundation();
+  </script>
+</body>
+</html>
+
