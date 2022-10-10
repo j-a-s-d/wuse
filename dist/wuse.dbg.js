@@ -1047,7 +1047,12 @@
       this.owner = owner;
       partsLooper(instance, (key) => partProcessor(this, instance[key], this.on_recall_part), (key) => this[key] = instance[key]);
     }
-    getIndexOf(value) {
+    getIndexOf(field, value) {
+      for (let idx = 0; idx < this.length; idx++) {
+        if (this[idx][field] === value)
+          return idx;
+      }
+      return -1;
     }
     on_snapshot_part() {
     }
@@ -1406,7 +1411,7 @@
   _events = new WeakMap();
 
   // src/wuse.base-element.js
-  var _html, _rules, _children, _fields, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binding, _contents, _waste, _measurement, _insertElements, insertElements_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _getElementByIdFromRoot, getElementByIdFromRoot_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _fieldRender, fieldRender_fn, _setField, setField_fn, _createField, createField_fn, _filiateChild, filiateChild_fn;
+  var _html, _rules, _children, _fields, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binding, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _getElementByIdFromRoot, getElementByIdFromRoot_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _fieldRender, fieldRender_fn, _setField, setField_fn, _createField, createField_fn, _filiateChild, filiateChild_fn;
   var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3 } = JavascriptHelpers;
   var { removeChildren } = WebHelpers;
   var { WUSEKEY_ATTRIBUTE, DEFAULT_STYLE_TYPE, DEFAULT_STYLE_MEDIA, DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE, SLOTS_KIND: SLOTS_KIND3 } = StringConstants;
@@ -1443,7 +1448,8 @@
   var _BaseElement = class extends window.HTMLElement {
     constructor(mode) {
       super();
-      __privateAdd(this, _insertElements);
+      __privateAdd(this, _insertStyle);
+      __privateAdd(this, _insertMain);
       __privateAdd(this, _extirpateElements);
       __privateAdd(this, _bind);
       __privateAdd(this, _getElementByIdFromRoot);
@@ -1461,6 +1467,7 @@
       __privateAdd(this, _rules, new class extends PartsHolder {
         constructor() {
           super(...arguments);
+          __publicField(this, "getIndexOf", (value) => super.getIndexOf("selector", value));
           __publicField(this, "on_version_change", () => {
             if (this.last !== null) {
               this.last.version = this.version;
@@ -1472,20 +1479,14 @@
           __publicField(this, "on_forbidden_change", () => {
             if (window.Wuse.DEBUG && __privateGet(this.owner, _identified))
               debug(this.owner, `rules list is locked and can not be changed`);
-            RuntimeErrors3.onLockedDefinition(__privateGet(this, _options).mainDefinition.id);
+            RuntimeErrors3.onLockedDefinition(__privateGet(this.owner, _options).mainDefinition.id);
           });
-        }
-        getIndexOf(value) {
-          for (let idx = 0; idx < this.length; idx++) {
-            if (this[idx].selector === value)
-              return idx;
-          }
-          return -1;
         }
       }(this));
       __privateAdd(this, _children, new class extends PartsHolder {
         constructor() {
           super(...arguments);
+          __publicField(this, "getIndexOf", (value) => super.getIndexOf("id", value));
           __publicField(this, "on_version_change", () => {
             var _a3;
             if (this.last !== null) {
@@ -1500,21 +1501,15 @@
           __publicField(this, "on_forbidden_change", () => {
             if (window.Wuse.DEBUG && __privateGet(this.owner, _identified))
               debug(this.owner, `children list is locked and can not be changed`);
-            RuntimeErrors3.onLockedDefinition(__privateGet(this, _options).mainDefinition.id);
+            RuntimeErrors3.onLockedDefinition(__privateGet(this.owner, _options).mainDefinition.id);
           });
           __publicField(this, "on_recall_part", (part) => __privateGet(this.owner, _filiatedKeys).tryToRemember(part));
-        }
-        getIndexOf(value) {
-          for (let idx = 0; idx < this.length; idx++) {
-            if (this[idx].id === value)
-              return idx;
-          }
-          return -1;
         }
       }(this));
       __privateAdd(this, _fields, new class extends PartsHolder {
         constructor() {
           super(...arguments);
+          __publicField(this, "getIndexOf", (value) => super.getIndexOf("name", value));
           __publicField(this, "on_version_change", () => {
             if (window.Wuse.DEBUG && __privateGet(this.owner, _identified))
               debug(this.owner, `fields list version change: ${this.version}`);
@@ -1522,17 +1517,10 @@
           __publicField(this, "on_forbidden_change", () => {
             if (window.Wuse.DEBUG && __privateGet(this.owner, _identified))
               debug(this.owner, `fields list is locked and can not be changed`);
-            RuntimeErrors3.onLockedDefinition(__privateGet(this, _options).mainDefinition.id);
+            RuntimeErrors3.onLockedDefinition(__privateGet(this.owner, _options).mainDefinition.id);
           });
           __publicField(this, "on_snapshot_part", (part) => part.value = this.owner[part.name]);
           __publicField(this, "on_recall_part", (part) => this.owner[part.name] = part.value);
-        }
-        getIndexOf(value) {
-          for (let idx = 0; idx < this.length; idx++) {
-            if (this[idx].name === value)
-              return idx;
-          }
-          return -1;
         }
       }(this));
       __privateAdd(this, _options, makeUserOptions());
@@ -1541,6 +1529,7 @@
       __privateAdd(this, _initialized, false);
       __privateAdd(this, _identified, false);
       __privateAdd(this, _slotted, false);
+      __privateAdd(this, _styled, false);
       __privateAdd(this, _shadowed, window.Wuse.isShadowElement(this));
       __privateAdd(this, _main, void 0);
       __privateAdd(this, _style, void 0);
@@ -1617,21 +1606,30 @@
       });
       __privateAdd(this, _contents, {
         root: new ContentManager((content) => this.innerHTML = content, (content) => true),
-        style: new ContentManager((content) => __privateGet(this, _style).promote(content), (content) => !__privateGet(this, _waste).style.compute(content)),
+        style: new ContentManager((content) => __privateGet(this, _style) && __privateGet(this, _style).promote(content), (content) => !__privateGet(this, _waste).style.compute(content)),
         main: new ContentManager((content) => __privateGet(this, _main).promote(content), (content) => !__privateGet(this, _waste).main.compute(content)),
         renderizers: {
           replacer: (str, rep) => str.replace(rep.find, this[rep.field] !== void 0 ? this[rep.field] : EMPTY_STRING2),
-          rule: (rule) => __privateGet(this, _contents).style.append(rule.cache ? rule.cache : rule.cache = RenderingRoutines.renderRule(__privateGet(this, _contents).renderizers.replacer, rule)),
+          rule: (rule) => {
+            const cts = __privateGet(this, _contents);
+            return cts.style.append(rule.cache ? rule.cache : rule.cache = RenderingRoutines.renderRule(cts.renderizers.replacer, rule));
+          },
           children: {
             mixed: (child) => child.kind === SLOTS_KIND3 ? __privateGet(this, _contents).renderizers.children.slot(child) : __privateGet(this, _contents).renderizers.children.normal(child),
-            slot: (child) => !child.cache && __privateGet(this, _contents).root.append(child.cache = RenderingRoutines.renderChild(__privateGet(this, _contents).renderizers.replacer, child), __privateGet(this, _contents).root.verify()),
+            slot: (child) => {
+              if (!child.cache) {
+                const cts = __privateGet(this, _contents);
+                return cts.root.append(child.cache = RenderingRoutines.renderChild(cts.renderizers.replacer, child), cts.root.verify());
+              }
+            },
             normal: (child) => {
-              __privateGet(this, _contents).main.append(child.cache ? child.cache : child.cache = RenderingRoutines.renderChild(__privateGet(this, _contents).renderizers.replacer, child));
-              child.rules.forEach(__privateGet(this, _contents).renderizers.rule);
+              const cts = __privateGet(this, _contents);
+              cts.main.append(child.cache ? child.cache : child.cache = RenderingRoutines.renderChild(cts.renderizers.replacer, child));
+              if (!!child.rules.length)
+                child.rules.forEach(cts.renderizers.rule);
             }
           }
-        },
-        getDebugInfo: () => `updated (root: ${__privateGet(this, _contents).root.invalidated}, main: ${__privateGet(this, _contents).main.invalidated}, style: ${__privateGet(this, _contents).style.invalidated})`
+        }
       });
       __privateAdd(this, _waste, makeWasteAnalyzers());
       __privateAdd(this, _measurement, makePerformanceWatches());
@@ -1650,18 +1648,18 @@
       __privateGet(this, _elementEvents).immediateTrigger(__privateGet(this, _stateManager).initializeState() > 1 ? "on_reconstruct" : "on_construct", __privateGet(this, _stateManager).state);
       __privateSet(this, _initialized, true);
     }
-    render() {
-      window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _render, render_fn).call(this);
-    }
-    redraw() {
-      window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _redraw, redraw_fn).call(this);
-    }
     get parameters() {
       return __privateGet(this, _parameters);
     }
     set parameters(value) {
       if (isAssignedObject7(__privateSet(this, _parameters, value)))
         forEachOwnProperty3(value, (name) => this[name] = value[name]);
+    }
+    render() {
+      window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _render, render_fn).call(this);
+    }
+    redraw() {
+      window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _redraw, redraw_fn).call(this);
     }
     connectedCallback() {
       if (window.Wuse.MEASURE)
@@ -1725,27 +1723,50 @@
         __privateGet(this, _main).element.setAttribute(key, value);
       return this;
     }
+    addMainClass(klass) {
+      const cls = __privateGet(this, _options).mainDefinition.classes;
+      if (cls.indexOf(klass) === -1) {
+        cls.push(klass);
+        if (__privateGet(this, _inserted))
+          __privateGet(this, _main).element.classList.add(klass);
+      }
+      return this;
+    }
+    removeMainClass(klass) {
+      const cls = __privateGet(this, _options).mainDefinition.classes;
+      const idx = cls.indexOf(klass);
+      if (idx > -1) {
+        cls.splice(idx, 1);
+        if (__privateGet(this, _inserted))
+          __privateGet(this, _main).element.classList.remove(klass);
+      }
+      return this;
+    }
+    toggleMainClass(klass) {
+      const cls = __privateGet(this, _options).mainDefinition.classes;
+      const idx = cls.indexOf(klass);
+      idx > -1 ? cls.splice(idx, 1) : cls.push(klass);
+      if (__privateGet(this, _inserted))
+        __privateGet(this, _main).element.classList.toggle(klass);
+      return this;
+    }
     setMainElement(shorthandNotation) {
       const tmp = parseElement(shorthandNotation);
       if (tmp !== null) {
         if (isNonEmptyString6(tmp.content) || isNonEmptyArray3(tmp.events)) {
           return RuntimeErrors3.onInvalidDefinition(shorthandNotation);
         }
-        if (__privateSet(this, _identified, isNonEmptyString6(tmp.id))) {
-          __privateGet(this, _options).mainDefinition.id = tmp.id;
-        }
-        if (isNonEmptyString6(tmp.tag)) {
-          __privateGet(this, _options).mainDefinition.tag = tmp.tag;
-        }
-        if (isNonEmptyArray3(tmp.classes)) {
-          __privateGet(this, _options).mainDefinition.classes = tmp.classes;
-        }
-        if (isAssignedObject7(tmp.style)) {
-          __privateGet(this, _options).mainDefinition.style = tmp.style;
-        }
-        if (isAssignedObject7(tmp.attributes)) {
-          __privateGet(this, _options).mainDefinition.attributes = tmp.attributes;
-        }
+        const def = __privateGet(this, _options).mainDefinition;
+        if (__privateSet(this, _identified, isNonEmptyString6(tmp.id)))
+          def.id = tmp.id;
+        if (isNonEmptyString6(tmp.tag))
+          def.tag = tmp.tag;
+        if (isNonEmptyArray3(tmp.classes))
+          def.classes = tmp.classes;
+        if (isAssignedObject7(tmp.style))
+          def.style = tmp.style;
+        if (isAssignedObject7(tmp.attributes))
+          def.attributes = tmp.attributes;
       }
       return this;
     }
@@ -1894,15 +1915,18 @@
       return this;
     }
     includeChildElementById(id) {
-      __privateGet(this, _children).forEach((child) => child.id === id && RenderingRoutines.renderingIncluder(child));
+      if (!!__privateGet(this, _children).length)
+        __privateGet(this, _children).forEach((child) => child.id === id && RenderingRoutines.renderingIncluder(child));
       return this;
     }
     excludeChildElementById(id) {
-      __privateGet(this, _children).forEach((child) => child.id === id && RenderingRoutines.renderingExcluder(child));
+      if (!!__privateGet(this, _children).length)
+        __privateGet(this, _children).forEach((child) => child.id === id && RenderingRoutines.renderingExcluder(child));
       return this;
     }
     invalidateChildElementsById(ids) {
-      __privateGet(this, _children).forEach((child) => ids.indexOf(child.id) > -1 && RenderingRoutines.cacheInvalidator(child));
+      if (!!__privateGet(this, _children).length)
+        __privateGet(this, _children).forEach((child) => ids.indexOf(child.id) > -1 && RenderingRoutines.cacheInvalidator(child));
       return this;
     }
     invalidateChildElements(childs) {
@@ -1950,6 +1974,14 @@
         return true;
       }
       return false;
+    }
+    dropAllFields() {
+      const names = [];
+      __privateGet(this, _fields).forEach((field) => this.hasOwnProperty(field.name) && names.push(field.name));
+      __privateGet(this, _fields).clear();
+      names.forEach((name) => delete this[name]);
+      __privateGet(this, _stateManager).writeState();
+      return this;
     }
     suspendRender() {
       __privateSet(this, _rendering, false);
@@ -2002,6 +2034,7 @@
   _initialized = new WeakMap();
   _identified = new WeakMap();
   _slotted = new WeakMap();
+  _styled = new WeakMap();
   _shadowed = new WeakMap();
   _main = new WeakMap();
   _style = new WeakMap();
@@ -2017,35 +2050,36 @@
   _contents = new WeakMap();
   _waste = new WeakMap();
   _measurement = new WeakMap();
-  _insertElements = new WeakSet();
-  insertElements_fn = function() {
-    if (__privateSet(this, _style, !__privateGet(this, _rules).length ? null : new NodeManager(__privateGet(this, _root), ElementParts.makeStyleNode(__privateGet(this, _options).styleMedia, __privateGet(this, _options).styleType))))
+  _insertStyle = new WeakSet();
+  insertStyle_fn = function() {
+    if (__privateSet(this, _styled, __privateSet(this, _style, !__privateGet(this, _rules).length ? null : new NodeManager(__privateGet(this, _root), ElementParts.makeStyleNode(__privateGet(this, _options).styleMedia, __privateGet(this, _options).styleType)))))
       __privateGet(this, _style).affiliate();
+  };
+  _insertMain = new WeakSet();
+  insertMain_fn = function() {
     __privateSet(this, _main, new NodeManager(__privateGet(this, _root), ElementParts.makeMainNode(__privateGet(this, _options).mainDefinition))).affiliate();
-    __privateSet(this, _inserted, true);
   };
   _extirpateElements = new WeakSet();
   extirpateElements_fn = function() {
-    if (__privateGet(this, _inserted)) {
-      __privateGet(this, _main).disaffiliate();
-      if (__privateGet(this, _style))
-        __privateGet(this, _style).disaffiliate();
-      if (__privateGet(this, _slotted) && __privateGet(this, _shadowed))
-        removeChildren(__privateGet(this, _root));
-    }
-    __privateSet(this, _inserted, false);
+    __privateGet(this, _main).disaffiliate();
+    if (__privateGet(this, _styled))
+      __privateGet(this, _style).disaffiliate();
+    if (__privateGet(this, _slotted) && __privateGet(this, _shadowed))
+      removeChildren(__privateGet(this, _root));
   };
   _bind = new WeakSet();
   bind_fn = function(value) {
     if (__privateGet(this, _binded) && !value || !__privateGet(this, _binded) && value) {
       const bindingHandlers = __privateGet(this, _binding).getHandlers(value);
-      __privateGet(this, _children).forEach((child) => {
-        if (!child.included && value)
-          return;
-        if (bindingHandlers.key)
-          bindingHandlers.key(child);
-        child.events.forEach((event) => event && bindingHandlers.event(child.id, event.kind, event.capture));
-      });
+      if (!!__privateGet(this, _children).length)
+        __privateGet(this, _children).forEach((child) => {
+          if (!child.included && value)
+            return;
+          if (bindingHandlers.key)
+            bindingHandlers.key(child);
+          if (!!child.events.length)
+            child.events.forEach((event) => event && bindingHandlers.event(child.id, event.kind, event.capture));
+        });
       if (__privateGet(this, _slotted) && __privateGet(this, _shadowed))
         bindingHandlers.slots();
       __privateSet(this, _binded, value);
@@ -2057,60 +2091,73 @@
   };
   _clearContents = new WeakSet();
   clearContents_fn = function() {
-    __privateGet(this, _children).forEach(RenderingRoutines.cacheInvalidator);
-    __privateGet(this, _rules).forEach(RenderingRoutines.cacheInvalidator);
+    if (!!__privateGet(this, _children).length)
+      __privateGet(this, _children).forEach(RenderingRoutines.cacheInvalidator);
+    if (!!__privateGet(this, _rules).length)
+      __privateGet(this, _rules).forEach(RenderingRoutines.cacheInvalidator);
   };
   _prepareContents = new WeakSet();
   prepareContents_fn = function() {
-    __privateGet(this, _contents).root.reset(EMPTY_STRING2);
-    __privateGet(this, _contents).style.reset(EMPTY_STRING2);
-    __privateGet(this, _contents).main.reset(__privateGet(this, _html));
-    const r = __privateGet(this, _slotted) && __privateGet(this, _shadowed) ? __privateGet(this, _contents).renderizers.children.mixed : __privateGet(this, _contents).renderizers.children.normal;
-    __privateGet(this, _children).forEach((child) => child.included && r(child));
-    __privateGet(this, _rules).forEach(__privateGet(this, _contents).renderizers.rule);
-    __privateGet(this, _contents).main.verify();
-    __privateGet(this, _contents).style.verify();
+    const cts = __privateGet(this, _contents);
+    cts.root.reset(EMPTY_STRING2);
+    cts.style.reset(EMPTY_STRING2);
+    cts.main.reset(__privateGet(this, _html));
+    const rdr = __privateGet(this, _slotted) && __privateGet(this, _shadowed) ? cts.renderizers.children.mixed : cts.renderizers.children.normal;
+    if (!!__privateGet(this, _children).length)
+      __privateGet(this, _children).forEach((child) => child.included && rdr(child));
+    if (!!__privateGet(this, _rules).length)
+      __privateGet(this, _rules).forEach(cts.renderizers.rule);
+    cts.main.verify();
+    cts.style.verify();
   };
   _commitContents = new WeakSet();
   commitContents_fn = function(forceRoot, forceStyle, forceMain) {
-    __privateGet(this, _contents).root.process(forceRoot);
-    __privateGet(this, _contents).style.process(forceStyle);
-    __privateGet(this, _contents).main.process(forceMain);
+    const cts = __privateGet(this, _contents);
+    cts.root.process(forceRoot);
+    cts.style.process(forceStyle);
+    cts.main.process(forceMain);
     if (window.Wuse.DEBUG && __privateGet(this, _identified))
-      debug(this, __privateGet(this, _contents).getDebugInfo());
+      debug(this, `updated (root: ${cts.root.invalidated}, main: ${cts.main.invalidated}, style: ${cts.style.invalidated})`);
   };
   _render = new WeakSet();
   render_fn = function() {
     if (window.Wuse.MEASURE)
       __privateGet(this, _measurement).partial.start();
-    __privateGet(this, _elementEvents).immediateTrigger("on_prerender");
+    if (!__privateGet(this, _styled))
+      __privateMethod(this, _insertStyle, insertStyle_fn).call(this);
+    const evs = __privateGet(this, _elementEvents);
+    evs.immediateTrigger("on_prerender");
     __privateMethod(this, _prepareContents, prepareContents_fn).call(this);
-    if (__privateGet(this, _contents).root.invalidated || __privateGet(this, _contents).main.invalidated || __privateGet(this, _contents).style.invalidated) {
+    const cts = __privateGet(this, _contents);
+    if (cts.root.invalidated || cts.main.invalidated || cts.style.invalidated) {
       __privateMethod(this, _bind, bind_fn).call(this, false);
       __privateMethod(this, _commitContents, commitContents_fn).call(this, false, false, false);
       __privateMethod(this, _bind, bind_fn).call(this, true);
       this.info.updatedRounds++;
-      __privateGet(this, _elementEvents).immediateTrigger("on_update");
+      evs.immediateTrigger("on_update");
       __privateGet(this, _stateManager).writeState();
-      __privateGet(this, _elementEvents).committedTrigger("on_refresh");
+      evs.committedTrigger("on_refresh");
     } else {
       this.info.unmodifiedRounds++;
     }
     if (window.Wuse.DEBUG && __privateGet(this, _identified))
       debug(this, `unmodified: ${this.info.unmodifiedRounds} (main: ${__privateGet(this, _waste).main.rounds}, style: ${__privateGet(this, _waste).style.rounds}) | updated: ${this.info.updatedRounds}`);
-    __privateGet(this, _elementEvents).immediateTrigger("on_postrender");
+    evs.immediateTrigger("on_postrender");
     if (window.Wuse.MEASURE)
       __privateGet(this, _measurement).partial.stop(window.Wuse.DEBUG);
   };
   _inject = new WeakSet();
   inject_fn = function(event) {
     __privateMethod(this, _clearContents, clearContents_fn).call(this);
-    __privateMethod(this, _insertElements, insertElements_fn).call(this);
-    __privateGet(this, _elementEvents).immediateTrigger("on_inject");
+    __privateMethod(this, _insertStyle, insertStyle_fn).call(this);
+    __privateMethod(this, _insertMain, insertMain_fn).call(this);
+    __privateSet(this, _inserted, true);
+    const evs = __privateGet(this, _elementEvents);
+    evs.immediateTrigger("on_inject");
     __privateMethod(this, _prepareContents, prepareContents_fn).call(this);
-    __privateMethod(this, _commitContents, commitContents_fn).call(this, false, !!__privateGet(this, _style), true);
+    __privateMethod(this, _commitContents, commitContents_fn).call(this, false, __privateGet(this, _styled), true);
     __privateMethod(this, _bind, bind_fn).call(this, true);
-    __privateGet(this, _elementEvents).immediateTrigger(event);
+    evs.immediateTrigger(event);
     __privateGet(this, _stateManager).writeState();
   };
   _redraw = new WeakSet();
@@ -2118,11 +2165,15 @@
     if (window.Wuse.MEASURE)
       __privateGet(this, _measurement).full.start();
     __privateMethod(this, _bind, bind_fn).call(this, false);
-    __privateMethod(this, _extirpateElements, extirpateElements_fn).call(this);
-    __privateGet(this, _elementEvents).immediateTrigger("on_unload");
-    __privateGet(this, _elementEvents).detect();
+    if (__privateGet(this, _inserted)) {
+      __privateMethod(this, _extirpateElements, extirpateElements_fn).call(this);
+      __privateSet(this, _inserted, false);
+    }
+    const evs = __privateGet(this, _elementEvents);
+    evs.immediateTrigger("on_unload");
+    evs.detect();
     __privateMethod(this, _inject, inject_fn).call(this, "on_reload");
-    __privateGet(this, _elementEvents).committedTrigger("on_repaint");
+    evs.committedTrigger("on_repaint");
     if (window.Wuse.MEASURE)
       __privateGet(this, _measurement).full.stop(window.Wuse.DEBUG);
   };
@@ -2375,7 +2426,7 @@
   };
 
   // package.json
-  var version = "0.7.2";
+  var version = "0.7.3";
 
   // src/wuse.js
   var _a2;

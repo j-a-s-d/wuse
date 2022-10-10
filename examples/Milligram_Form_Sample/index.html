@@ -18,8 +18,10 @@
       on_create() {
         this
           .setMainElement("div.float-right")
-          .appendChildElement("input#confirmField[type=checkbox]")
-          .appendChildElement("label.label-inline[for=confirmField]=Send a copy to yourself")
+          .appendChildElements(`
+            input#confirmField[type=checkbox]
+            label.label-inline[for=confirmField]=Send a copy to yourself
+          `)
       }
 
     }
@@ -30,14 +32,16 @@
       on_create() {
         this
           .setMainElement("fieldset")
-          .appendChildElement("label[for=nameField]=Name")
-          .appendChildElement("input#nameField[type=text|placeholder='John Doe']")
-          .appendChildElement("label[for=ageRangeField]=Age Range")
-          .appendChildElement("select#ageRangeField")
-          .appendChildElement("label[for=commentField]=Comment")
-          .appendChildElement("textarea#commentField[placeholder='Hi John']")
-          .appendChildElement(Milligram_Form_RightCheckbox.tag)
-          .appendChildElement("input.button-primary[type=submit|value=Send]")
+          .appendChildElements(`
+            label[for=nameField]=Name
+            input#nameField[type=text|placeholder='John Doe']
+            label[for=ageRangeField]=Age Range
+            select#ageRangeField
+            label[for=commentField]=Comment
+            textarea#commentField[placeholder='Hi John']
+            ${Milligram_Form_RightCheckbox.tag}
+            input.button-primary[type=submit|value=Send]
+          `)
       }
 
       #inlineRangeOption = range =>

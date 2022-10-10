@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.7.3] 2022-oct-10
+  - added `dropAllFields`, `addMainClass`, `removeMainClass` and `toggleMainClass` to the `BaseElement` class
+  - added `FomanticUI_Messages_Sample` example
 * [0.7.2] 2022-oct-08
   - added `removeAllChildElements` and `removeAllCSSRules` to the `BaseElement` class
   - added `clear` to the `PartsHolder` class

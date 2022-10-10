@@ -45,7 +45,6 @@
             p=Accordions lets you organize and navigate multiple documents in a single container. Highly useful for switching between items in the container specially when you have a large amount of content.
             div.columns=<foundation-accordion-accordion/>
           `)
-          .appendCSSRule("body", "padding: 2rem 1rem")
       }
 
       loadItems(items) {
@@ -59,6 +58,8 @@
       { active: false, title: "Accordion 2", content: "<textarea></textarea><button class='button'>I do nothing!</button>" },
       { active: false, title: "Accordion 3", content: "Type your name!<input type='text'></input>" }
     ]);
+    sampleApp.appendCSSRule("body", "padding: 2rem 1rem");
+    sampleApp.render();
     $(document).foundation();
   </script>
 </body>

@@ -36,10 +36,10 @@ const makeUserOptions = () => ({
   mainDefinition: WuseElementParts.newDefinition(),
   styleMedia: DEFAULT_STYLE_MEDIA,
   styleType: DEFAULT_STYLE_TYPE,
-  rawContent: false,
-  attributeKeys: false,
-  elementKeys: true,
-  autokeyChildren: true
+  rawContent: false, // when on, allows the inclusion of raw html content
+  attributeKeys: false, // when on, sets the received node attributes as element keys
+  elementKeys: true, // when on, add the main element and it's children as element keys using their ids
+  autokeyChildren: true // when on, automatically add store key to children elements
 });
 
 const makePerformanceWatches = () => ({
@@ -63,12 +63,7 @@ export default class BaseElement extends window.HTMLElement {
   // CONTENT HOLDERS
   #html = new window.String(); // RAW HTML
   #rules = new (class extends WusePartsHolder {
-    getIndexOf(value) {
-      for (let idx = 0; idx < this.length; idx++) {
-        if (this[idx].selector === value) return idx;
-      }
-      return -1;
-    }
+    getIndexOf = value => super.getIndexOf("selector", value)
     on_version_change = () => {
       if (this.last !== null) {
         this.last.version = this.version;
@@ -78,16 +73,11 @@ export default class BaseElement extends window.HTMLElement {
     }
     on_forbidden_change = () => {
       if (window.Wuse.DEBUG && this.owner.#identified) debug(this.owner, `rules list is locked and can not be changed`);
-      RuntimeErrors.onLockedDefinition(this.#options.mainDefinition.id);
+      RuntimeErrors.onLockedDefinition(this.owner.#options.mainDefinition.id);
     }
   })(this); // CSS RULES
   #children = new (class extends WusePartsHolder {
-    getIndexOf(value) {
-      for (let idx = 0; idx < this.length; idx++) {
-        if (this[idx].id === value) return idx;
-      }
-      return -1;
-    }
+    getIndexOf = value => super.getIndexOf("id", value)
     on_version_change = () => {
       if (this.last !== null) {
         this.last.version = this.version;
@@ -98,23 +88,18 @@ export default class BaseElement extends window.HTMLElement {
     }
     on_forbidden_change = () => {
       if (window.Wuse.DEBUG && this.owner.#identified) debug(this.owner, `children list is locked and can not be changed`);
-      RuntimeErrors.onLockedDefinition(this.#options.mainDefinition.id);
+      RuntimeErrors.onLockedDefinition(this.owner.#options.mainDefinition.id);
     }
     on_recall_part = part => this.owner.#filiatedKeys.tryToRemember(part);
   })(this); // HTML ELEMENTS
   #fields = new (class extends WusePartsHolder {
-    getIndexOf(value) {
-      for (let idx = 0; idx < this.length; idx++) {
-        if (this[idx].name === value) return idx;
-      }
-      return -1;
-    }
+    getIndexOf = value => super.getIndexOf("name", value)
     on_version_change = () => {
       if (window.Wuse.DEBUG && this.owner.#identified) debug(this.owner, `fields list version change: ${this.version}`);
     }
     on_forbidden_change = () => {
       if (window.Wuse.DEBUG && this.owner.#identified) debug(this.owner, `fields list is locked and can not be changed`);
-      RuntimeErrors.onLockedDefinition(this.#options.mainDefinition.id);
+      RuntimeErrors.onLockedDefinition(this.owner.#options.mainDefinition.id);
     }
     on_snapshot_part = part => part.value = this.owner[part.name];
     on_recall_part = part => this.owner[part.name] = part.value;
@@ -129,6 +114,7 @@ export default class BaseElement extends window.HTMLElement {
   #initialized = false;
   #identified = false;
   #slotted = false;
+  #styled = false;
   #shadowed = window.Wuse.isShadowElement(this);
 
   // INNER STRUCTURE
@@ -219,7 +205,7 @@ export default class BaseElement extends window.HTMLElement {
       content => true
     ),
     style: new WuseContentManager(
-      content => this.#style.promote(content), // rule change promoter
+      content => this.#style && this.#style.promote(content), // rule change promoter
       content => !this.#waste.style.compute(content)
     ),
     main: new WuseContentManager(
@@ -228,19 +214,25 @@ export default class BaseElement extends window.HTMLElement {
     ),
     renderizers: {
       replacer: (str, rep) => str.replace(rep.find, this[rep.field] !== undefined ? this[rep.field] : EMPTY_STRING),
-      rule: rule => this.#contents.style.append(rule.cache ? rule.cache : rule.cache = WuseRenderingRoutines.renderRule(this.#contents.renderizers.replacer, rule)),
+      rule: rule => {
+        const cts = this.#contents;
+        return cts.style.append(rule.cache ? rule.cache : rule.cache = WuseRenderingRoutines.renderRule(cts.renderizers.replacer, rule));
+      },
       children: {
         mixed: child => child.kind === SLOTS_KIND ? this.#contents.renderizers.children.slot(child) : this.#contents.renderizers.children.normal(child),
-        slot: child => !child.cache && this.#contents.root.append(
-          child.cache = WuseRenderingRoutines.renderChild(this.#contents.renderizers.replacer, child), this.#contents.root.verify()
-        ),
+        slot: child => {
+          if (!child.cache) {
+            const cts = this.#contents;
+            return cts.root.append(child.cache = WuseRenderingRoutines.renderChild(cts.renderizers.replacer, child), cts.root.verify());
+          }
+        },
         normal: child => {
-          this.#contents.main.append(child.cache ? child.cache : child.cache = WuseRenderingRoutines.renderChild(this.#contents.renderizers.replacer, child));
-          child.rules.forEach(this.#contents.renderizers.rule);
+          const cts = this.#contents;
+          cts.main.append(child.cache ? child.cache : child.cache = WuseRenderingRoutines.renderChild(cts.renderizers.replacer, child));
+          if (!!child.rules.length) child.rules.forEach(cts.renderizers.rule);
         }
       }
-    },
-    getDebugInfo: () => `updated (root: ${this.#contents.root.invalidated}, main: ${this.#contents.main.invalidated}, style: ${this.#contents.style.invalidated})`
+    }
   }
 
   // CONTENT ANALYSIS
@@ -252,32 +244,33 @@ export default class BaseElement extends window.HTMLElement {
   // ROUTINES
 
   // DOM ROUTINES
-  #insertElements() {
-    if (this.#style = !this.#rules.length ? null : new WuseNodeManager(
+  #insertStyle() {
+    if (this.#styled = (this.#style = !this.#rules.length ? null : new WuseNodeManager(
       this.#root, WuseElementParts.makeStyleNode(this.#options.styleMedia, this.#options.styleType)
-    )) this.#style.affiliate();
+    ))) this.#style.affiliate();
+  }
+
+  #insertMain() {
     (this.#main = new WuseNodeManager(
       this.#root, WuseElementParts.makeMainNode(this.#options.mainDefinition)
     )).affiliate();
-    this.#inserted = true;
   }
 
   #extirpateElements() {
-    if (this.#inserted) {
-      this.#main.disaffiliate();
-      if (this.#style) this.#style.disaffiliate();
-      if (this.#slotted && this.#shadowed) removeChildren(this.#root);
-    }
-    this.#inserted = false;
+    this.#main.disaffiliate();
+    if (this.#styled) this.#style.disaffiliate();
+    if (this.#slotted && this.#shadowed) removeChildren(this.#root);
   }
 
   #bind(value) {
     if ((this.#binded && !value) || (!this.#binded && value)) {
       const bindingHandlers = this.#binding.getHandlers(value);
-      this.#children.forEach(child => {
+      if (!!this.#children.length) this.#children.forEach(child => {
         if (!child.included && value) return;
         if (bindingHandlers.key) bindingHandlers.key(child);
-        child.events.forEach(event => event && bindingHandlers.event(child.id, event.kind, event.capture));
+        if (!!child.events.length) child.events.forEach(
+          event => event && bindingHandlers.event(child.id, event.kind, event.capture)
+        );
       });
       if (this.#slotted && this.#shadowed) bindingHandlers.slots();
       this.#binded = value;
@@ -289,70 +282,82 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   #clearContents() {
-    this.#children.forEach(WuseRenderingRoutines.cacheInvalidator);
-    this.#rules.forEach(WuseRenderingRoutines.cacheInvalidator);
+    if (!!this.#children.length) this.#children.forEach(WuseRenderingRoutines.cacheInvalidator);
+    if (!!this.#rules.length) this.#rules.forEach(WuseRenderingRoutines.cacheInvalidator);
   }
 
   #prepareContents() {
-    this.#contents.root.reset(EMPTY_STRING);
-    this.#contents.style.reset(EMPTY_STRING);
-    this.#contents.main.reset(this.#html);
-    const r = this.#slotted && this.#shadowed ? this.#contents.renderizers.children.mixed : this.#contents.renderizers.children.normal;
-    this.#children.forEach(child => child.included && r(child));
-    this.#rules.forEach(this.#contents.renderizers.rule);
-    this.#contents.main.verify();
-    this.#contents.style.verify();
+    const cts = this.#contents;
+    cts.root.reset(EMPTY_STRING);
+    cts.style.reset(EMPTY_STRING);
+    cts.main.reset(this.#html);
+    const rdr = this.#slotted && this.#shadowed ? cts.renderizers.children.mixed : cts.renderizers.children.normal;
+    if (!!this.#children.length) this.#children.forEach(child => child.included && rdr(child));
+    if (!!this.#rules.length) this.#rules.forEach(cts.renderizers.rule);
+    cts.main.verify();
+    cts.style.verify();
   }
 
   #commitContents(forceRoot, forceStyle, forceMain) {
-    this.#contents.root.process(forceRoot);
-    this.#contents.style.process(forceStyle);
-    this.#contents.main.process(forceMain);
-    if (window.Wuse.DEBUG && this.#identified) debug(this, this.#contents.getDebugInfo());
+    const cts = this.#contents;
+    cts.root.process(forceRoot);
+    cts.style.process(forceStyle);
+    cts.main.process(forceMain);
+    if (window.Wuse.DEBUG && this.#identified) debug(this, `updated (root: ${cts.root.invalidated}, main: ${cts.main.invalidated}, style: ${cts.style.invalidated})`);
   }
 
   #render() {
     if (window.Wuse.MEASURE) this.#measurement.partial.start();
-    this.#elementEvents.immediateTrigger("on_prerender");
+    if (!this.#styled) this.#insertStyle();
+    const evs = this.#elementEvents;
+    evs.immediateTrigger("on_prerender");
     this.#prepareContents();
-    if (this.#contents.root.invalidated || this.#contents.main.invalidated || this.#contents.style.invalidated) {
+    const cts = this.#contents;
+    if (cts.root.invalidated || cts.main.invalidated || cts.style.invalidated) {
       this.#bind(false);
       this.#commitContents(false, false, false);
       this.#bind(true);
       this.info.updatedRounds++;
-      this.#elementEvents.immediateTrigger("on_update");
+      evs.immediateTrigger("on_update");
       this.#stateManager.writeState();
-      this.#elementEvents.committedTrigger("on_refresh");
+      evs.committedTrigger("on_refresh");
     } else {
       this.info.unmodifiedRounds++;
     }
     if (window.Wuse.DEBUG && this.#identified) debug(this,
       `unmodified: ${this.info.unmodifiedRounds} (main: ${this.#waste.main.rounds}, style: ${this.#waste.style.rounds}) | updated: ${this.info.updatedRounds}`
     );
-    this.#elementEvents.immediateTrigger("on_postrender");
+    evs.immediateTrigger("on_postrender");
     if (window.Wuse.MEASURE) this.#measurement.partial.stop(window.Wuse.DEBUG);
   }
 
   #inject(event) {
     this.#clearContents();
-    this.#insertElements();
-    this.#elementEvents.immediateTrigger("on_inject");
+    this.#insertStyle();
+    this.#insertMain();
+    this.#inserted = true;
+    const evs = this.#elementEvents;
+    evs.immediateTrigger("on_inject");
     this.#prepareContents();
     // NOTE: on injection, due to it's optional nature the style element must be invalidated only if present
-    this.#commitContents(false, !!this.#style, true);
+    this.#commitContents(false, this.#styled, true);
     this.#bind(true);
-    this.#elementEvents.immediateTrigger(event);
+    evs.immediateTrigger(event);
     this.#stateManager.writeState();
   }
 
   #redraw() {
     if (window.Wuse.MEASURE) this.#measurement.full.start();
     this.#bind(false);
-    this.#extirpateElements();
-    this.#elementEvents.immediateTrigger("on_unload");
-    this.#elementEvents.detect();
+    if (this.#inserted) {
+      this.#extirpateElements();
+      this.#inserted = false;
+    }
+    const evs = this.#elementEvents;
+    evs.immediateTrigger("on_unload");
+    evs.detect();
     this.#inject("on_reload");
-    this.#elementEvents.committedTrigger("on_repaint");
+    evs.committedTrigger("on_repaint");
     if (window.Wuse.MEASURE) this.#measurement.full.stop(window.Wuse.DEBUG);
   }
 
@@ -419,20 +424,20 @@ export default class BaseElement extends window.HTMLElement {
     this.#initialized = true;
   }
 
-  render() {
-    window.Wuse.RENDERING && this.#rendering && this.#binded && this.#render();
-  }
-
-  redraw() {
-    window.Wuse.RENDERING && this.#rendering && this.#binded && this.#redraw();
-  }
-
   get parameters() {
     return this.#parameters;
   }
 
   set parameters(value) {
     if (isAssignedObject(this.#parameters = value)) forEachOwnProperty(value, name => this[name] = value[name]);
+  }
+
+  render() {
+    window.Wuse.RENDERING && this.#rendering && this.#binded && this.#render();
+  }
+
+  redraw() {
+    window.Wuse.RENDERING && this.#rendering && this.#binded && this.#redraw();
   }
 
   connectedCallback() {
@@ -508,27 +513,45 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
+  addMainClass(klass) {
+    const cls = this.#options.mainDefinition.classes;
+    if (cls.indexOf(klass) === -1) {
+      cls.push(klass);
+      if (this.#inserted) this.#main.element.classList.add(klass);
+    }
+    return this;
+  }
+
+  removeMainClass(klass) {
+    const cls = this.#options.mainDefinition.classes;
+    const idx = cls.indexOf(klass);
+    if (idx > -1) {
+      cls.splice(idx, 1);
+      if (this.#inserted) this.#main.element.classList.remove(klass);
+    }
+    return this;
+  }
+
+  toggleMainClass(klass) {
+    const cls = this.#options.mainDefinition.classes;
+    const idx = cls.indexOf(klass);
+    idx > -1 ? cls.splice(idx, 1) : cls.push(klass);
+    if (this.#inserted) this.#main.element.classList.toggle(klass);
+    return this;
+  }
+
   setMainElement(shorthandNotation) {
     const tmp = parseElement(shorthandNotation);
     if (tmp !== null) {
       if (isNonEmptyString(tmp.content) || isNonEmptyArray(tmp.events)) {
         return RuntimeErrors.onInvalidDefinition(shorthandNotation);
       }
-      if (this.#identified = isNonEmptyString(tmp.id)) {
-        this.#options.mainDefinition.id = tmp.id;
-      }
-      if (isNonEmptyString(tmp.tag)) {
-        this.#options.mainDefinition.tag = tmp.tag;
-      }
-      if (isNonEmptyArray(tmp.classes)) {
-        this.#options.mainDefinition.classes = tmp.classes;
-      }
-      if (isAssignedObject(tmp.style)) {
-        this.#options.mainDefinition.style = tmp.style;
-      }
-      if (isAssignedObject(tmp.attributes)) {
-        this.#options.mainDefinition.attributes = tmp.attributes;
-      }
+      const def = this.#options.mainDefinition;
+      if (this.#identified = isNonEmptyString(tmp.id)) def.id = tmp.id;
+      if (isNonEmptyString(tmp.tag)) def.tag = tmp.tag;
+      if (isNonEmptyArray(tmp.classes)) def.classes = tmp.classes;
+      if (isAssignedObject(tmp.style)) def.style = tmp.style;
+      if (isAssignedObject(tmp.attributes)) def.attributes = tmp.attributes;
     }
     return this;
   }
@@ -701,17 +724,17 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   includeChildElementById(id) {
-    this.#children.forEach(child => (child.id === id) && WuseRenderingRoutines.renderingIncluder(child));
+    if (!!this.#children.length) this.#children.forEach(child => (child.id === id) && WuseRenderingRoutines.renderingIncluder(child));
     return this;
   }
 
   excludeChildElementById(id) {
-    this.#children.forEach(child => (child.id === id) && WuseRenderingRoutines.renderingExcluder(child));
+    if (!!this.#children.length) this.#children.forEach(child => (child.id === id) && WuseRenderingRoutines.renderingExcluder(child));
     return this;
   }
 
   invalidateChildElementsById(ids) {
-    this.#children.forEach(child => (ids.indexOf(child.id) > -1) && WuseRenderingRoutines.cacheInvalidator(child));
+    if (!!this.#children.length) this.#children.forEach(child => (ids.indexOf(child.id) > -1) && WuseRenderingRoutines.cacheInvalidator(child));
     return this;
   }
 
@@ -762,6 +785,15 @@ export default class BaseElement extends window.HTMLElement {
       return true;
     }
     return false;
+  }
+
+  dropAllFields() {
+    const names = [];
+    this.#fields.forEach(field => this.hasOwnProperty(field.name) && names.push(field.name));
+    this.#fields.clear();
+    names.forEach(name => delete this[name]);
+    this.#stateManager.writeState();
+    return this;
   }
 
   suspendRender() {

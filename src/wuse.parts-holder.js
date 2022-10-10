@@ -102,7 +102,12 @@ export default class PartsHolder extends window.Array {
     );
   }
 
-  getIndexOf(value) {}
+  getIndexOf(field, value) {
+    for (let idx = 0; idx < this.length; idx++) {
+      if (this[idx][field] === value) return idx;
+    }
+    return -1;
+  }
 
   on_snapshot_part() {}
 
