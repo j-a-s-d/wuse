@@ -3,7 +3,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" text="width=device-width, initial-scale=1">
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.1/dist/jquery.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.8/dist/semantic.min.css">
   <title>Wuse | FomanticUI Messages Sample</title>
@@ -23,10 +23,10 @@
             this
               .setAttributesAsKeys(true)
               .setMainElement("div.ui.message")
-              .appendChildElement("div.header=~{title}~")
-              .appendChildElement("p=~{content}~")
-              .makeReactiveField("title", "")
-              .makeReactiveField("content", "")
+              .appendChildElement("div.header=~{caption}~")
+              .appendChildElement("p=~{text}~")
+              .makeReactiveField("caption", "")
+              .makeReactiveField("text", "")
           }
 
         }, class FomanticUI_Messages_Icon extends Wuse.NonShadowElement {
@@ -36,9 +36,9 @@
               .setAttributesAsKeys(true)
               .setMainElement("div.ui.icon.message")
               .appendChildElement("i.~{icon}~.icon")
-              .appendChildElement("div.content=<div class='header'>~{title}~</div><p>~{content}~</p>")
-              .makeReactiveField("title", "")
-              .makeReactiveField("content", "")
+              .appendChildElement("div.text=<div class='header'>~{caption}~</div><p>~{text}~</p>")
+              .makeReactiveField("caption", "")
+              .makeReactiveField("text", "")
           }
 
         }, class FomanticUI_Messages_Dismissable extends Wuse.NonShadowElement {
@@ -48,10 +48,10 @@
               .setAttributesAsKeys(true)
               .setMainElement("div.ui.message")
               .appendChildElement("i.~{icon}~.icon")
-              .appendChildElement("div.header=~{title}~")
-              .appendChildElement("p=~{content}~")
-              .makeReactiveField("title", "")
-              .makeReactiveField("content", "")
+              .appendChildElement("div.header=~{caption}~")
+              .appendChildElement("p=~{text}~")
+              .makeReactiveField("caption", "")
+              .makeReactiveField("text", "")
           }
 
           on_load() {
@@ -67,29 +67,22 @@
           .appendChildElements(`
             h2=Message
             h3=A basic message
-            fomanticui-messages-basic[title='Changes in Service'|content='We just updated our privacy policy here to better service our customers. We recommend reviewing the changes.']
+            fomanticui-messages-basic[caption='Changes in Service'|text='We just updated our privacy policy here to better service our customers. We recommend reviewing the changes.']
             br
             h2=Icon Message
             h3=A message can contain an icon.
-            fomanticui-messages-icon[icon='inbox'|title='Have you heard about our mailing list?'|content='Get the best news in your e-mail every day.']
+            fomanticui-messages-icon[icon='inbox'|caption='Have you heard about our mailing list?'|text='Get the best news in your e-mail every day.']
             br
-            fomanticui-messages-icon[icon='notched circle loading'|title='Just one second'|content="We're fetching that content for you."]
+            fomanticui-messages-icon[icon='notched circle loading'|caption='Just one second'|text="We're fetching that text for you."]
             br
             h2=Dismissable Block
             h3=A message that the user can choose to hide
-            fomanticui-messages-dismissable[icon='close'|title='Welcome back!'|content="This is a special notification which you can dismiss if you're bored with it."]
+            fomanticui-messages-dismissable[icon='close'|caption='Welcome back!'|text="This is a special notification which you can dismiss if you're bored with it."]
           `)
       }
 
     }
-    const sampleApp = FomanticUI_Messages_Sample.create();
-    /*sampleApp.loadItems([
-      { active: true, title: "Accordion 1", content: "<p>Panel 1. Lorem ipsum dolor</p><a href='#'>Nowhere to Go</a>" },
-      { active: false, title: "Accordion 2", content: "<textarea></textarea><button class='button'>I do nothing!</button>" },
-      { active: false, title: "Accordion 3", content: "Type your name!<input type='text'></input>" }
-    ]);
-    sampleApp.appendCSSRule("body", "padding: 2rem 1rem");
-    sampleApp.render();*/
+    FomanticUI_Messages_Sample.create();
   </script>
 </body>
 </html>

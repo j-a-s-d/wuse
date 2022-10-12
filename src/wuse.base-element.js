@@ -3,7 +3,7 @@
 import JsHelpers from './wuse.javascript-helpers.js';
 const { EMPTY_STRING, noop, ensureFunction, isOf, isAssignedObject, isAssignedArray, isNonEmptyArray, isNonEmptyString, forcedStringSplit, forEachOwnProperty } = JsHelpers;
 import WebHelpers from './wuse.web-helpers.js';
-const { removeChildren } = WebHelpers;
+const { removeChildren, isHTMLAttribute } = WebHelpers;
 import StringConstants from './wuse.string-constants.js';
 const { WUSEKEY_ATTRIBUTE, DEFAULT_STYLE_TYPE, DEFAULT_STYLE_MEDIA, DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE, SLOTS_KIND } = StringConstants;
 import ReactiveField from './wuse.reactive-field.js';
@@ -25,12 +25,15 @@ let RuntimeErrors = {
   onInvalidDefinition: noop,
   onLockedDefinition: noop,
   onTakenId: noop,
+  onMisnamedField: noop,
   onAllowHTML: noop
 }
 
 const debug = (wel, msg) => window.Wuse.debug(`#${wel.id} (${wel.info.instanceNumber}) | ${(typeof msg === "string" ? msg : JSON.stringify(msg))}`);
 
 const parseElement = (shorthandNotation, rules) => WuseElementParts.performValidations(WuseElementParts.newChild(shorthandNotation, rules));
+
+const isInvalidFieldName = name => typeof name !== "string" || !name.trim().length || name.startsWith("data") || isHTMLAttribute(name);
 
 const makeUserOptions = () => ({
   mainDefinition: WuseElementParts.newDefinition(),
@@ -39,7 +42,8 @@ const makeUserOptions = () => ({
   rawContent: false, // when on, allows the inclusion of raw html content
   attributeKeys: false, // when on, sets the received node attributes as element keys
   elementKeys: true, // when on, add the main element and it's children as element keys using their ids
-  autokeyChildren: true // when on, automatically add store key to children elements
+  autokeyChildren: true, // when on, automatically add store key to children elements
+  automaticallyRestore: false // when on, it ignores any on_reconstruct event handler set and simply does call to the restoreFromElementsStore method directly
 });
 
 const makePerformanceWatches = () => ({
@@ -93,6 +97,14 @@ export default class BaseElement extends window.HTMLElement {
     on_recall_part = part => this.owner.#filiatedKeys.tryToRemember(part);
   })(this); // HTML ELEMENTS
   #fields = new (class extends WusePartsHolder {
+    establish(name, value) {
+      if (this.prepare()) {
+        const idx = super.getIndexOf("name", value);
+        idx > -1 ? this[idx].value = value : this.append({ name, value });
+        return true;
+      }
+      return false;
+    }
     getIndexOf = value => super.getIndexOf("name", value)
     on_version_change = () => {
       if (window.Wuse.DEBUG && this.owner.#identified) debug(this.owner, `fields list version change: ${this.version}`);
@@ -331,12 +343,11 @@ export default class BaseElement extends window.HTMLElement {
     if (window.Wuse.MEASURE) this.#measurement.partial.stop(window.Wuse.DEBUG);
   }
 
-  #inject(event) {
+  #inject(evs, event) {
     this.#clearContents();
     this.#insertStyle();
     this.#insertMain();
     this.#inserted = true;
-    const evs = this.#elementEvents;
     evs.immediateTrigger("on_inject");
     this.#prepareContents();
     // NOTE: on injection, due to it's optional nature the style element must be invalidated only if present
@@ -356,7 +367,7 @@ export default class BaseElement extends window.HTMLElement {
     const evs = this.#elementEvents;
     evs.immediateTrigger("on_unload");
     evs.detect();
-    this.#inject("on_reload");
+    this.#inject(evs, "on_reload");
     evs.committedTrigger("on_repaint");
     if (window.Wuse.MEASURE) this.#measurement.full.stop(window.Wuse.DEBUG);
   }
@@ -380,15 +391,19 @@ export default class BaseElement extends window.HTMLElement {
     }
   }
 
-  #setField(name, value) {
-    const idx = this.#fields.getIndexOf(name);
-    idx > -1 ? this.#fields[idx].value = value : this.#fields.append({ name, value });
+  #createField(name, value, writable) {
+    if (this.#validateField(name) && this.#fields.establish(name, value)) {
+      window.Object.defineProperty(this, name, { value, writable });
+    }
+    return this;
   }
 
-  #createField(name, value, writable) {
-    window.Object.defineProperty(this, name, { value, writable });
-    this.#setField(name, value);
-    return this;
+  #validateField(name) {
+    if (this.#fields.getIndexOf(name) === -1 && isInvalidFieldName(name)) {
+      RuntimeErrors.onMisnamedField(name);
+      return false;
+    }
+    return true;
   }
 
   #filiateChild(tmp) {
@@ -414,13 +429,22 @@ export default class BaseElement extends window.HTMLElement {
   constructor(mode) {
     super();
     this.#root = mode === WuseElementModes.REGULAR ? this : this.shadowRoot || this.attachShadow({ mode });
-    this.#elementEvents.detect();
-    this.#elementEvents.immediateTrigger("on_create");
-    if (this.#options.attributeKeys) this.getAttributeNames().forEach(attr => this[attr] = this.getAttribute(attr));
+    const evs = this.#elementEvents;
+    evs.detect();
+    evs.immediateTrigger("on_create");
+    if (this.#options.attributeKeys) {
+      const ats = this.getAttributeNames();
+      if (!!ats.length) ats.forEach(attr => this[attr] = this.getAttribute(attr));
+    }
     if (this.dataset.wusekey) this.setElementsStoreKey(this.dataset.wusekey);
-    this.#elementEvents.immediateTrigger(
-      this.#stateManager.initializeState() > 1 ? "on_reconstruct" : "on_construct", this.#stateManager.state
-    );
+    const stm = this.#stateManager;
+    if (stm.initializeState() > 1) {
+      this.#options.automaticallyRestore ?
+        this.restoreFromElementsStore() :
+        evs.immediateTrigger("on_reconstruct", stm.state);
+    } else {
+      evs.immediateTrigger("on_construct", stm.state);
+    }
     this.#initialized = true;
   }
 
@@ -442,9 +466,10 @@ export default class BaseElement extends window.HTMLElement {
 
   connectedCallback() {
     if (window.Wuse.MEASURE) this.#measurement.attachment.start();
-    this.#elementEvents.detect();
-    this.#elementEvents.immediateTrigger("on_connect");
-    this.#inject("on_load");
+    const evs = this.#elementEvents;
+    evs.detect();
+    evs.immediateTrigger("on_connect");
+    this.#inject(evs, "on_load");
     if (window.Wuse.MEASURE) this.#measurement.attachment.stop(window.Wuse.DEBUG);
   }
 
@@ -483,6 +508,12 @@ export default class BaseElement extends window.HTMLElement {
 
   deriveChildrenStoreKey(value) {
     this.#options.autokeyChildren = value;
+    return this;
+  }
+
+  restoreOnReconstruct(value) {
+    this.#options.automaticallyRestore = value;
+    return this;
   }
 
   persistToElementsStore() {
@@ -645,14 +676,12 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   replaceCSSRuleBySelector(selector, properties) {
-    const idx = this.#rules.getIndexOf(selector);
-    if (idx >-1) this.#rules[idx] = WuseElementParts.newRule(selector, properties);
+    this.#rules.replace(this.#rules.getIndexOf(selector), WuseElementParts.newRule(selector, properties));
     return this;
   }
 
   removeCSSRuleBySelector(selector) {
-    const idx = this.#rules.getIndexOf(selector);
-    if (idx >-1) this.#rules.splice(idx, 1);
+    this.#rules.remove(this.#rules.getIndexOf(selector));
     return this;
   }
 
@@ -698,17 +727,13 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   replaceChildElementById(id, shorthandNotation, rules) {
-    const idx = this.#children.getIndexOf(id);
-    if (idx > -1) {
-      const tmp = parseElement(shorthandNotation, rules);
-      if (tmp !== null) this.#children.replace(idx, tmp);
-    }
+    const tmp = parseElement(shorthandNotation, rules);
+    if (tmp !== null) this.#children.replace(this.#children.getIndexOf(id), tmp);
     return this;
   }
 
   removeChildElementById(id) {
-    const idx = this.#children.getIndexOf(id);
-    if (idx >-1) this.#children.remove(idx);
+    this.#children.remove(this.#children.getIndexOf(id));
     return this;
   }
 
@@ -762,14 +787,19 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   makeReactiveField(name, value, handler, initial = true) {
-    createReactiveField(this, name, value, handler, (name, label) => this.#fieldRender(name, label || "$auto"), name => this.dropField(name));
-    this.#setField(name, value);
-    if (initial) this.#fieldRender(name, "$init");
+    if (this.#validateField(name)) {
+      if (this.#fields.establish(name, value)) createReactiveField(
+        this, name, value, handler, (name, label) => this.#fieldRender(name, label || "$auto"), name => this.dropField(name)
+      );
+      if (initial) this.#fieldRender(name, "$init");
+    }
     return this;
   }
 
   makeExternalReactiveField(mirror, name, value, handler, initial = true) {
-    return this.makeReactiveField(name, mirror[name] || value, actions => { mirror[name] = this[name]; handler(actions) }, initial);
+    return this.#validateField(name) ? this.makeReactiveField(
+      name, mirror[name] || value, actions => { mirror[name] = this[name]; handler(actions) }, initial
+    ) : this;
   }
 
   hasField(name) {
@@ -777,22 +807,28 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   dropField(name) {
-    const idx = this.#fields.getIndexOf(name);
-    if (idx > -1) {
-      if (this.hasOwnProperty(name)) delete this[name];
-      this.#fields.splice(idx, 1);
-      this.#stateManager.writeState();
-      return true;
+    if (this.#fields.prepare()) {
+      const idx = this.#fields.getIndexOf(name);
+      if (idx > -1) {
+        if (this.hasOwnProperty(name)) delete this[name];
+        this.#fields.splice(idx, 1);
+        this.#stateManager.writeState();
+        return true;
+      }
     }
     return false;
   }
 
   dropAllFields() {
-    const names = [];
-    this.#fields.forEach(field => this.hasOwnProperty(field.name) && names.push(field.name));
-    this.#fields.clear();
-    names.forEach(name => delete this[name]);
-    this.#stateManager.writeState();
+    if (this.#fields.locked) {
+      this.#fields.on_forbidden_change();
+    } else {
+      const names = [];
+      this.#fields.forEach(field => this.hasOwnProperty(field.name) && names.push(field.name));
+      this.#fields.clear();
+      names.forEach(name => delete this[name]);
+      this.#stateManager.writeState();
+    }
     return this;
   }
 
@@ -832,6 +868,7 @@ export default class BaseElement extends window.HTMLElement {
       RuntimeErrors.onInvalidDefinition = ensureFunction(options.onInvalidDefinition);
       RuntimeErrors.onLockedDefinition = ensureFunction(options.onLockedDefinition);
       RuntimeErrors.onTakenId = ensureFunction(options.onTakenId);
+      RuntimeErrors.onMisnamedField = ensureFunction(options.onMisnamedField);
     }
   }
 

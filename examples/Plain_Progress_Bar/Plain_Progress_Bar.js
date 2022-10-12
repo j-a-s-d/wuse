@@ -21,15 +21,12 @@ class Plain_Progress_Bar extends Wuse.OpenShadowElement {
       .makeReactiveField("valuecolor", "orange")
       .makeField("maximum", 100)
       .makeField("percentage", 0)
+      .restoreOnReconstruct(true)
   }
 
   #updateValues = () => this
     .setMainAttribute("max", this.maximum)
     .setMainAttribute("value", this.percentage);
-
-  on_reconstruct(state) {
-    this.restoreFromElementsStore();
-  }
 
   on_load() {
     this.#updateValues();

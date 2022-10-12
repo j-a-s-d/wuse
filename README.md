@@ -12,7 +12,7 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 
 * no external dependencies (none in runtime and only esbuild if you want to build from source)
 * self-documenting api (descriptive "long" function names)
-* full unit testing (520+ tests cases)
+* full unit testing (530+ tests cases)
 * markdown documentation [TODO]
 
 ## FEATURES
@@ -39,6 +39,12 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.7.4] 2022-oct-12
+  - added `restoreOnReconstruct` to the `BaseElement` class (if you set this behaviour then `on_reconstruct` won't fire)
+  - added `prepare` to the `PartsHolder` class
+  - added `isHTMLAttribute` to the `WebHelpers` class
+  - added `MISNAMED_FIELD` error to the `RuntimeErrors` class
+  - added `ChartJS_VerticalBars_Sample` example
 * [0.7.3] 2022-oct-10
   - added `dropAllFields`, `addMainClass`, `removeMainClass` and `toggleMainClass` to the `BaseElement` class
   - added `FomanticUI_Messages_Sample` example

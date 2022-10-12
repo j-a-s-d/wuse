@@ -9,6 +9,7 @@ export default new class {
     tester.testModuleFunction(module, "getUniqueId", ["existence", "type:string", "property:length"], this.getUniqueId);
     tester.testModuleFunction(module, "removeChildren", ["existence", "type:undefined"], this.removeChildren);
     tester.testModuleFunction(module, "isHTMLTag", ["existence", "type:boolean"], this.isHTMLTag);
+    tester.testModuleFunction(module, "isHTMLAttribute", ["existence", "type:boolean"], this.isHTMLAttribute);
     tester.testModuleFunction(module, "htmlEncode", ["existence", "type:string"], this.htmlEncode);
     tester.testModuleFunction(module, "getCSSVendorPrefix", ["existence", "type:string"], this.getCSSVendorPrefix);
   }
@@ -35,6 +36,13 @@ export default new class {
   isHTMLTag = (tester, module, fn) => {
     tester.testInvokationWithArgsResult(module, fn, ["div"], "valid tag", result => result === true);
     tester.testInvokationWithArgsResult(module, fn, ["---"], "invalid tag", result => result === false);
+    tester.testInvokationWithArgsResult(module, fn, [null], "null tag", result => result === false);
+  }
+
+  isHTMLAttribute = (tester, module, fn) => {
+    tester.testInvokationWithArgsResult(module, fn, ["allow"], "valid tag", result => result === true);
+    tester.testInvokationWithArgsResult(module, fn, ["---"], "invalid tag", result => result === false);
+    tester.testInvokationWithArgsResult(module, fn, [null], "null tag", result => result === false);
   }
 
   htmlEncode = (tester, module, fn) => {

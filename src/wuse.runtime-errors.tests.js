@@ -18,6 +18,7 @@ export default new class {
       "ALLOW_HTML",
       "INVALID_STATE",
       "TAKEN_ID",
+      "MISNAMED_FIELD",
       "INEXISTENT_TEMPLATE",
       "EXTINCT_TEMPLATE",
       "INVALID_TEMPLATE",
@@ -54,6 +55,8 @@ export default new class {
   INVALID_STATE = (tester, module, mb) => this.testError(tester, module, mb, 14);
 
   TAKEN_ID = (tester, module, mb) => this.testError(tester, module, mb, 15);
+
+  MISNAMED_FIELD = (tester, module, mb) => this.testError(tester, module, mb, 16);
 
   INEXISTENT_TEMPLATE = (tester, module, mb) => this.testError(tester, module, mb, 20);
 

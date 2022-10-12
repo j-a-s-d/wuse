@@ -61,6 +61,10 @@ export default class RuntimeErrors {
     return makeError(15, arg => `Taken id: ${arg}.`);
   }
 
+  static get MISNAMED_FIELD() {
+    return makeError(16, arg => `Misnamed field: ${arg}.`);
+  }
+
   static get INEXISTENT_TEMPLATE() {
     return makeError(20, arg => `Inexistent template: #${arg}.`);
   }

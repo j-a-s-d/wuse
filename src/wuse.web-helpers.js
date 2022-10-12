@@ -28,6 +28,29 @@ const HTML_TAGS = [ // NOTE: it includes deprecated and non-standard ones
   "wbr"
 ].map(hash);
 
+const HTML_ATTRIBUTES = [ // NOTE: it does not include "data-*"
+  "accept", "accept-charset", "accesskey", "action", "align", "allow", "alt", "async", "autocapitalize", "autocomplete", "autofocus", "autoplay",
+  "buffered",
+  "capture", "challenge", "charset", "checked", "cite", "class", "code", "codebase", "cols", "colspan", "content", "contenteditable", "contextmenu", "controls", "coords", "crossorigin", "csp",
+  "data", "datetime", "decoding", "default", "defer", "dir", "dirname", "disabled", "download", "draggable",
+  "enctype", "enterkeyhint",
+  "for", "form", "formaction", "formenctype", "formmethod", "formnovalidate", "formtarget",
+  "headers", "hidden", "high", "href", "hreflang", "http-equiv",
+  "icon", "id", "importance", "integrity", "ismap", "itemprop",
+  "keytype", "kind",
+  "label", "lang", "language", "list", "loop", "low",
+  "manifest", "max", "maxlength", "minlength", "media", "method", "min", "multiple", "muted",
+  "name", "novalidate",
+  "open", "optimum",
+  "pattern", "ping", "placeholder", "poster", "preload",
+  "radiogroup", "readonly", "referrerpolicy", "rel", "required", "reversed", "role", "rows", "rowspan",
+  "sandbox", "scope", "scoped", "selected", "shape", "size", "sizes", "slot", "span", "spellcheck", "src", "srcdoc", "srclang", "srcset", "start", "step", "style", "summary",
+  "tabindex", "target", "title", "translate", "type",
+  "usemap",
+  "value",
+  "width", "wrap"
+].map(hash);
+
 export default class WebHelpers {
 
   static onDOMContentLoaded(callback) {
@@ -52,7 +75,11 @@ export default class WebHelpers {
   }
 
   static isHTMLTag(tag) {
-    return HTML_TAGS.indexOf(hash(tag)) > -1;
+    return typeof tag === "string" && HTML_TAGS.indexOf(hash(tag)) > -1;
+  }
+
+  static isHTMLAttribute(attribute) {
+    return typeof attribute === "string" && HTML_ATTRIBUTES.indexOf(hash(attribute)) > -1;
   }
 
   static htmlEncode(text = "") {

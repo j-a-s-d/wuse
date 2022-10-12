@@ -46,7 +46,7 @@ const INFO = `<i>Open the development tools console (usually F12) to see the eve
   <ul>
     <li><i>on_[element-id]_[event-type] (besides it's not part of the element event cycle, it's printed for your better understanding)</i></li>
     <li>on_create</li>
-    <li>on_reconstruct</li>
+    <li>on_reconstruct (if you set the restoreOnReconstruct behaviour then this event won't fire)</li>
     <li>on_disconnect</li>
     <li>on_connect</li>
     <li>on_inject</li>
@@ -57,12 +57,12 @@ const INFO = `<i>Open the development tools console (usually F12) to see the eve
   <ul>
     <li><i>on_[element-id]_[event-type] (besides it's not part of the element event cycle, it's printed for your better understanding)</i></li>
     <li>on_create</li>
-    <li>on_reconstruct</li>
+    <li>on_reconstruct (if you set the restoreOnReconstruct behaviour then this event won't fire)</li>
     <li>on_connect</li>
     <li>on_inject</li>
     <li>on_load</li>
     <li>on_create</li>
-    <li>on_reconstruct</li>
+    <li>on_reconstruct (if you set the restoreOnReconstruct behaviour then this event won't fire)</li>
     <li>on_disconnect</li>
   </ul>
   <hr>
@@ -106,7 +106,7 @@ class Buttons_Panel extends Wuse.ClosedShadowElement {
 
   on_reconstruct() {
     this.restoreFromElementsStore();
-    print("on_reconstruct", "after the element state has been loaded from a previous existence (if it has a store key, otherwise it's never called)");
+    print("on_reconstruct", "after the element state has been loaded from a previous existence (if it has a store key, otherwise it's never called, and also note that if you set the restoreOnReconstruct behaviour then this event won't fire neither)");
   }
 
   on_connect() {

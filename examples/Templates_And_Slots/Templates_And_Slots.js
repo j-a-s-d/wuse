@@ -11,7 +11,7 @@ class Card_Content_Template extends Wuse.NonShadowElement {
       })
       .appendChildElements(`
         slot[name=sltSymbol]=*
-        slot[name=sltTitle]=TITLE!
+        slot[name=sltCaption]=CAPTION!
         slot[name=sltDescription]=DESCRIPTION!
       `)
   }
@@ -31,10 +31,10 @@ class Sample_Card extends Wuse.ClosedShadowElement {
       `)
       .appendChildElement("%templates%#tmplCardContent")
       .appendChildElement("%slots%span[slot=sltSymbol|style=float:right]=~{symbol}~")
-      .appendChildElement("%slots%h1[slot=sltTitle]=~{title}~")
+      .appendChildElement("%slots%h1[slot=sltCaption]=~{caption}~")
       .appendChildElement("%slots%p[slot=sltDescription]=~{description}~")
       .makeReactiveField("symbol", "*")
-      .makeReactiveField("title", "Title")
+      .makeReactiveField("caption", "Caption")
       .makeReactiveField("description", "Description")
       .setAttributesAsKeys(true)
   }
@@ -46,9 +46,9 @@ class Templates_And_Slots extends Wuse.NonShadowElement {
   on_create() {
     this
       .setMainElement("div")
-      .appendChildElement("sample-card[title='Title 0'|description='Description 0']")
-      .appendChildElement("sample-card[title='Title 1'|description='Description 1'|symbol='_']")
-      .appendChildElement("sample-card[title='Title 2'|description='Description 2'|symbol='x']")
+      .appendChildElement("sample-card[caption='Caption 0'|description='Description 0']")
+      .appendChildElement("sample-card[caption='Caption 1'|description='Description 1'|symbol='_']")
+      .appendChildElement("sample-card[caption='Caption 2'|description='Description 2'|symbol='x']")
   }
 
 }

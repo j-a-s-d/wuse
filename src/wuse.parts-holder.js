@@ -43,45 +43,43 @@ export default class PartsHolder extends window.Array {
     this.owner = owner;
   }
 
-  append(item) {
+  prepare() {
     if (this.locked) {
       this.on_forbidden_change();
-    } else if (isAssignedObject(item)) {
+      return false;
+    }
+    return true;
+  }
+
+  append(item) {
+    if (this.prepare() && isAssignedObject(item)) {
       this.push(item);
       this.#roll(item);
     }
   }
 
   prepend(item) {
-    if (this.locked) {
-      this.on_forbidden_change();
-    } else if (isAssignedObject(item)) {
+    if (this.prepare() && isAssignedObject(item)) {
       this.unshift(item);
       this.#roll(item);
     }
   }
 
   replace(index, item) {
-    if (this.locked) {
-      this.on_forbidden_change();
-    } else if ((index > -1) && isAssignedObject(item)) {
+    if (this.prepare() && index > -1 && isAssignedObject(item)) {
       this.#roll(this[index] = item);
     }
   }
 
   remove(index) {
-    if (this.locked) {
-      this.on_forbidden_change();
-    } else if (index > -1) {
+    if (this.prepare() && index > -1) {
       const a = this.splice(index, 1);
       this.#roll(!!a.length ? a[0] : null);
     }
   }
 
   clear() {
-    if (this.locked) {
-      this.on_forbidden_change();
-    } else {
+    if (this.prepare()) {
       this.length = 0;
       this.#roll(null);
     }

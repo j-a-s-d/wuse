@@ -76,6 +76,9 @@
     static get TAKEN_ID() {
       return makeError(15, (arg) => `Taken id: ${arg}.`);
     }
+    static get MISNAMED_FIELD() {
+      return makeError(16, (arg) => `Misnamed field: ${arg}.`);
+    }
     static get INEXISTENT_TEMPLATE() {
       return makeError(20, (arg) => `Inexistent template: #${arg}.`);
     }
@@ -453,6 +456,131 @@
     "xmp",
     "wbr"
   ].map(hash);
+  var HTML_ATTRIBUTES = [
+    "accept",
+    "accept-charset",
+    "accesskey",
+    "action",
+    "align",
+    "allow",
+    "alt",
+    "async",
+    "autocapitalize",
+    "autocomplete",
+    "autofocus",
+    "autoplay",
+    "buffered",
+    "capture",
+    "challenge",
+    "charset",
+    "checked",
+    "cite",
+    "class",
+    "code",
+    "codebase",
+    "cols",
+    "colspan",
+    "content",
+    "contenteditable",
+    "contextmenu",
+    "controls",
+    "coords",
+    "crossorigin",
+    "csp",
+    "data",
+    "datetime",
+    "decoding",
+    "default",
+    "defer",
+    "dir",
+    "dirname",
+    "disabled",
+    "download",
+    "draggable",
+    "enctype",
+    "enterkeyhint",
+    "for",
+    "form",
+    "formaction",
+    "formenctype",
+    "formmethod",
+    "formnovalidate",
+    "formtarget",
+    "headers",
+    "hidden",
+    "high",
+    "href",
+    "hreflang",
+    "http-equiv",
+    "icon",
+    "id",
+    "importance",
+    "integrity",
+    "ismap",
+    "itemprop",
+    "keytype",
+    "kind",
+    "label",
+    "lang",
+    "language",
+    "list",
+    "loop",
+    "low",
+    "manifest",
+    "max",
+    "maxlength",
+    "minlength",
+    "media",
+    "method",
+    "min",
+    "multiple",
+    "muted",
+    "name",
+    "novalidate",
+    "open",
+    "optimum",
+    "pattern",
+    "ping",
+    "placeholder",
+    "poster",
+    "preload",
+    "radiogroup",
+    "readonly",
+    "referrerpolicy",
+    "rel",
+    "required",
+    "reversed",
+    "role",
+    "rows",
+    "rowspan",
+    "sandbox",
+    "scope",
+    "scoped",
+    "selected",
+    "shape",
+    "size",
+    "sizes",
+    "slot",
+    "span",
+    "spellcheck",
+    "src",
+    "srcdoc",
+    "srclang",
+    "srcset",
+    "start",
+    "step",
+    "style",
+    "summary",
+    "tabindex",
+    "target",
+    "title",
+    "translate",
+    "type",
+    "usemap",
+    "value",
+    "width",
+    "wrap"
+  ].map(hash);
   var WebHelpers = class {
     static onDOMContentLoaded(callback) {
       if (callback && callback.constructor === window.Function) {
@@ -476,7 +604,10 @@
           element.removeChild(element.firstChild);
     }
     static isHTMLTag(tag) {
-      return HTML_TAGS.indexOf(hash(tag)) > -1;
+      return typeof tag === "string" && HTML_TAGS.indexOf(hash(tag)) > -1;
+    }
+    static isHTMLAttribute(attribute) {
+      return typeof attribute === "string" && HTML_ATTRIBUTES.indexOf(hash(attribute)) > -1;
     }
     static htmlEncode(text = "") {
       return typeof text !== "string" ? null : text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -1001,41 +1132,38 @@
       __publicField(this, "locked", false);
       this.owner = owner;
     }
-    append(item) {
+    prepare() {
       if (this.locked) {
         this.on_forbidden_change();
-      } else if (isAssignedObject5(item)) {
+        return false;
+      }
+      return true;
+    }
+    append(item) {
+      if (this.prepare() && isAssignedObject5(item)) {
         this.push(item);
         __privateMethod(this, _roll2, roll_fn2).call(this, item);
       }
     }
     prepend(item) {
-      if (this.locked) {
-        this.on_forbidden_change();
-      } else if (isAssignedObject5(item)) {
+      if (this.prepare() && isAssignedObject5(item)) {
         this.unshift(item);
         __privateMethod(this, _roll2, roll_fn2).call(this, item);
       }
     }
     replace(index, item) {
-      if (this.locked) {
-        this.on_forbidden_change();
-      } else if (index > -1 && isAssignedObject5(item)) {
+      if (this.prepare() && index > -1 && isAssignedObject5(item)) {
         __privateMethod(this, _roll2, roll_fn2).call(this, this[index] = item);
       }
     }
     remove(index) {
-      if (this.locked) {
-        this.on_forbidden_change();
-      } else if (index > -1) {
+      if (this.prepare() && index > -1) {
         const a = this.splice(index, 1);
         __privateMethod(this, _roll2, roll_fn2).call(this, !!a.length ? a[0] : null);
       }
     }
     clear() {
-      if (this.locked) {
-        this.on_forbidden_change();
-      } else {
+      if (this.prepare()) {
         this.length = 0;
         __privateMethod(this, _roll2, roll_fn2).call(this, null);
       }
@@ -1411,9 +1539,9 @@
   _events = new WeakMap();
 
   // src/wuse.base-element.js
-  var _html, _rules, _children, _fields, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binding, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _getElementByIdFromRoot, getElementByIdFromRoot_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _fieldRender, fieldRender_fn, _setField, setField_fn, _createField, createField_fn, _filiateChild, filiateChild_fn;
+  var _html, _rules, _children, _fields, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binding, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _getElementByIdFromRoot, getElementByIdFromRoot_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
   var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3 } = JavascriptHelpers;
-  var { removeChildren } = WebHelpers;
+  var { removeChildren, isHTMLAttribute } = WebHelpers;
   var { WUSEKEY_ATTRIBUTE, DEFAULT_STYLE_TYPE, DEFAULT_STYLE_MEDIA, DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE, SLOTS_KIND: SLOTS_KIND3 } = StringConstants;
   var { createReactiveField } = ReactiveField;
   var RuntimeErrors3 = {
@@ -1422,10 +1550,12 @@
     onInvalidDefinition: noop6,
     onLockedDefinition: noop6,
     onTakenId: noop6,
+    onMisnamedField: noop6,
     onAllowHTML: noop6
   };
   var debug = (wel, msg) => window.Wuse.debug(`#${wel.id} (${wel.info.instanceNumber}) | ${typeof msg === "string" ? msg : JSON.stringify(msg)}`);
   var parseElement = (shorthandNotation, rules) => ElementParts.performValidations(ElementParts.newChild(shorthandNotation, rules));
+  var isInvalidFieldName = (name) => typeof name !== "string" || !name.trim().length || name.startsWith("data") || isHTMLAttribute(name);
   var makeUserOptions = () => ({
     mainDefinition: ElementParts.newDefinition(),
     styleMedia: DEFAULT_STYLE_MEDIA,
@@ -1433,7 +1563,8 @@
     rawContent: false,
     attributeKeys: false,
     elementKeys: true,
-    autokeyChildren: true
+    autokeyChildren: true,
+    automaticallyRestore: false
   });
   var makePerformanceWatches = () => ({
     attachment: new window.Wuse.PerformanceMeasurement.StopWatch(),
@@ -1460,8 +1591,8 @@
       __privateAdd(this, _inject);
       __privateAdd(this, _redraw);
       __privateAdd(this, _fieldRender);
-      __privateAdd(this, _setField);
       __privateAdd(this, _createField);
+      __privateAdd(this, _validateField);
       __privateAdd(this, _filiateChild);
       __privateAdd(this, _html, new window.String());
       __privateAdd(this, _rules, new class extends PartsHolder {
@@ -1521,6 +1652,14 @@
           });
           __publicField(this, "on_snapshot_part", (part) => part.value = this.owner[part.name]);
           __publicField(this, "on_recall_part", (part) => this.owner[part.name] = part.value);
+        }
+        establish(name, value) {
+          if (this.prepare()) {
+            const idx = super.getIndexOf("name", value);
+            idx > -1 ? this[idx].value = value : this.append({ name, value });
+            return true;
+          }
+          return false;
         }
       }(this));
       __privateAdd(this, _options, makeUserOptions());
@@ -1639,13 +1778,22 @@
         updatedRounds: 0
       });
       __privateSet(this, _root, mode === ElementModes.REGULAR ? this : this.shadowRoot || this.attachShadow({ mode }));
-      __privateGet(this, _elementEvents).detect();
-      __privateGet(this, _elementEvents).immediateTrigger("on_create");
-      if (__privateGet(this, _options).attributeKeys)
-        this.getAttributeNames().forEach((attr) => this[attr] = this.getAttribute(attr));
+      const evs = __privateGet(this, _elementEvents);
+      evs.detect();
+      evs.immediateTrigger("on_create");
+      if (__privateGet(this, _options).attributeKeys) {
+        const ats = this.getAttributeNames();
+        if (!!ats.length)
+          ats.forEach((attr) => this[attr] = this.getAttribute(attr));
+      }
       if (this.dataset.wusekey)
         this.setElementsStoreKey(this.dataset.wusekey);
-      __privateGet(this, _elementEvents).immediateTrigger(__privateGet(this, _stateManager).initializeState() > 1 ? "on_reconstruct" : "on_construct", __privateGet(this, _stateManager).state);
+      const stm = __privateGet(this, _stateManager);
+      if (stm.initializeState() > 1) {
+        __privateGet(this, _options).automaticallyRestore ? this.restoreFromElementsStore() : evs.immediateTrigger("on_reconstruct", stm.state);
+      } else {
+        evs.immediateTrigger("on_construct", stm.state);
+      }
       __privateSet(this, _initialized, true);
     }
     get parameters() {
@@ -1664,9 +1812,10 @@
     connectedCallback() {
       if (window.Wuse.MEASURE)
         __privateGet(this, _measurement).attachment.start();
-      __privateGet(this, _elementEvents).detect();
-      __privateGet(this, _elementEvents).immediateTrigger("on_connect");
-      __privateMethod(this, _inject, inject_fn).call(this, "on_load");
+      const evs = __privateGet(this, _elementEvents);
+      evs.detect();
+      evs.immediateTrigger("on_connect");
+      __privateMethod(this, _inject, inject_fn).call(this, evs, "on_load");
       if (window.Wuse.MEASURE)
         __privateGet(this, _measurement).attachment.stop(window.Wuse.DEBUG);
     }
@@ -1701,6 +1850,11 @@
     }
     deriveChildrenStoreKey(value) {
       __privateGet(this, _options).autokeyChildren = value;
+      return this;
+    }
+    restoreOnReconstruct(value) {
+      __privateGet(this, _options).automaticallyRestore = value;
+      return this;
     }
     persistToElementsStore() {
       return __privateGet(this, _stateManager).validateKey() && __privateGet(this, _stateManager).writeState();
@@ -1847,15 +2001,11 @@
       return __privateGet(this, _rules).getIndexOf(selector) > -1;
     }
     replaceCSSRuleBySelector(selector, properties) {
-      const idx = __privateGet(this, _rules).getIndexOf(selector);
-      if (idx > -1)
-        __privateGet(this, _rules)[idx] = ElementParts.newRule(selector, properties);
+      __privateGet(this, _rules).replace(__privateGet(this, _rules).getIndexOf(selector), ElementParts.newRule(selector, properties));
       return this;
     }
     removeCSSRuleBySelector(selector) {
-      const idx = __privateGet(this, _rules).getIndexOf(selector);
-      if (idx > -1)
-        __privateGet(this, _rules).splice(idx, 1);
+      __privateGet(this, _rules).remove(__privateGet(this, _rules).getIndexOf(selector));
       return this;
     }
     removeAllCSSRules() {
@@ -1891,18 +2041,13 @@
       return this;
     }
     replaceChildElementById(id, shorthandNotation, rules) {
-      const idx = __privateGet(this, _children).getIndexOf(id);
-      if (idx > -1) {
-        const tmp = parseElement(shorthandNotation, rules);
-        if (tmp !== null)
-          __privateGet(this, _children).replace(idx, tmp);
-      }
+      const tmp = parseElement(shorthandNotation, rules);
+      if (tmp !== null)
+        __privateGet(this, _children).replace(__privateGet(this, _children).getIndexOf(id), tmp);
       return this;
     }
     removeChildElementById(id) {
-      const idx = __privateGet(this, _children).getIndexOf(id);
-      if (idx > -1)
-        __privateGet(this, _children).remove(idx);
+      __privateGet(this, _children).remove(__privateGet(this, _children).getIndexOf(id));
       return this;
     }
     removeAllChildElements() {
@@ -1949,38 +2094,46 @@
       return __privateMethod(this, _createField, createField_fn).call(this, name, value, false);
     }
     makeReactiveField(name, value, handler, initial = true) {
-      createReactiveField(this, name, value, handler, (name2, label) => __privateMethod(this, _fieldRender, fieldRender_fn).call(this, name2, label || "$auto"), (name2) => this.dropField(name2));
-      __privateMethod(this, _setField, setField_fn).call(this, name, value);
-      if (initial)
-        __privateMethod(this, _fieldRender, fieldRender_fn).call(this, name, "$init");
+      if (__privateMethod(this, _validateField, validateField_fn).call(this, name)) {
+        if (__privateGet(this, _fields).establish(name, value))
+          createReactiveField(this, name, value, handler, (name2, label) => __privateMethod(this, _fieldRender, fieldRender_fn).call(this, name2, label || "$auto"), (name2) => this.dropField(name2));
+        if (initial)
+          __privateMethod(this, _fieldRender, fieldRender_fn).call(this, name, "$init");
+      }
       return this;
     }
     makeExternalReactiveField(mirror, name, value, handler, initial = true) {
-      return this.makeReactiveField(name, mirror[name] || value, (actions) => {
+      return __privateMethod(this, _validateField, validateField_fn).call(this, name) ? this.makeReactiveField(name, mirror[name] || value, (actions) => {
         mirror[name] = this[name];
         handler(actions);
-      }, initial);
+      }, initial) : this;
     }
     hasField(name) {
       return __privateGet(this, _fields).getIndexOf(name) > -1;
     }
     dropField(name) {
-      const idx = __privateGet(this, _fields).getIndexOf(name);
-      if (idx > -1) {
-        if (this.hasOwnProperty(name))
-          delete this[name];
-        __privateGet(this, _fields).splice(idx, 1);
-        __privateGet(this, _stateManager).writeState();
-        return true;
+      if (__privateGet(this, _fields).prepare()) {
+        const idx = __privateGet(this, _fields).getIndexOf(name);
+        if (idx > -1) {
+          if (this.hasOwnProperty(name))
+            delete this[name];
+          __privateGet(this, _fields).splice(idx, 1);
+          __privateGet(this, _stateManager).writeState();
+          return true;
+        }
       }
       return false;
     }
     dropAllFields() {
-      const names = [];
-      __privateGet(this, _fields).forEach((field) => this.hasOwnProperty(field.name) && names.push(field.name));
-      __privateGet(this, _fields).clear();
-      names.forEach((name) => delete this[name]);
-      __privateGet(this, _stateManager).writeState();
+      if (__privateGet(this, _fields).locked) {
+        __privateGet(this, _fields).on_forbidden_change();
+      } else {
+        const names = [];
+        __privateGet(this, _fields).forEach((field) => this.hasOwnProperty(field.name) && names.push(field.name));
+        __privateGet(this, _fields).clear();
+        names.forEach((name) => delete this[name]);
+        __privateGet(this, _stateManager).writeState();
+      }
       return this;
     }
     suspendRender() {
@@ -2013,6 +2166,7 @@
         RuntimeErrors3.onInvalidDefinition = ensureFunction7(options.onInvalidDefinition);
         RuntimeErrors3.onLockedDefinition = ensureFunction7(options.onLockedDefinition);
         RuntimeErrors3.onTakenId = ensureFunction7(options.onTakenId);
+        RuntimeErrors3.onMisnamedField = ensureFunction7(options.onMisnamedField);
       }
     }
     static register() {
@@ -2147,12 +2301,11 @@
       __privateGet(this, _measurement).partial.stop(window.Wuse.DEBUG);
   };
   _inject = new WeakSet();
-  inject_fn = function(event) {
+  inject_fn = function(evs, event) {
     __privateMethod(this, _clearContents, clearContents_fn).call(this);
     __privateMethod(this, _insertStyle, insertStyle_fn).call(this);
     __privateMethod(this, _insertMain, insertMain_fn).call(this);
     __privateSet(this, _inserted, true);
-    const evs = __privateGet(this, _elementEvents);
     evs.immediateTrigger("on_inject");
     __privateMethod(this, _prepareContents, prepareContents_fn).call(this);
     __privateMethod(this, _commitContents, commitContents_fn).call(this, false, __privateGet(this, _styled), true);
@@ -2172,7 +2325,7 @@
     const evs = __privateGet(this, _elementEvents);
     evs.immediateTrigger("on_unload");
     evs.detect();
-    __privateMethod(this, _inject, inject_fn).call(this, "on_reload");
+    __privateMethod(this, _inject, inject_fn).call(this, evs, "on_reload");
     evs.committedTrigger("on_repaint");
     if (window.Wuse.MEASURE)
       __privateGet(this, _measurement).full.stop(window.Wuse.DEBUG);
@@ -2194,16 +2347,20 @@
       }
     }
   };
-  _setField = new WeakSet();
-  setField_fn = function(name, value) {
-    const idx = __privateGet(this, _fields).getIndexOf(name);
-    idx > -1 ? __privateGet(this, _fields)[idx].value = value : __privateGet(this, _fields).append({ name, value });
-  };
   _createField = new WeakSet();
   createField_fn = function(name, value, writable) {
-    window.Object.defineProperty(this, name, { value, writable });
-    __privateMethod(this, _setField, setField_fn).call(this, name, value);
+    if (__privateMethod(this, _validateField, validateField_fn).call(this, name) && __privateGet(this, _fields).establish(name, value)) {
+      window.Object.defineProperty(this, name, { value, writable });
+    }
     return this;
+  };
+  _validateField = new WeakSet();
+  validateField_fn = function(name) {
+    if (__privateGet(this, _fields).getIndexOf(name) === -1 && isInvalidFieldName(name)) {
+      RuntimeErrors3.onMisnamedField(name);
+      return false;
+    }
+    return true;
   };
   _filiateChild = new WeakSet();
   filiateChild_fn = function(tmp) {
@@ -2273,6 +2430,7 @@
         onUnknownTag: RuntimeErrors.UNKNOWN_TAG.emit,
         onInvalidId: RuntimeErrors.INVALID_ID.emit,
         onTakenId: RuntimeErrors.TAKEN_ID.emit,
+        onMisnamedField: RuntimeErrors.MISNAMED_FIELD.emit,
         onInvalidState: RuntimeErrors.INVALID_STATE.emit,
         onFetchTemplate: TemplateImporter.fetch
       });
@@ -2426,7 +2584,7 @@
   };
 
   // package.json
-  var version = "0.7.3";
+  var version = "0.7.4";
 
   // src/wuse.js
   var _a2;
