@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.7.5] 2022-oct-14
+  - added `snapshotInstanceFields` to the `BaseElement` class
+  - added `Canvas_Text_Wrapper` example
 * [0.7.4] 2022-oct-12
   - added `restoreOnReconstruct` to the `BaseElement` class (if you set this behaviour then `on_reconstruct` won't fire)
   - added `prepare` to the `PartsHolder` class

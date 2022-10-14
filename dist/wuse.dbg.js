@@ -692,797 +692,6 @@
     }
   };
 
-  // src/wuse.text-replacements.js
-  var _regExp, _addReplacement, _includeMatches, _includeStringMatches, _includeKeysMatches;
-  var { EMPTY_ARRAY, buildArray, buildObject, isNonEmptyString: isNonEmptyString2, isAssignedArray: isAssignedArray2 } = JavascriptHelpers;
-  var _ReplacementMarkers = class {
-    static initialize(begin, end) {
-      this.begin = begin;
-      this.end = end;
-    }
-  };
-  var ReplacementMarkers = _ReplacementMarkers;
-  __publicField(ReplacementMarkers, "begin", null);
-  __publicField(ReplacementMarkers, "end", null);
-  __publicField(ReplacementMarkers, "enclose", (match) => _ReplacementMarkers.begin + match + _ReplacementMarkers.end);
-  __publicField(ReplacementMarkers, "makeRegExp", () => new window.RegExp(`(?<=${_ReplacementMarkers.begin}).*?(?=${_ReplacementMarkers.end})`, "gs"));
-  var REPLACEMENT_PLACES = ["contents", "classes", "styles", "attributes"];
-  var ReplacementsScanners = class {
-  };
-  __publicField(ReplacementsScanners, "rules", (rules, name) => buildArray((hits) => rules.forEach((rule) => rule.replacements.forEach((x) => x.field === name && hits.push(rule)))));
-  __publicField(ReplacementsScanners, "children", (children, name) => buildArray((hits) => {
-    const processAll = (child) => {
-      const process = (collection) => collection.forEach((x) => x.field === name && hits.push(child));
-      REPLACEMENT_PLACES.forEach((key) => process(child.replacements[key]));
-      child.rules.forEach((rule) => rule.replacements.forEach((x) => x.field === name && hits.push(child)));
-    };
-    children.forEach((child) => child.included && processAll(child));
-  }));
-  var _ReplacementsExtractors = class {
-    static initialize(regExp) {
-      __privateSet(this, _regExp, regExp);
-    }
-  };
-  var ReplacementsExtractors = _ReplacementsExtractors;
-  _regExp = new WeakMap();
-  _addReplacement = new WeakMap();
-  _includeMatches = new WeakMap();
-  _includeStringMatches = new WeakMap();
-  _includeKeysMatches = new WeakMap();
-  __privateAdd(ReplacementsExtractors, _regExp, null);
-  __privateAdd(ReplacementsExtractors, _addReplacement, (hits, at, match) => hits.push({
-    at,
-    field: match.trim(),
-    find: ReplacementMarkers.enclose(match)
-  }));
-  __privateAdd(ReplacementsExtractors, _includeMatches, (hits, at, str) => isNonEmptyString2(str) && (str.match(__privateGet(_ReplacementsExtractors, _regExp)) || EMPTY_ARRAY).forEach((match) => {
-    var _a3;
-    return __privateGet(_a3 = _ReplacementsExtractors, _addReplacement).call(_a3, hits, at, match);
-  }));
-  __privateAdd(ReplacementsExtractors, _includeStringMatches, (result, key, value) => {
-    var _a3;
-    result[key] = new window.Array();
-    __privateGet(_a3 = _ReplacementsExtractors, _includeMatches).call(_a3, result[key], key, value);
-  });
-  __privateAdd(ReplacementsExtractors, _includeKeysMatches, (result, key, obj) => {
-    result[key] = new window.Array();
-    window.Object.keys(obj).forEach((k) => {
-      var _a3, _b2;
-      __privateGet(_a3 = _ReplacementsExtractors, _includeMatches).call(_a3, result[key], key, k);
-      __privateGet(_b2 = _ReplacementsExtractors, _includeMatches).call(_b2, result[key], key, obj[k]);
-    });
-  });
-  __publicField(ReplacementsExtractors, "child", (child) => buildObject((result) => {
-    var _a3, _b2, _c2, _d;
-    __privateGet(_a3 = _ReplacementsExtractors, _includeStringMatches).call(_a3, result, "contents", child.content);
-    __privateGet(_b2 = _ReplacementsExtractors, _includeStringMatches).call(_b2, result, "classes", child.classes.join(" "));
-    __privateGet(_c2 = _ReplacementsExtractors, _includeKeysMatches).call(_c2, result, "styles", child.style);
-    __privateGet(_d = _ReplacementsExtractors, _includeKeysMatches).call(_d, result, "attributes", child.attributes);
-    child.rules.forEach((r) => r.replacements = _ReplacementsExtractors.rule(r));
-  }));
-  __publicField(ReplacementsExtractors, "rule", (rule) => buildArray((result) => {
-    var _a3;
-    if (isAssignedArray2(rule.nested)) {
-      return rule.nested.map((r) => _ReplacementsExtractors.rule(r));
-    }
-    var c = "";
-    for (const property in rule.properties) {
-      c += `${property}:${rule.properties[property]};`;
-    }
-    __privateGet(_a3 = _ReplacementsExtractors, _includeMatches).call(_a3, result, "rules", c);
-  }));
-  var TextReplacements = class {
-    static initialize(openMarker, closeMarker) {
-      ReplacementMarkers.initialize(openMarker, closeMarker);
-      ReplacementsExtractors.initialize(ReplacementMarkers.makeRegExp());
-    }
-  };
-  __publicField(TextReplacements, "extractReplacementsFromRule", ReplacementsExtractors.rule);
-  __publicField(TextReplacements, "extractReplacementsFromChild", ReplacementsExtractors.child);
-  __publicField(TextReplacements, "scanRulesForReplacements", ReplacementsScanners.rules);
-  __publicField(TextReplacements, "scanChildrenForReplacements", ReplacementsScanners.children);
-
-  // src/wuse.rendering-routines.js
-  var _onFetchTemplate;
-  var { noop: noop4, isAssignedArray: isAssignedArray3, hasObjectKeys, isNonEmptyString: isNonEmptyString3, isNonEmptyArray: isNonEmptyArray2, isAssignedObject: isAssignedObject3, ensureFunction: ensureFunction3 } = JavascriptHelpers;
-  var { htmlEncode } = WebHelpers;
-  var { SLOTS_KIND, TEMPLATES_KIND, TEXTNODE_TAG } = StringConstants;
-  var _RenderingRoutines = class {
-    static initialize(events) {
-      if (isAssignedObject3(events)) {
-        __privateSet(this, _onFetchTemplate, ensureFunction3(events.onFetchTemplate, __privateGet(this, _onFetchTemplate)));
-      }
-    }
-  };
-  var RenderingRoutines = _RenderingRoutines;
-  _onFetchTemplate = new WeakMap();
-  __privateAdd(RenderingRoutines, _onFetchTemplate, noop4);
-  __publicField(RenderingRoutines, "cacheInvalidator", (item) => item.cache = null);
-  __publicField(RenderingRoutines, "slotsInvalidator", (item) => item.kind === SLOTS_KIND ? _RenderingRoutines.cacheInvalidator(item) : void 0);
-  __publicField(RenderingRoutines, "renderingIncluder", (item) => item.included = true);
-  __publicField(RenderingRoutines, "renderingExcluder", (item) => item.included = false);
-  __publicField(RenderingRoutines, "renderRule", (replacer, rule) => {
-    if (isAssignedArray3(rule.nested)) {
-      return `${rule.selector}{${rule.nested.map((r) => _RenderingRoutines.renderRule(replacer, r)).join("\n")}}`;
-    } else if (isNonEmptyString3(rule.selector) && !rule.nested) {
-      var c = new window.String();
-      for (const property in rule.properties) {
-        c += `${property}:${rule.properties[property]};`;
-      }
-      if (isNonEmptyArray2(rule.replacements)) {
-        rule.replacements.forEach((r) => c = replacer(c, r));
-      }
-      return `${rule.selector}{${c}}`;
-    }
-    return null;
-  });
-  __publicField(RenderingRoutines, "renderChild", (replacer, child) => {
-    var _a3;
-    if (child.kind === TEMPLATES_KIND) {
-      return __privateGet(_a3 = _RenderingRoutines, _onFetchTemplate).call(_a3, child.id);
-    }
-    if (child.tag === TEXTNODE_TAG) {
-      var c = child.content;
-      child.replacements["contents"].forEach((r) => c = replacer(c, r));
-      return child.encode ? htmlEncode(c) : c;
-    }
-    var result = isNonEmptyString3(child.id) ? `<${child.tag} id='${child.id}'` : `<${child.tag}`;
-    if (!!child.classes.length) {
-      var c = child.classes.join(" ");
-      child.replacements["classes"].forEach((r) => c = replacer(c, r));
-      result += ` class='${c}'`;
-    }
-    if (hasObjectKeys(child.style)) {
-      var c = " style='";
-      for (const property in child.style) {
-        c += `${property}: ${child.style[property]}; `;
-      }
-      c += "'";
-      child.replacements["styles"].forEach((r) => c = replacer(c, r));
-      result += c;
-    }
-    if (hasObjectKeys(child.attributes)) {
-      var c = new window.String();
-      for (const property in child.attributes) {
-        c += ` ${property}=${child.attributes[property]}`;
-      }
-      child.replacements["attributes"].forEach((r) => c = replacer(c, r));
-      result += c;
-    }
-    if (typeof child.content === "string") {
-      var c = child.content;
-      child.replacements["contents"].forEach((r) => c = replacer(c, r));
-      result += `>${child.encode ? htmlEncode(c) : c}</${child.tag}>`;
-    } else {
-      result += "/>";
-    }
-    return result;
-  });
-
-  // src/wuse.equality-analyzer.js
-  var _last, _current, _equal, _analyzer;
-  var { ensureFunction: ensureFunction4 } = JavascriptHelpers;
-  var EqualityAnalyzer = class {
-    constructor(analyzer) {
-      __publicField(this, "rounds", 0);
-      __privateAdd(this, _last, 0);
-      __privateAdd(this, _current, null);
-      __privateAdd(this, _equal, false);
-      __privateAdd(this, _analyzer, null);
-      __privateSet(this, _analyzer, ensureFunction4(analyzer));
-    }
-    compute(value) {
-      this.rounds += +__privateSet(this, _equal, __privateGet(this, _last) == __privateSet(this, _current, __privateGet(this, _analyzer).call(this, value)));
-      __privateSet(this, _last, __privateGet(this, _current));
-      return __privateGet(this, _equal);
-    }
-  };
-  _last = new WeakMap();
-  _current = new WeakMap();
-  _equal = new WeakMap();
-  _analyzer = new WeakMap();
-
-  // src/wuse.state-manager.js
-  var _key, _keyed, _maker, _reader, _writer, _state, _store, _filiated, _persistState, persistState_fn;
-  var { ensureFunction: ensureFunction5, isNonEmptyString: isNonEmptyString4, isAssignedObject: isAssignedObject4 } = JavascriptHelpers;
-  var StateManager = class {
-    constructor(maker, reader, writer, store = {}) {
-      __privateAdd(this, _persistState);
-      __privateAdd(this, _key, new window.String());
-      __privateAdd(this, _keyed, false);
-      __privateAdd(this, _maker, null);
-      __privateAdd(this, _reader, null);
-      __privateAdd(this, _writer, null);
-      __privateAdd(this, _state, null);
-      __privateAdd(this, _store, null);
-      __privateAdd(this, _filiated, new class extends window.Set {
-        name(parentKey, id) {
-          let key = `${parentKey}_${id}`;
-          var x = 0;
-          while (this.has(key))
-            key = `${parentKey}_${id}_${++x}`;
-          this.add(key);
-          return key;
-        }
-      }());
-      __privateSet(this, _maker, ensureFunction5(maker));
-      __privateSet(this, _reader, ensureFunction5(reader));
-      __privateSet(this, _writer, ensureFunction5(writer));
-      __privateSet(this, _store, store);
-    }
-    getStore() {
-      return __privateGet(this, _store);
-    }
-    setStore(store) {
-      __privateSet(this, _store, store);
-    }
-    get state() {
-      return __privateGet(this, _state);
-    }
-    get key() {
-      return __privateGet(this, _key);
-    }
-    set key(key) {
-      return __privateSet(this, _keyed, isNonEmptyString4(__privateSet(this, _key, key)));
-    }
-    hasKey() {
-      return __privateGet(this, _keyed);
-    }
-    validateKey() {
-      if (!__privateGet(this, _keyed)) {
-        this.on_invalid_key();
-        return false;
-      }
-      return true;
-    }
-    nameFiliatedKey(id) {
-      return __privateGet(this, _filiated).name(__privateGet(this, _key), id);
-    }
-    rememberFiliatedKey(key) {
-      __privateGet(this, _filiated).add(key);
-    }
-    hasFiliatedKey(key) {
-      return __privateGet(this, _filiated).has(key);
-    }
-    initializeState() {
-      __privateGet(this, _filiated).clear();
-      if (__privateGet(this, _keyed)) {
-        const state = __privateGet(this, _store).hasItem(this.key) ? __privateGet(this, _store).getItem(this.key) : __privateGet(this, _maker).call(this);
-        if (isAssignedObject4(state)) {
-          __privateSet(this, _state, state);
-          __privateGet(this, _state).generation++;
-          __privateMethod(this, _persistState, persistState_fn).call(this);
-        } else {
-          this.on_invalid_state();
-          return -1;
-        }
-      } else {
-        __privateSet(this, _state, __privateGet(this, _maker).call(this));
-        __privateGet(this, _state).generation++;
-      }
-      return __privateGet(this, _state).generation;
-    }
-    writeState() {
-      const state = __privateGet(this, _state);
-      if (isAssignedObject4(state)) {
-        state.data = __privateGet(this, _writer).call(this);
-        __privateMethod(this, _persistState, persistState_fn).call(this);
-        return true;
-      }
-      return false;
-    }
-    readState() {
-      const state = __privateGet(this, _state);
-      if (isAssignedObject4(state) && state.persisted) {
-        __privateGet(this, _reader).call(this, state.data);
-        return true;
-      }
-      return false;
-    }
-    eraseState() {
-      const state = __privateGet(this, _state);
-      if (isAssignedObject4(state) && state.persisted && state.data) {
-        delete state.data;
-        __privateMethod(this, _persistState, persistState_fn).call(this);
-        return true;
-      }
-      return false;
-    }
-    on_invalid_state() {
-    }
-    on_invalid_key() {
-    }
-  };
-  _key = new WeakMap();
-  _keyed = new WeakMap();
-  _maker = new WeakMap();
-  _reader = new WeakMap();
-  _writer = new WeakMap();
-  _state = new WeakMap();
-  _store = new WeakMap();
-  _filiated = new WeakMap();
-  _persistState = new WeakSet();
-  persistState_fn = function() {
-    if (__privateGet(this, _keyed)) {
-      __privateGet(this, _state).persisted = !!__privateGet(this, _state).data;
-      __privateGet(this, _store).setItem(__privateGet(this, _key), __privateGet(this, _state));
-    }
-  };
-
-  // src/wuse.node-manager.js
-  var _parent, _actual, _clone, _drop, drop_fn, _roll, roll_fn;
-  var { WUSENODE_ATTRIBUTE } = StringConstants;
-  var NodeManager = class {
-    constructor(parent, original) {
-      __privateAdd(this, _drop);
-      __privateAdd(this, _roll);
-      __privateAdd(this, _parent, null);
-      __privateAdd(this, _actual, null);
-      __privateAdd(this, _clone, null);
-      if (parent instanceof window.Node && original instanceof window.Node) {
-        __privateSet(this, _parent, parent);
-        this.element = original;
-      } else
-        throw new Error("[WUSE:ERROR] Wrong arguments supplied.");
-    }
-    set element(original) {
-      __privateMethod(this, _drop, drop_fn).call(this, original.getAttribute(WUSENODE_ATTRIBUTE));
-      __privateSet(this, _actual, original);
-      __privateSet(this, _clone, original.cloneNode(false));
-    }
-    get element() {
-      return __privateGet(this, _actual);
-    }
-    affiliate() {
-      __privateGet(this, _parent).appendChild(__privateGet(this, _actual));
-    }
-    disaffiliate() {
-      __privateGet(this, _parent).removeChild(__privateGet(this, _actual));
-    }
-    promote(content) {
-      __privateGet(this, _clone).innerHTML = content;
-      __privateGet(this, _parent).replaceChild(__privateGet(this, _clone), __privateGet(this, _actual));
-      __privateMethod(this, _roll, roll_fn).call(this);
-    }
-  };
-  _parent = new WeakMap();
-  _actual = new WeakMap();
-  _clone = new WeakMap();
-  _drop = new WeakSet();
-  drop_fn = function(type) {
-    const old = __privateGet(this, _parent).querySelector(`[${WUSENODE_ATTRIBUTE}='${type}']`);
-    if (old)
-      __privateGet(this, _parent).removeChild(old);
-  };
-  _roll = new WeakSet();
-  roll_fn = function() {
-    const tmp = __privateGet(this, _clone);
-    __privateSet(this, _clone, __privateGet(this, _actual).cloneNode(false));
-    __privateSet(this, _actual, tmp);
-  };
-
-  // src/wuse.content-manager.js
-  var _invalidated, _content;
-  var { isOf: isOf3 } = JavascriptHelpers;
-  var ContentManager = class {
-    constructor(promoter, verifier) {
-      __privateAdd(this, _invalidated, false);
-      __privateAdd(this, _content, "");
-      if (isOf3(promoter, window.Function))
-        this.on_content_invalidation = promoter;
-      if (isOf3(verifier, window.Function))
-        this.on_content_verification = verifier;
-    }
-    get invalidated() {
-      return __privateGet(this, _invalidated);
-    }
-    reset(content) {
-      __privateSet(this, _invalidated, false);
-      __privateSet(this, _content, content);
-    }
-    append(more) {
-      __privateSet(this, _content, __privateGet(this, _content) + more);
-    }
-    verify() {
-      __privateSet(this, _invalidated, this.on_content_verification(__privateGet(this, _content)));
-    }
-    process(force) {
-      if (force || __privateGet(this, _invalidated))
-        this.on_content_invalidation(__privateGet(this, _content));
-    }
-    on_content_verification(content) {
-    }
-    on_content_invalidation(content) {
-    }
-  };
-  _invalidated = new WeakMap();
-  _content = new WeakMap();
-
-  // src/wuse.parts-holder.js
-  var _roll2, roll_fn2;
-  var { isIntegerNumber, isAssignedObject: isAssignedObject5, cloneObject, forEachOwnProperty: forEachOwnProperty2, buildArray: buildArray2 } = JavascriptHelpers;
-  var partsLooper = (holder, partCallback, metaCallback) => forEachOwnProperty2(holder, (key) => {
-    switch (key) {
-      case "owner":
-      case "last":
-      case "length":
-        break;
-      case "version":
-      case "locked":
-        metaCallback(key);
-        break;
-      default:
-        if (isIntegerNumber(key))
-          partCallback(key);
-    }
-  });
-  var partProcessor = (collection, part, event) => {
-    event(part);
-    const item = cloneObject(part);
-    item.cache = null;
-    collection.push(item);
-  };
-  var PartsHolder = class extends window.Array {
-    constructor(owner) {
-      super();
-      __privateAdd(this, _roll2);
-      __publicField(this, "owner", null);
-      __publicField(this, "last", null);
-      __publicField(this, "version", 0);
-      __publicField(this, "locked", false);
-      this.owner = owner;
-    }
-    prepare() {
-      if (this.locked) {
-        this.on_forbidden_change();
-        return false;
-      }
-      return true;
-    }
-    append(item) {
-      if (this.prepare() && isAssignedObject5(item)) {
-        this.push(item);
-        __privateMethod(this, _roll2, roll_fn2).call(this, item);
-      }
-    }
-    prepend(item) {
-      if (this.prepare() && isAssignedObject5(item)) {
-        this.unshift(item);
-        __privateMethod(this, _roll2, roll_fn2).call(this, item);
-      }
-    }
-    replace(index, item) {
-      if (this.prepare() && index > -1 && isAssignedObject5(item)) {
-        __privateMethod(this, _roll2, roll_fn2).call(this, this[index] = item);
-      }
-    }
-    remove(index) {
-      if (this.prepare() && index > -1) {
-        const a = this.splice(index, 1);
-        __privateMethod(this, _roll2, roll_fn2).call(this, !!a.length ? a[0] : null);
-      }
-    }
-    clear() {
-      if (this.prepare()) {
-        this.length = 0;
-        __privateMethod(this, _roll2, roll_fn2).call(this, null);
-      }
-    }
-    persist() {
-      return buildArray2((result) => partsLooper(this, (key) => partProcessor(result, this[key], this.on_snapshot_part), (key) => result[key] = this[key]));
-    }
-    restore(owner, instance) {
-      this.owner = owner;
-      partsLooper(instance, (key) => partProcessor(this, instance[key], this.on_recall_part), (key) => this[key] = instance[key]);
-    }
-    getIndexOf(field, value) {
-      for (let idx = 0; idx < this.length; idx++) {
-        if (this[idx][field] === value)
-          return idx;
-      }
-      return -1;
-    }
-    on_snapshot_part() {
-    }
-    on_recall_part() {
-    }
-    on_version_change() {
-    }
-    on_forbidden_change() {
-    }
-  };
-  _roll2 = new WeakSet();
-  roll_fn2 = function(item) {
-    this.last = item;
-    this.version++;
-    this.on_version_change();
-  };
-
-  // src/wuse.element-parts.js
-  var _extractAttributes, extractAttributes_fn, _extractContent, extractContent_fn, _extractEvents, extractEvents_fn, _extractClasses, extractClasses_fn, _extractIdAndTag, extractIdAndTag_fn, _extractData, extractData_fn, _process, process_fn;
-  var { isHTMLTag } = WebHelpers;
-  var { EMPTY_STRING, EMPTY_ARRAY: EMPTY_ARRAY2, noop: noop5, buildArray: buildArray3, buildObject: buildObject2, isAssignedObject: isAssignedObject6, isAssignedArray: isAssignedArray4, ensureFunction: ensureFunction6, hasObjectKeys: hasObjectKeys2, isNonEmptyString: isNonEmptyString5, forcedStringSplit } = JavascriptHelpers;
-  var { WUSENODE_ATTRIBUTE: WUSENODE_ATTRIBUTE2, DEFAULT_TAG, DEFAULT_KIND, TEMPLATES_KIND: TEMPLATES_KIND2, SLOTS_KIND: SLOTS_KIND2, TEXTNODE_TAG: TEXTNODE_TAG2 } = StringConstants;
-  var hash2 = StringHashing.defaultRoutine;
-  var RuntimeErrors2 = {
-    onInvalidDefinition: noop5,
-    onInexistentTemplate: noop5,
-    onUnespecifiedSlot: noop5,
-    onInvalidId: noop5,
-    onUnknownTag: noop5
-  };
-  var isCustomTag = (tag) => tag.indexOf("-") > 0 && !isHTMLTag(tag);
-  var ShorthandNotationParser = class {
-    static parse(value) {
-      if (isNonEmptyString5(value)) {
-        let val = value.trimLeft();
-        let def = makeDefinition();
-        if (val.charAt(0) === "%") {
-          if (val.startsWith(TEMPLATES_KIND2)) {
-            return __privateMethod(this, _extractData, extractData_fn).call(this, def, val.replace(def.kind = TEMPLATES_KIND2, EMPTY_STRING));
-          } else if (val.startsWith(SLOTS_KIND2)) {
-            return __privateMethod(this, _extractData, extractData_fn).call(this, def, val.replace(def.kind = SLOTS_KIND2, EMPTY_STRING));
-          } else {
-            return null;
-          }
-        } else {
-          return __privateMethod(this, _extractData, extractData_fn).call(this, def, val);
-        }
-      }
-      return null;
-    }
-  };
-  _extractAttributes = new WeakSet();
-  extractAttributes_fn = function(result, input) {
-    const op = input.indexOf("[");
-    const cp = input.indexOf("]");
-    if (op > -1 && cp > -1 && cp > op) {
-      const ip = input.substr(op, cp - op + 1);
-      const pp = ip.substr(1, ip.length - 2).split("|");
-      for (const z in pp) {
-        const x = pp[z].split("=");
-        if (x[0] === "style") {
-          x[1].split(";").forEach((r) => {
-            const s = r.split(":");
-            const k = s[0].trim();
-            if (!!k.length) {
-              result.style[k] = s[1].trim();
-            }
-          });
-        } else {
-          result.attributes[x[0]] = x[1] || "";
-        }
-      }
-      return input.replace(ip, EMPTY_STRING);
-    }
-    return input;
-  };
-  _extractContent = new WeakSet();
-  extractContent_fn = function(result, input) {
-    const index = input.indexOf("=");
-    if (index > -1) {
-      result.content = input.slice(index + 1);
-      if (!!result.content.length && result.content.charAt(0) === "&") {
-        result.content = result.content.slice(1);
-        result.encode = !!result.content.length && result.content.charAt(0) !== "&";
-      }
-      return input.slice(0, index);
-    }
-    return input;
-  };
-  _extractEvents = new WeakSet();
-  extractEvents_fn = function(result, input) {
-    const tmp = input.replaceAll("!", " ").split(" ");
-    tmp.slice(1).map((item) => {
-      const [event, ...rest] = item.toLowerCase().split("+");
-      const capture = (rest || EMPTY_ARRAY2).indexOf("capture") > -1;
-      result.events.push(makeEvent(event, capture));
-    });
-    return tmp[0];
-  };
-  _extractClasses = new WeakSet();
-  extractClasses_fn = function(result, input) {
-    const tmp = input.replaceAll(".", " ").split(" ");
-    result.classes = tmp.slice(1);
-    return tmp[0];
-  };
-  _extractIdAndTag = new WeakSet();
-  extractIdAndTag_fn = function(result, input) {
-    if (isNonEmptyString5(input)) {
-      const x = input.indexOf("#");
-      if (x === -1) {
-        result.tag = input;
-      } else {
-        if (x > 0) {
-          result.tag = input.substr(0, x);
-        }
-        result.id = input.substr(x + 1);
-      }
-    }
-    return result;
-  };
-  _extractData = new WeakSet();
-  extractData_fn = function(result, input) {
-    return __privateMethod(this, _extractIdAndTag, extractIdAndTag_fn).call(this, result, __privateMethod(this, _extractClasses, extractClasses_fn).call(this, result, __privateMethod(this, _extractEvents, extractEvents_fn).call(this, result, __privateMethod(this, _extractContent, extractContent_fn).call(this, result, __privateMethod(this, _extractAttributes, extractAttributes_fn).call(this, result, input)))));
-  };
-  __privateAdd(ShorthandNotationParser, _extractAttributes);
-  __privateAdd(ShorthandNotationParser, _extractContent);
-  __privateAdd(ShorthandNotationParser, _extractEvents);
-  __privateAdd(ShorthandNotationParser, _extractClasses);
-  __privateAdd(ShorthandNotationParser, _extractIdAndTag);
-  __privateAdd(ShorthandNotationParser, _extractData);
-  var CSSPropertiesParser = class {
-    static parse(content) {
-      return buildObject2((result) => (isAssignedArray4(content) ? content : forcedStringSplit(content, "\n").map((x) => x.trim()).join(EMPTY_STRING).split(";")).forEach((item) => isNonEmptyString5(item) && __privateMethod(this, _process, process_fn).call(this, result, item.trim())));
-    }
-  };
-  _process = new WeakSet();
-  process_fn = function(result, item) {
-    if (!!item.length && item.indexOf(":") > -1) {
-      const [key, ...values] = item.split(":");
-      const k = key.trim();
-      if (!!k.length) {
-        const v = values.join(":").trim();
-        result[k] = v.endsWith(";") ? v.slice(0, -1) : v;
-      }
-    }
-  };
-  __privateAdd(CSSPropertiesParser, _process);
-  var makeDefinition = () => ({
-    kind: DEFAULT_KIND,
-    tag: DEFAULT_TAG,
-    id: EMPTY_STRING,
-    classes: new window.Array(),
-    attributes: new window.Object(),
-    style: new window.Object(),
-    events: new window.Array(),
-    content: EMPTY_STRING,
-    encode: false
-  });
-  var makeState = () => ({ generation: 0, persisted: false });
-  var makeEvent = (kind, capture) => typeof kind === "string" && typeof capture === "boolean" ? { kind, capture } : null;
-  var makeChild = (shorthandNotation, rules) => {
-    let result = ShorthandNotationParser.parse(shorthandNotation);
-    if (!result) {
-      return RuntimeErrors2.onInvalidDefinition(shorthandNotation);
-    }
-    result.custom = result.kind === DEFAULT_KIND && isCustomTag(result.tag);
-    result.hash = hash2(shorthandNotation);
-    result.rules = isAssignedArray4(rules) ? rules : new window.Array();
-    result.included = true;
-    result.cache = null;
-    return result;
-  };
-  var doValidations = (child) => {
-    if (child !== null) {
-      if (child.kind === TEMPLATES_KIND2) {
-        if (!window.document.getElementById(child.id)) {
-          return RuntimeErrors2.onInexistentTemplate(child.id);
-        }
-      } else if (child.kind === SLOTS_KIND2) {
-        if (new window.String(child.attributes["slot"]).replaceAll('"', EMPTY_STRING).replaceAll("'", EMPTY_STRING).length === 0) {
-          return RuntimeErrors2.onUnespecifiedSlot(child.id);
-        }
-      } else if (typeof child.id !== "string") {
-        return RuntimeErrors2.onInvalidId(child.id);
-      } else if (child.custom && !window.customElements.get(child.tag)) {
-        RuntimeErrors2.onUnknownTag(child.tag);
-      }
-    }
-    return child;
-  };
-  var createMainNode = (mainDefinition) => {
-    if (!isAssignedObject6(mainDefinition)) {
-      return null;
-    }
-    let result = window.document.createElement(mainDefinition.tag);
-    if (!!mainDefinition.id.length) {
-      result.setAttribute("id", mainDefinition.id);
-    }
-    if (!!mainDefinition.classes.length) {
-      result.setAttribute("class", mainDefinition.classes.join(" "));
-    }
-    if (hasObjectKeys2(mainDefinition.style)) {
-      var style = new window.String();
-      for (const property in mainDefinition.style) {
-        style += `${property}: ${mainDefinition.style[property]}; `;
-      }
-      if (!!style.length) {
-        const v = style.trim();
-        result.setAttribute("style", v.endsWith(";") ? v.slice(0, -1) : v);
-      }
-    }
-    if (hasObjectKeys2(mainDefinition.attributes)) {
-      for (const property in mainDefinition.attributes) {
-        result.setAttribute(property, mainDefinition.attributes[property]);
-      }
-    }
-    result.setAttribute(WUSENODE_ATTRIBUTE2, "main");
-    return result;
-  };
-  var createStyleNode = (media, type) => {
-    let result = window.document.createElement("style");
-    if (isNonEmptyString5(media))
-      result.setAttribute("media", media);
-    if (isNonEmptyString5(type))
-      result.setAttribute("type", type);
-    result.setAttribute(WUSENODE_ATTRIBUTE2, "style");
-    result.appendChild(window.document.createTextNode(EMPTY_STRING));
-    return result;
-  };
-  var makeRule = (selector, properties) => {
-    const s = isAssignedArray4(selector) ? selector.join(",") : isNonEmptyString5(selector) ? selector : EMPTY_STRING;
-    return !s.length ? null : {
-      selector: s,
-      properties: isAssignedObject6(properties) ? properties : CSSPropertiesParser.parse(properties),
-      cache: null
-    };
-  };
-  var makeNestedRule = (selector, sub, properties) => {
-    const s = isAssignedArray4(selector) ? selector.join(",") : isNonEmptyString5(selector) ? selector : EMPTY_STRING;
-    const b = isAssignedArray4(sub) ? sub.join(",") : isNonEmptyString5(sub) ? sub : EMPTY_STRING;
-    return !s.length || !b.length ? null : {
-      selector: s,
-      nested: [{
-        selector: b,
-        properties: isAssignedObject6(properties) ? properties : CSSPropertiesParser.parse(properties)
-      }],
-      cache: null
-    };
-  };
-  var rulesJoiner = (lr, rule) => {
-    if (lr.selector === rule.selector) {
-      for (const p in rule.properties) {
-        lr.properties[p] = rule.properties[p];
-      }
-      lr.cache = null;
-      return true;
-    }
-    return false;
-  };
-  var nestedRulesJoiner = (lr, rule) => {
-    if (isAssignedArray4(lr.nested) && lr.selector === rule.selector) {
-      rule.nested.forEach((n) => {
-        var found = false;
-        for (const x in lr.nested) {
-          if (found = lr.nested[x].selector === n.selector) {
-            for (const p in n.properties) {
-              lr.nested[x].properties[p] = n.properties[p];
-            }
-            break;
-          }
-        }
-        if (!found)
-          lr.nested.push(n);
-      });
-      lr.cache = null;
-      return true;
-    }
-    return false;
-  };
-  var ElementParts = class {
-    static initialize(options) {
-      if (isAssignedObject6(options)) {
-        RuntimeErrors2.onInvalidDefinition = ensureFunction6(options.onInvalidDefinition);
-        RuntimeErrors2.onInexistentTemplate = ensureFunction6(options.onInexistentTemplate);
-        RuntimeErrors2.onUnespecifiedSlot = ensureFunction6(options.onUnespecifiedSlot);
-        RuntimeErrors2.onInvalidId = ensureFunction6(options.onInvalidId);
-        RuntimeErrors2.onUnknownTag = ensureFunction6(options.onUnknownTag);
-      }
-    }
-  };
-  __publicField(ElementParts, "makeStyleNode", createStyleNode);
-  __publicField(ElementParts, "newRule", makeRule);
-  __publicField(ElementParts, "newNestedRule", makeNestedRule);
-  __publicField(ElementParts, "tryToJoinRules", rulesJoiner);
-  __publicField(ElementParts, "tryToJoinNestedRules", nestedRulesJoiner);
-  __publicField(ElementParts, "performValidations", doValidations);
-  __publicField(ElementParts, "makeMainNode", createMainNode);
-  __publicField(ElementParts, "newChild", makeChild);
-  __publicField(ElementParts, "newDefinition", makeDefinition);
-  __publicField(ElementParts, "newEvent", makeEvent);
-  __publicField(ElementParts, "newState", makeState);
-
   // src/wuse.element-modes.js
   var ElementModes = class {
     static get REGULAR() {
@@ -1538,12 +747,807 @@
   _owner = new WeakMap();
   _events = new WeakMap();
 
+  // src/wuse.element-parts.js
+  var _extractAttributes, extractAttributes_fn, _extractContent, extractContent_fn, _extractEvents, extractEvents_fn, _extractClasses, extractClasses_fn, _extractIdAndTag, extractIdAndTag_fn, _extractData, extractData_fn, _process, process_fn;
+  var { isHTMLTag } = WebHelpers;
+  var { EMPTY_STRING, EMPTY_ARRAY, noop: noop4, buildArray, buildObject, isAssignedObject: isAssignedObject3, isAssignedArray: isAssignedArray2, ensureFunction: ensureFunction3, hasObjectKeys, isNonEmptyString: isNonEmptyString2, forcedStringSplit } = JavascriptHelpers;
+  var { WUSENODE_ATTRIBUTE, DEFAULT_TAG, DEFAULT_KIND, TEMPLATES_KIND, SLOTS_KIND, TEXTNODE_TAG } = StringConstants;
+  var hash2 = StringHashing.defaultRoutine;
+  var RuntimeErrors2 = {
+    onInvalidDefinition: noop4,
+    onInexistentTemplate: noop4,
+    onUnespecifiedSlot: noop4,
+    onInvalidId: noop4,
+    onUnknownTag: noop4
+  };
+  var isCustomTag = (tag) => tag.indexOf("-") > 0 && !isHTMLTag(tag);
+  var ShorthandNotationParser = class {
+    static parse(value) {
+      if (isNonEmptyString2(value)) {
+        let val = value.trimLeft();
+        let def = makeDefinition();
+        if (val.charAt(0) === "%") {
+          if (val.startsWith(TEMPLATES_KIND)) {
+            return __privateMethod(this, _extractData, extractData_fn).call(this, def, val.replace(def.kind = TEMPLATES_KIND, EMPTY_STRING));
+          } else if (val.startsWith(SLOTS_KIND)) {
+            return __privateMethod(this, _extractData, extractData_fn).call(this, def, val.replace(def.kind = SLOTS_KIND, EMPTY_STRING));
+          } else {
+            return null;
+          }
+        } else {
+          return __privateMethod(this, _extractData, extractData_fn).call(this, def, val);
+        }
+      }
+      return null;
+    }
+  };
+  _extractAttributes = new WeakSet();
+  extractAttributes_fn = function(result, input) {
+    const op = input.indexOf("[");
+    const cp = input.indexOf("]");
+    if (op > -1 && cp > -1 && cp > op) {
+      const ip = input.substr(op, cp - op + 1);
+      const pp = ip.substr(1, ip.length - 2).split("|");
+      for (const z in pp) {
+        const x = pp[z].split("=");
+        if (x[0] === "style") {
+          x[1].split(";").forEach((r) => {
+            const s = r.split(":");
+            const k = s[0].trim();
+            if (!!k.length) {
+              result.style[k] = s[1].trim();
+            }
+          });
+        } else {
+          result.attributes[x[0]] = x[1] || "";
+        }
+      }
+      return input.replace(ip, EMPTY_STRING);
+    }
+    return input;
+  };
+  _extractContent = new WeakSet();
+  extractContent_fn = function(result, input) {
+    const index = input.indexOf("=");
+    if (index > -1) {
+      result.content = input.slice(index + 1);
+      if (!!result.content.length && result.content.charAt(0) === "&") {
+        result.content = result.content.slice(1);
+        result.encode = !!result.content.length && result.content.charAt(0) !== "&";
+      }
+      return input.slice(0, index);
+    }
+    return input;
+  };
+  _extractEvents = new WeakSet();
+  extractEvents_fn = function(result, input) {
+    const tmp = input.replaceAll("!", " ").split(" ");
+    tmp.slice(1).map((item) => {
+      const [event, ...rest] = item.toLowerCase().split("+");
+      const capture = (rest || EMPTY_ARRAY).indexOf("capture") > -1;
+      result.events.push(makeEvent(event, capture));
+    });
+    return tmp[0];
+  };
+  _extractClasses = new WeakSet();
+  extractClasses_fn = function(result, input) {
+    const tmp = input.replaceAll(".", " ").split(" ");
+    result.classes = tmp.slice(1);
+    return tmp[0];
+  };
+  _extractIdAndTag = new WeakSet();
+  extractIdAndTag_fn = function(result, input) {
+    if (isNonEmptyString2(input)) {
+      const x = input.indexOf("#");
+      if (x === -1) {
+        result.tag = input;
+      } else {
+        if (x > 0) {
+          result.tag = input.substr(0, x);
+        }
+        result.id = input.substr(x + 1);
+      }
+    }
+    return result;
+  };
+  _extractData = new WeakSet();
+  extractData_fn = function(result, input) {
+    return __privateMethod(this, _extractIdAndTag, extractIdAndTag_fn).call(this, result, __privateMethod(this, _extractClasses, extractClasses_fn).call(this, result, __privateMethod(this, _extractEvents, extractEvents_fn).call(this, result, __privateMethod(this, _extractContent, extractContent_fn).call(this, result, __privateMethod(this, _extractAttributes, extractAttributes_fn).call(this, result, input)))));
+  };
+  __privateAdd(ShorthandNotationParser, _extractAttributes);
+  __privateAdd(ShorthandNotationParser, _extractContent);
+  __privateAdd(ShorthandNotationParser, _extractEvents);
+  __privateAdd(ShorthandNotationParser, _extractClasses);
+  __privateAdd(ShorthandNotationParser, _extractIdAndTag);
+  __privateAdd(ShorthandNotationParser, _extractData);
+  var CSSPropertiesParser = class {
+    static parse(content) {
+      return buildObject((result) => (isAssignedArray2(content) ? content : forcedStringSplit(content, "\n").map((x) => x.trim()).join(EMPTY_STRING).split(";")).forEach((item) => isNonEmptyString2(item) && __privateMethod(this, _process, process_fn).call(this, result, item.trim())));
+    }
+  };
+  _process = new WeakSet();
+  process_fn = function(result, item) {
+    if (!!item.length && item.indexOf(":") > -1) {
+      const [key, ...values] = item.split(":");
+      const k = key.trim();
+      if (!!k.length) {
+        const v = values.join(":").trim();
+        result[k] = v.endsWith(";") ? v.slice(0, -1) : v;
+      }
+    }
+  };
+  __privateAdd(CSSPropertiesParser, _process);
+  var makeDefinition = () => ({
+    kind: DEFAULT_KIND,
+    tag: DEFAULT_TAG,
+    id: EMPTY_STRING,
+    classes: new window.Array(),
+    attributes: new window.Object(),
+    style: new window.Object(),
+    events: new window.Array(),
+    content: EMPTY_STRING,
+    encode: false
+  });
+  var makeState = () => ({ generation: 0, persisted: false });
+  var makeEvent = (kind, capture) => typeof kind === "string" && typeof capture === "boolean" ? { kind, capture } : null;
+  var makeChild = (shorthandNotation, rules) => {
+    let result = ShorthandNotationParser.parse(shorthandNotation);
+    if (!result) {
+      return RuntimeErrors2.onInvalidDefinition(shorthandNotation);
+    }
+    result.custom = result.kind === DEFAULT_KIND && isCustomTag(result.tag);
+    result.hash = hash2(shorthandNotation);
+    result.rules = isAssignedArray2(rules) ? rules : new window.Array();
+    result.included = true;
+    result.cache = null;
+    return result;
+  };
+  var doValidations = (child) => {
+    if (child !== null) {
+      if (child.kind === TEMPLATES_KIND) {
+        if (!window.document.getElementById(child.id)) {
+          return RuntimeErrors2.onInexistentTemplate(child.id);
+        }
+      } else if (child.kind === SLOTS_KIND) {
+        if (new window.String(child.attributes["slot"]).replaceAll('"', EMPTY_STRING).replaceAll("'", EMPTY_STRING).length === 0) {
+          return RuntimeErrors2.onUnespecifiedSlot(child.id);
+        }
+      } else if (typeof child.id !== "string") {
+        return RuntimeErrors2.onInvalidId(child.id);
+      } else if (child.custom && !window.customElements.get(child.tag)) {
+        RuntimeErrors2.onUnknownTag(child.tag);
+      }
+    }
+    return child;
+  };
+  var createMainNode = (mainDefinition) => {
+    if (!isAssignedObject3(mainDefinition)) {
+      return null;
+    }
+    let result = window.document.createElement(mainDefinition.tag);
+    if (!!mainDefinition.id.length) {
+      result.setAttribute("id", mainDefinition.id);
+    }
+    if (!!mainDefinition.classes.length) {
+      result.setAttribute("class", mainDefinition.classes.join(" "));
+    }
+    if (hasObjectKeys(mainDefinition.style)) {
+      var style = new window.String();
+      for (const property in mainDefinition.style) {
+        style += `${property}: ${mainDefinition.style[property]}; `;
+      }
+      if (!!style.length) {
+        const v = style.trim();
+        result.setAttribute("style", v.endsWith(";") ? v.slice(0, -1) : v);
+      }
+    }
+    if (hasObjectKeys(mainDefinition.attributes)) {
+      for (const property in mainDefinition.attributes) {
+        result.setAttribute(property, mainDefinition.attributes[property]);
+      }
+    }
+    result.setAttribute(WUSENODE_ATTRIBUTE, "main");
+    return result;
+  };
+  var createStyleNode = (media, type) => {
+    let result = window.document.createElement("style");
+    if (isNonEmptyString2(media))
+      result.setAttribute("media", media);
+    if (isNonEmptyString2(type))
+      result.setAttribute("type", type);
+    result.setAttribute(WUSENODE_ATTRIBUTE, "style");
+    result.appendChild(window.document.createTextNode(EMPTY_STRING));
+    return result;
+  };
+  var makeRule = (selector, properties) => {
+    const s = isAssignedArray2(selector) ? selector.join(",") : isNonEmptyString2(selector) ? selector : EMPTY_STRING;
+    return !s.length ? null : {
+      selector: s,
+      properties: isAssignedObject3(properties) ? properties : CSSPropertiesParser.parse(properties),
+      cache: null
+    };
+  };
+  var makeNestedRule = (selector, sub, properties) => {
+    const s = isAssignedArray2(selector) ? selector.join(",") : isNonEmptyString2(selector) ? selector : EMPTY_STRING;
+    const b = isAssignedArray2(sub) ? sub.join(",") : isNonEmptyString2(sub) ? sub : EMPTY_STRING;
+    return !s.length || !b.length ? null : {
+      selector: s,
+      nested: [{
+        selector: b,
+        properties: isAssignedObject3(properties) ? properties : CSSPropertiesParser.parse(properties)
+      }],
+      cache: null
+    };
+  };
+  var rulesJoiner = (lr, rule) => {
+    if (lr.selector === rule.selector) {
+      for (const p in rule.properties) {
+        lr.properties[p] = rule.properties[p];
+      }
+      lr.cache = null;
+      return true;
+    }
+    return false;
+  };
+  var nestedRulesJoiner = (lr, rule) => {
+    if (isAssignedArray2(lr.nested) && lr.selector === rule.selector) {
+      rule.nested.forEach((n) => {
+        var found = false;
+        for (const x in lr.nested) {
+          if (found = lr.nested[x].selector === n.selector) {
+            for (const p in n.properties) {
+              lr.nested[x].properties[p] = n.properties[p];
+            }
+            break;
+          }
+        }
+        if (!found)
+          lr.nested.push(n);
+      });
+      lr.cache = null;
+      return true;
+    }
+    return false;
+  };
+  var ElementParts = class {
+    static initialize(options) {
+      if (isAssignedObject3(options)) {
+        RuntimeErrors2.onInvalidDefinition = ensureFunction3(options.onInvalidDefinition);
+        RuntimeErrors2.onInexistentTemplate = ensureFunction3(options.onInexistentTemplate);
+        RuntimeErrors2.onUnespecifiedSlot = ensureFunction3(options.onUnespecifiedSlot);
+        RuntimeErrors2.onInvalidId = ensureFunction3(options.onInvalidId);
+        RuntimeErrors2.onUnknownTag = ensureFunction3(options.onUnknownTag);
+      }
+    }
+  };
+  __publicField(ElementParts, "makeStyleNode", createStyleNode);
+  __publicField(ElementParts, "newRule", makeRule);
+  __publicField(ElementParts, "newNestedRule", makeNestedRule);
+  __publicField(ElementParts, "tryToJoinRules", rulesJoiner);
+  __publicField(ElementParts, "tryToJoinNestedRules", nestedRulesJoiner);
+  __publicField(ElementParts, "performValidations", doValidations);
+  __publicField(ElementParts, "makeMainNode", createMainNode);
+  __publicField(ElementParts, "newChild", makeChild);
+  __publicField(ElementParts, "newDefinition", makeDefinition);
+  __publicField(ElementParts, "newEvent", makeEvent);
+  __publicField(ElementParts, "newState", makeState);
+
+  // src/wuse.text-replacements.js
+  var _regExp, _addReplacement, _includeMatches, _includeStringMatches, _includeKeysMatches;
+  var { EMPTY_ARRAY: EMPTY_ARRAY2, buildArray: buildArray2, buildObject: buildObject2, isNonEmptyString: isNonEmptyString3, isAssignedArray: isAssignedArray3 } = JavascriptHelpers;
+  var _ReplacementMarkers = class {
+    static initialize(begin, end) {
+      this.begin = begin;
+      this.end = end;
+    }
+  };
+  var ReplacementMarkers = _ReplacementMarkers;
+  __publicField(ReplacementMarkers, "begin", null);
+  __publicField(ReplacementMarkers, "end", null);
+  __publicField(ReplacementMarkers, "enclose", (match) => _ReplacementMarkers.begin + match + _ReplacementMarkers.end);
+  __publicField(ReplacementMarkers, "makeRegExp", () => new window.RegExp(`(?<=${_ReplacementMarkers.begin}).*?(?=${_ReplacementMarkers.end})`, "gs"));
+  var REPLACEMENT_PLACES = ["contents", "classes", "styles", "attributes"];
+  var ReplacementsScanners = class {
+  };
+  __publicField(ReplacementsScanners, "rules", (rules, name) => buildArray2((hits) => rules.forEach((rule) => rule.replacements.forEach((x) => x.field === name && hits.push(rule)))));
+  __publicField(ReplacementsScanners, "children", (children, name) => buildArray2((hits) => {
+    const processAll = (child) => {
+      const process = (collection) => collection.forEach((x) => x.field === name && hits.push(child));
+      REPLACEMENT_PLACES.forEach((key) => process(child.replacements[key]));
+      child.rules.forEach((rule) => rule.replacements.forEach((x) => x.field === name && hits.push(child)));
+    };
+    children.forEach((child) => child.included && processAll(child));
+  }));
+  var _ReplacementsExtractors = class {
+    static initialize(regExp) {
+      __privateSet(this, _regExp, regExp);
+    }
+  };
+  var ReplacementsExtractors = _ReplacementsExtractors;
+  _regExp = new WeakMap();
+  _addReplacement = new WeakMap();
+  _includeMatches = new WeakMap();
+  _includeStringMatches = new WeakMap();
+  _includeKeysMatches = new WeakMap();
+  __privateAdd(ReplacementsExtractors, _regExp, null);
+  __privateAdd(ReplacementsExtractors, _addReplacement, (hits, at, match) => hits.push({
+    at,
+    field: match.trim(),
+    find: ReplacementMarkers.enclose(match)
+  }));
+  __privateAdd(ReplacementsExtractors, _includeMatches, (hits, at, str) => isNonEmptyString3(str) && (str.match(__privateGet(_ReplacementsExtractors, _regExp)) || EMPTY_ARRAY2).forEach((match) => {
+    var _a3;
+    return __privateGet(_a3 = _ReplacementsExtractors, _addReplacement).call(_a3, hits, at, match);
+  }));
+  __privateAdd(ReplacementsExtractors, _includeStringMatches, (result, key, value) => {
+    var _a3;
+    result[key] = new window.Array();
+    __privateGet(_a3 = _ReplacementsExtractors, _includeMatches).call(_a3, result[key], key, value);
+  });
+  __privateAdd(ReplacementsExtractors, _includeKeysMatches, (result, key, obj) => {
+    result[key] = new window.Array();
+    window.Object.keys(obj).forEach((k) => {
+      var _a3, _b2;
+      __privateGet(_a3 = _ReplacementsExtractors, _includeMatches).call(_a3, result[key], key, k);
+      __privateGet(_b2 = _ReplacementsExtractors, _includeMatches).call(_b2, result[key], key, obj[k]);
+    });
+  });
+  __publicField(ReplacementsExtractors, "child", (child) => buildObject2((result) => {
+    var _a3, _b2, _c2, _d;
+    __privateGet(_a3 = _ReplacementsExtractors, _includeStringMatches).call(_a3, result, "contents", child.content);
+    __privateGet(_b2 = _ReplacementsExtractors, _includeStringMatches).call(_b2, result, "classes", child.classes.join(" "));
+    __privateGet(_c2 = _ReplacementsExtractors, _includeKeysMatches).call(_c2, result, "styles", child.style);
+    __privateGet(_d = _ReplacementsExtractors, _includeKeysMatches).call(_d, result, "attributes", child.attributes);
+    child.rules.forEach((r) => r.replacements = _ReplacementsExtractors.rule(r));
+  }));
+  __publicField(ReplacementsExtractors, "rule", (rule) => buildArray2((result) => {
+    var _a3;
+    if (isAssignedArray3(rule.nested)) {
+      return rule.nested.map((r) => _ReplacementsExtractors.rule(r));
+    }
+    var c = "";
+    for (const property in rule.properties) {
+      c += `${property}:${rule.properties[property]};`;
+    }
+    __privateGet(_a3 = _ReplacementsExtractors, _includeMatches).call(_a3, result, "rules", c);
+  }));
+  var TextReplacements = class {
+    static initialize(openMarker, closeMarker) {
+      ReplacementMarkers.initialize(openMarker, closeMarker);
+      ReplacementsExtractors.initialize(ReplacementMarkers.makeRegExp());
+    }
+  };
+  __publicField(TextReplacements, "extractReplacementsFromRule", ReplacementsExtractors.rule);
+  __publicField(TextReplacements, "extractReplacementsFromChild", ReplacementsExtractors.child);
+  __publicField(TextReplacements, "scanRulesForReplacements", ReplacementsScanners.rules);
+  __publicField(TextReplacements, "scanChildrenForReplacements", ReplacementsScanners.children);
+
+  // src/wuse.rendering-routines.js
+  var _onFetchTemplate;
+  var { noop: noop5, isAssignedArray: isAssignedArray4, hasObjectKeys: hasObjectKeys2, isNonEmptyString: isNonEmptyString4, isNonEmptyArray: isNonEmptyArray2, isAssignedObject: isAssignedObject4, ensureFunction: ensureFunction4 } = JavascriptHelpers;
+  var { htmlEncode } = WebHelpers;
+  var { SLOTS_KIND: SLOTS_KIND2, TEMPLATES_KIND: TEMPLATES_KIND2, TEXTNODE_TAG: TEXTNODE_TAG2 } = StringConstants;
+  var _RenderingRoutines = class {
+    static initialize(events) {
+      if (isAssignedObject4(events)) {
+        __privateSet(this, _onFetchTemplate, ensureFunction4(events.onFetchTemplate, __privateGet(this, _onFetchTemplate)));
+      }
+    }
+  };
+  var RenderingRoutines = _RenderingRoutines;
+  _onFetchTemplate = new WeakMap();
+  __privateAdd(RenderingRoutines, _onFetchTemplate, noop5);
+  __publicField(RenderingRoutines, "cacheInvalidator", (item) => item.cache = null);
+  __publicField(RenderingRoutines, "slotsInvalidator", (item) => item.kind === SLOTS_KIND2 ? _RenderingRoutines.cacheInvalidator(item) : void 0);
+  __publicField(RenderingRoutines, "renderingIncluder", (item) => item.included = true);
+  __publicField(RenderingRoutines, "renderingExcluder", (item) => item.included = false);
+  __publicField(RenderingRoutines, "renderRule", (replacer, rule) => {
+    if (isAssignedArray4(rule.nested)) {
+      return `${rule.selector}{${rule.nested.map((r) => _RenderingRoutines.renderRule(replacer, r)).join("\n")}}`;
+    } else if (isNonEmptyString4(rule.selector) && !rule.nested) {
+      var c = new window.String();
+      for (const property in rule.properties) {
+        c += `${property}:${rule.properties[property]};`;
+      }
+      if (isNonEmptyArray2(rule.replacements)) {
+        rule.replacements.forEach((r) => c = replacer(c, r));
+      }
+      return `${rule.selector}{${c}}`;
+    }
+    return null;
+  });
+  __publicField(RenderingRoutines, "renderChild", (replacer, child) => {
+    var _a3;
+    if (child.kind === TEMPLATES_KIND2) {
+      return __privateGet(_a3 = _RenderingRoutines, _onFetchTemplate).call(_a3, child.id);
+    }
+    if (child.tag === TEXTNODE_TAG2) {
+      var c = child.content;
+      child.replacements["contents"].forEach((r) => c = replacer(c, r));
+      return child.encode ? htmlEncode(c) : c;
+    }
+    var result = isNonEmptyString4(child.id) ? `<${child.tag} id='${child.id}'` : `<${child.tag}`;
+    if (!!child.classes.length) {
+      var c = child.classes.join(" ");
+      child.replacements["classes"].forEach((r) => c = replacer(c, r));
+      result += ` class='${c}'`;
+    }
+    if (hasObjectKeys2(child.style)) {
+      var c = " style='";
+      for (const property in child.style) {
+        c += `${property}: ${child.style[property]}; `;
+      }
+      c += "'";
+      child.replacements["styles"].forEach((r) => c = replacer(c, r));
+      result += c;
+    }
+    if (hasObjectKeys2(child.attributes)) {
+      var c = new window.String();
+      for (const property in child.attributes) {
+        c += ` ${property}=${child.attributes[property]}`;
+      }
+      child.replacements["attributes"].forEach((r) => c = replacer(c, r));
+      result += c;
+    }
+    if (typeof child.content === "string") {
+      var c = child.content;
+      child.replacements["contents"].forEach((r) => c = replacer(c, r));
+      result += `>${child.encode ? htmlEncode(c) : c}</${child.tag}>`;
+    } else {
+      result += "/>";
+    }
+    return result;
+  });
+
+  // src/wuse.state-manager.js
+  var _key, _keyed, _maker, _reader, _writer, _state, _store, _filiated, _persistState, persistState_fn;
+  var { ensureFunction: ensureFunction5, isNonEmptyString: isNonEmptyString5, isAssignedObject: isAssignedObject5 } = JavascriptHelpers;
+  var StateManager = class {
+    constructor(maker, reader, writer, store = {}) {
+      __privateAdd(this, _persistState);
+      __privateAdd(this, _key, new window.String());
+      __privateAdd(this, _keyed, false);
+      __privateAdd(this, _maker, null);
+      __privateAdd(this, _reader, null);
+      __privateAdd(this, _writer, null);
+      __privateAdd(this, _state, null);
+      __privateAdd(this, _store, null);
+      __privateAdd(this, _filiated, new class extends window.Set {
+        name(parentKey, id) {
+          let key = `${parentKey}_${id}`;
+          var x = 0;
+          while (this.has(key))
+            key = `${parentKey}_${id}_${++x}`;
+          this.add(key);
+          return key;
+        }
+      }());
+      __privateSet(this, _maker, ensureFunction5(maker));
+      __privateSet(this, _reader, ensureFunction5(reader));
+      __privateSet(this, _writer, ensureFunction5(writer));
+      __privateSet(this, _store, store);
+    }
+    getStore() {
+      return __privateGet(this, _store);
+    }
+    setStore(store) {
+      __privateSet(this, _store, store);
+    }
+    get state() {
+      return __privateGet(this, _state);
+    }
+    get key() {
+      return __privateGet(this, _key);
+    }
+    set key(key) {
+      return __privateSet(this, _keyed, isNonEmptyString5(__privateSet(this, _key, key)));
+    }
+    hasKey() {
+      return __privateGet(this, _keyed);
+    }
+    validateKey() {
+      if (!__privateGet(this, _keyed)) {
+        this.on_invalid_key();
+        return false;
+      }
+      return true;
+    }
+    nameFiliatedKey(id) {
+      return __privateGet(this, _filiated).name(__privateGet(this, _key), id);
+    }
+    rememberFiliatedKey(key) {
+      __privateGet(this, _filiated).add(key);
+    }
+    hasFiliatedKey(key) {
+      return __privateGet(this, _filiated).has(key);
+    }
+    initializeState() {
+      __privateGet(this, _filiated).clear();
+      if (__privateGet(this, _keyed)) {
+        const state = __privateGet(this, _store).hasItem(this.key) ? __privateGet(this, _store).getItem(this.key) : __privateGet(this, _maker).call(this);
+        if (isAssignedObject5(state)) {
+          __privateSet(this, _state, state);
+          __privateGet(this, _state).generation++;
+          __privateMethod(this, _persistState, persistState_fn).call(this);
+        } else {
+          this.on_invalid_state();
+          return -1;
+        }
+      } else {
+        __privateSet(this, _state, __privateGet(this, _maker).call(this));
+        __privateGet(this, _state).generation++;
+      }
+      return __privateGet(this, _state).generation;
+    }
+    writeState() {
+      const state = __privateGet(this, _state);
+      if (isAssignedObject5(state)) {
+        state.data = __privateGet(this, _writer).call(this);
+        __privateMethod(this, _persistState, persistState_fn).call(this);
+        return true;
+      }
+      return false;
+    }
+    readState() {
+      const state = __privateGet(this, _state);
+      if (isAssignedObject5(state) && state.persisted) {
+        __privateGet(this, _reader).call(this, state.data);
+        return true;
+      }
+      return false;
+    }
+    eraseState() {
+      const state = __privateGet(this, _state);
+      if (isAssignedObject5(state) && state.persisted && state.data) {
+        delete state.data;
+        __privateMethod(this, _persistState, persistState_fn).call(this);
+        return true;
+      }
+      return false;
+    }
+    on_invalid_state() {
+    }
+    on_invalid_key() {
+    }
+  };
+  _key = new WeakMap();
+  _keyed = new WeakMap();
+  _maker = new WeakMap();
+  _reader = new WeakMap();
+  _writer = new WeakMap();
+  _state = new WeakMap();
+  _store = new WeakMap();
+  _filiated = new WeakMap();
+  _persistState = new WeakSet();
+  persistState_fn = function() {
+    if (__privateGet(this, _keyed)) {
+      __privateGet(this, _state).persisted = !!__privateGet(this, _state).data;
+      __privateGet(this, _store).setItem(__privateGet(this, _key), __privateGet(this, _state));
+    }
+  };
+
+  // src/wuse.node-manager.js
+  var _parent, _actual, _clone, _drop, drop_fn, _roll, roll_fn;
+  var { WUSENODE_ATTRIBUTE: WUSENODE_ATTRIBUTE2 } = StringConstants;
+  var NodeManager = class {
+    constructor(parent, original) {
+      __privateAdd(this, _drop);
+      __privateAdd(this, _roll);
+      __privateAdd(this, _parent, null);
+      __privateAdd(this, _actual, null);
+      __privateAdd(this, _clone, null);
+      if (parent instanceof window.Node && original instanceof window.Node) {
+        __privateSet(this, _parent, parent);
+        this.element = original;
+      } else
+        throw new Error("[WUSE:ERROR] Wrong arguments supplied.");
+    }
+    set element(original) {
+      __privateMethod(this, _drop, drop_fn).call(this, original.getAttribute(WUSENODE_ATTRIBUTE2));
+      __privateSet(this, _actual, original);
+      __privateSet(this, _clone, original.cloneNode(false));
+    }
+    get element() {
+      return __privateGet(this, _actual);
+    }
+    affiliate() {
+      __privateGet(this, _parent).appendChild(__privateGet(this, _actual));
+    }
+    disaffiliate() {
+      __privateGet(this, _parent).removeChild(__privateGet(this, _actual));
+    }
+    promote(content) {
+      __privateGet(this, _clone).innerHTML = content;
+      __privateGet(this, _parent).replaceChild(__privateGet(this, _clone), __privateGet(this, _actual));
+      __privateMethod(this, _roll, roll_fn).call(this);
+    }
+  };
+  _parent = new WeakMap();
+  _actual = new WeakMap();
+  _clone = new WeakMap();
+  _drop = new WeakSet();
+  drop_fn = function(type) {
+    const old = __privateGet(this, _parent).querySelector(`[${WUSENODE_ATTRIBUTE2}='${type}']`);
+    if (old)
+      __privateGet(this, _parent).removeChild(old);
+  };
+  _roll = new WeakSet();
+  roll_fn = function() {
+    const tmp = __privateGet(this, _clone);
+    __privateSet(this, _clone, __privateGet(this, _actual).cloneNode(false));
+    __privateSet(this, _actual, tmp);
+  };
+
+  // src/wuse.content-manager.js
+  var _invalidated, _content;
+  var { isOf: isOf3 } = JavascriptHelpers;
+  var ContentManager = class {
+    constructor(promoter, verifier) {
+      __privateAdd(this, _invalidated, false);
+      __privateAdd(this, _content, "");
+      if (isOf3(promoter, window.Function))
+        this.on_content_invalidation = promoter;
+      if (isOf3(verifier, window.Function))
+        this.on_content_verification = verifier;
+    }
+    get invalidated() {
+      return __privateGet(this, _invalidated);
+    }
+    reset(content) {
+      __privateSet(this, _invalidated, false);
+      __privateSet(this, _content, content);
+    }
+    append(more) {
+      __privateSet(this, _content, __privateGet(this, _content) + more);
+    }
+    verify() {
+      __privateSet(this, _invalidated, this.on_content_verification(__privateGet(this, _content)));
+    }
+    process(force) {
+      if (force || __privateGet(this, _invalidated))
+        this.on_content_invalidation(__privateGet(this, _content));
+    }
+    on_content_verification(content) {
+    }
+    on_content_invalidation(content) {
+    }
+  };
+  _invalidated = new WeakMap();
+  _content = new WeakMap();
+
+  // src/wuse.parts-holder.js
+  var _roll2, roll_fn2;
+  var { isIntegerNumber, isAssignedObject: isAssignedObject6, cloneObject, forEachOwnProperty: forEachOwnProperty2, buildArray: buildArray3 } = JavascriptHelpers;
+  var partsLooper = (holder, partCallback, metaCallback) => forEachOwnProperty2(holder, (key) => {
+    switch (key) {
+      case "owner":
+      case "last":
+      case "length":
+        break;
+      case "version":
+      case "locked":
+        metaCallback(key);
+        break;
+      default:
+        if (isIntegerNumber(key))
+          partCallback(key);
+    }
+  });
+  var partProcessor = (collection, part, event) => {
+    event(part);
+    const item = cloneObject(part);
+    item.cache = null;
+    collection.push(item);
+  };
+  var PartsHolder = class extends window.Array {
+    constructor(owner) {
+      super();
+      __privateAdd(this, _roll2);
+      __publicField(this, "owner", null);
+      __publicField(this, "last", null);
+      __publicField(this, "version", 0);
+      __publicField(this, "locked", false);
+      this.owner = owner;
+    }
+    prepare() {
+      if (this.locked) {
+        this.on_forbidden_change();
+        return false;
+      }
+      return true;
+    }
+    append(item) {
+      if (this.prepare() && isAssignedObject6(item)) {
+        this.push(item);
+        __privateMethod(this, _roll2, roll_fn2).call(this, item);
+      }
+    }
+    prepend(item) {
+      if (this.prepare() && isAssignedObject6(item)) {
+        this.unshift(item);
+        __privateMethod(this, _roll2, roll_fn2).call(this, item);
+      }
+    }
+    replace(index, item) {
+      if (this.prepare() && index > -1 && isAssignedObject6(item)) {
+        __privateMethod(this, _roll2, roll_fn2).call(this, this[index] = item);
+      }
+    }
+    remove(index) {
+      if (this.prepare() && index > -1) {
+        const a = this.splice(index, 1);
+        __privateMethod(this, _roll2, roll_fn2).call(this, !!a.length ? a[0] : null);
+      }
+    }
+    clear() {
+      if (this.prepare()) {
+        this.length = 0;
+        __privateMethod(this, _roll2, roll_fn2).call(this, null);
+      }
+    }
+    persist() {
+      return buildArray3((result) => partsLooper(this, (key) => partProcessor(result, this[key], this.on_snapshot_part), (key) => result[key] = this[key]));
+    }
+    restore(owner, instance) {
+      this.owner = owner;
+      partsLooper(instance, (key) => partProcessor(this, instance[key], this.on_recall_part), (key) => this[key] = instance[key]);
+    }
+    getIndexOf(field, value) {
+      for (let idx = 0; idx < this.length; idx++) {
+        if (this[idx][field] === value)
+          return idx;
+      }
+      return -1;
+    }
+    on_snapshot_part() {
+    }
+    on_recall_part() {
+    }
+    on_version_change() {
+    }
+    on_forbidden_change() {
+    }
+  };
+  _roll2 = new WeakSet();
+  roll_fn2 = function(item) {
+    this.last = item;
+    this.version++;
+    this.on_version_change();
+  };
+
+  // src/wuse.equality-analyzer.js
+  var _last, _current, _equal, _analyzer;
+  var { ensureFunction: ensureFunction6 } = JavascriptHelpers;
+  var EqualityAnalyzer = class {
+    constructor(analyzer) {
+      __publicField(this, "rounds", 0);
+      __privateAdd(this, _last, 0);
+      __privateAdd(this, _current, null);
+      __privateAdd(this, _equal, false);
+      __privateAdd(this, _analyzer, null);
+      __privateSet(this, _analyzer, ensureFunction6(analyzer));
+    }
+    compute(value) {
+      this.rounds += +__privateSet(this, _equal, __privateGet(this, _last) == __privateSet(this, _current, __privateGet(this, _analyzer).call(this, value)));
+      __privateSet(this, _last, __privateGet(this, _current));
+      return __privateGet(this, _equal);
+    }
+  };
+  _last = new WeakMap();
+  _current = new WeakMap();
+  _equal = new WeakMap();
+  _analyzer = new WeakMap();
+
   // src/wuse.base-element.js
   var _html, _rules, _children, _fields, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binding, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _getElementByIdFromRoot, getElementByIdFromRoot_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
-  var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3 } = JavascriptHelpers;
+  var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3, buildArray: buildArray4 } = JavascriptHelpers;
   var { removeChildren, isHTMLAttribute } = WebHelpers;
   var { WUSEKEY_ATTRIBUTE, DEFAULT_STYLE_TYPE, DEFAULT_STYLE_MEDIA, DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE, SLOTS_KIND: SLOTS_KIND3 } = StringConstants;
   var { createReactiveField } = ReactiveField;
+  var { REGULAR } = ElementModes;
+  var { newDefinition, newState, makeMainNode, makeStyleNode, performValidations, newChild, newRule, newNestedRule, tryToJoinRules, tryToJoinNestedRules } = ElementParts;
+  var { extractReplacementsFromChild, extractReplacementsFromRule, scanChildrenForReplacements, scanRulesForReplacements } = TextReplacements;
+  var { renderChild, renderRule, renderingIncluder, renderingExcluder, cacheInvalidator, slotsInvalidator } = RenderingRoutines;
   var RuntimeErrors3 = {
     onInvalidState: noop6,
     onInvalidKey: noop6,
@@ -1554,10 +1558,10 @@
     onAllowHTML: noop6
   };
   var debug = (wel, msg) => window.Wuse.debug(`#${wel.id} (${wel.info.instanceNumber}) | ${typeof msg === "string" ? msg : JSON.stringify(msg)}`);
-  var parseElement = (shorthandNotation, rules) => ElementParts.performValidations(ElementParts.newChild(shorthandNotation, rules));
+  var parseElement = (shorthandNotation, rules) => performValidations(newChild(shorthandNotation, rules));
   var isInvalidFieldName = (name) => typeof name !== "string" || !name.trim().length || name.startsWith("data") || isHTMLAttribute(name);
   var makeUserOptions = () => ({
-    mainDefinition: ElementParts.newDefinition(),
+    mainDefinition: newDefinition(),
     styleMedia: DEFAULT_STYLE_MEDIA,
     styleType: DEFAULT_STYLE_TYPE,
     rawContent: false,
@@ -1602,7 +1606,7 @@
           __publicField(this, "on_version_change", () => {
             if (this.last !== null) {
               this.last.version = this.version;
-              this.last.replacements = TextReplacements.extractReplacementsFromRule(this.last);
+              this.last.replacements = extractReplacementsFromRule(this.last);
             }
             if (window.Wuse.DEBUG && __privateGet(this.owner, _identified))
               debug(this.owner, `rules list version change: ${this.version}`);
@@ -1622,7 +1626,7 @@
             var _a3;
             if (this.last !== null) {
               this.last.version = this.version;
-              this.last.replacements = TextReplacements.extractReplacementsFromChild(this.last);
+              this.last.replacements = extractReplacementsFromChild(this.last);
             }
             if (!__privateGet(this.owner, _slotted))
               __privateSet(_a3 = this.owner, _slotted, __privateGet(_a3, _slotted) | this.some((child) => child.kind === SLOTS_KIND3));
@@ -1640,6 +1644,15 @@
       __privateAdd(this, _fields, new class extends PartsHolder {
         constructor() {
           super(...arguments);
+          __publicField(this, "establish", (name, value) => {
+            if (this.prepare()) {
+              const idx = super.getIndexOf("name", name);
+              idx > -1 ? this[idx].value = value : this.append({ name, value });
+              return true;
+            }
+            return false;
+          });
+          __publicField(this, "snapshot", () => buildArray4((instance) => this.persist().forEach((item) => instance.push({ name: item.name, value: item.value }))));
           __publicField(this, "getIndexOf", (value) => super.getIndexOf("name", value));
           __publicField(this, "on_version_change", () => {
             if (window.Wuse.DEBUG && __privateGet(this.owner, _identified))
@@ -1652,14 +1665,6 @@
           });
           __publicField(this, "on_snapshot_part", (part) => part.value = this.owner[part.name]);
           __publicField(this, "on_recall_part", (part) => this.owner[part.name] = part.value);
-        }
-        establish(name, value) {
-          if (this.prepare()) {
-            const idx = super.getIndexOf("name", value);
-            idx > -1 ? this[idx].value = value : this.append({ name, value });
-            return true;
-          }
-          return false;
         }
       }(this));
       __privateAdd(this, _options, makeUserOptions());
@@ -1697,6 +1702,7 @@
           __privateGet(this, _children).restore(this, data.children);
           __privateGet(this, _rules).restore(this, data.rules);
           __privateGet(this, _fields).restore(this, data.fields);
+          this.parameters = data.parameters;
         }
       });
       __privateAdd(this, _stateWriter, () => {
@@ -1707,7 +1713,8 @@
           rules: __privateGet(this, _rules).persist(),
           fields: __privateGet(this, _fields).persist(),
           slotted: __privateGet(this, _slotted),
-          identified: __privateGet(this, _identified)
+          identified: __privateGet(this, _identified),
+          parameters: __privateGet(this, _parameters)
         };
       });
       __privateAdd(this, _stateManager, new class extends StateManager {
@@ -1717,7 +1724,7 @@
         on_invalid_key() {
           RuntimeErrors3.onInvalidKey();
         }
-      }(ElementParts.newState, __privateGet(this, _stateReader), __privateGet(this, _stateWriter), window.Wuse.elementsStorage));
+      }(newState, __privateGet(this, _stateReader), __privateGet(this, _stateWriter), window.Wuse.elementsStorage));
       __privateAdd(this, _binding, {
         binder: (id) => isNonEmptyString6(id) && (this[id] = __privateMethod(this, _getElementByIdFromRoot, getElementByIdFromRoot_fn).call(this, id)),
         unbinder: (id) => delete this[id],
@@ -1751,19 +1758,19 @@
           replacer: (str, rep) => str.replace(rep.find, this[rep.field] !== void 0 ? this[rep.field] : EMPTY_STRING2),
           rule: (rule) => {
             const cts = __privateGet(this, _contents);
-            return cts.style.append(rule.cache ? rule.cache : rule.cache = RenderingRoutines.renderRule(cts.renderizers.replacer, rule));
+            return cts.style.append(rule.cache ? rule.cache : rule.cache = renderRule(cts.renderizers.replacer, rule));
           },
           children: {
             mixed: (child) => child.kind === SLOTS_KIND3 ? __privateGet(this, _contents).renderizers.children.slot(child) : __privateGet(this, _contents).renderizers.children.normal(child),
             slot: (child) => {
               if (!child.cache) {
                 const cts = __privateGet(this, _contents);
-                return cts.root.append(child.cache = RenderingRoutines.renderChild(cts.renderizers.replacer, child), cts.root.verify());
+                return cts.root.append(child.cache = renderChild(cts.renderizers.replacer, child), cts.root.verify());
               }
             },
             normal: (child) => {
               const cts = __privateGet(this, _contents);
-              cts.main.append(child.cache ? child.cache : child.cache = RenderingRoutines.renderChild(cts.renderizers.replacer, child));
+              cts.main.append(child.cache ? child.cache : child.cache = renderChild(cts.renderizers.replacer, child));
               if (!!child.rules.length)
                 child.rules.forEach(cts.renderizers.rule);
             }
@@ -1777,7 +1784,7 @@
         unmodifiedRounds: 0,
         updatedRounds: 0
       });
-      __privateSet(this, _root, mode === ElementModes.REGULAR ? this : this.shadowRoot || this.attachShadow({ mode }));
+      __privateSet(this, _root, mode === REGULAR ? this : this.shadowRoot || this.attachShadow({ mode }));
       const evs = __privateGet(this, _elementEvents);
       evs.detect();
       evs.immediateTrigger("on_create");
@@ -1965,8 +1972,8 @@
       if (nesting)
         return this.appendCSSNestedRule(selector, properties, nesting);
       const sliced = __privateGet(this, _rules).slice(-1);
-      const rule = ElementParts.newRule(selector, properties);
-      if (!sliced.length || !ElementParts.tryToJoinRules(sliced[0], rule)) {
+      const rule = newRule(selector, properties);
+      if (!sliced.length || !tryToJoinRules(sliced[0], rule)) {
         __privateGet(this, _rules).append(rule);
       }
       return this;
@@ -1975,24 +1982,24 @@
       if (nesting)
         return this.prependCSSNestedRule(selector, properties, nesting);
       const sliced = __privateGet(this, _rules).slice(0, 1);
-      const rule = ElementParts.newRule(selector, properties);
-      if (!sliced.length || !ElementParts.tryToJoinRules(sliced[0], rule)) {
+      const rule = newRule(selector, properties);
+      if (!sliced.length || !tryToJoinRules(sliced[0], rule)) {
         __privateGet(this, _rules).prepend(rule);
       }
       return this;
     }
     appendCSSNestedRule(selector, subselector, properties) {
       const sliced = __privateGet(this, _rules).slice(-1);
-      const rule = ElementParts.newNestedRule(selector, subselector, properties);
-      if (!sliced.length || !ElementParts.tryToJoinNestedRules(sliced[0], rule)) {
+      const rule = newNestedRule(selector, subselector, properties);
+      if (!sliced.length || !tryToJoinNestedRules(sliced[0], rule)) {
         __privateGet(this, _rules).append(rule);
       }
       return this;
     }
     prependCSSNestedRule(selector, subselector, properties) {
       const sliced = __privateGet(this, _rules).slice(0, 1);
-      const rule = ElementParts.newNestedRule(selector, subselector, properties);
-      if (!sliced.length || !ElementParts.tryToJoinNestedRules(sliced[0], rule)) {
+      const rule = newNestedRule(selector, subselector, properties);
+      if (!sliced.length || !tryToJoinNestedRules(sliced[0], rule)) {
         __privateGet(this, _rules).prepend(rule);
       }
       return this;
@@ -2001,7 +2008,7 @@
       return __privateGet(this, _rules).getIndexOf(selector) > -1;
     }
     replaceCSSRuleBySelector(selector, properties) {
-      __privateGet(this, _rules).replace(__privateGet(this, _rules).getIndexOf(selector), ElementParts.newRule(selector, properties));
+      __privateGet(this, _rules).replace(__privateGet(this, _rules).getIndexOf(selector), newRule(selector, properties));
       return this;
     }
     removeCSSRuleBySelector(selector) {
@@ -2061,22 +2068,22 @@
     }
     includeChildElementById(id) {
       if (!!__privateGet(this, _children).length)
-        __privateGet(this, _children).forEach((child) => child.id === id && RenderingRoutines.renderingIncluder(child));
+        __privateGet(this, _children).forEach((child) => child.id === id && renderingIncluder(child));
       return this;
     }
     excludeChildElementById(id) {
       if (!!__privateGet(this, _children).length)
-        __privateGet(this, _children).forEach((child) => child.id === id && RenderingRoutines.renderingExcluder(child));
+        __privateGet(this, _children).forEach((child) => child.id === id && renderingExcluder(child));
       return this;
     }
     invalidateChildElementsById(ids) {
       if (!!__privateGet(this, _children).length)
-        __privateGet(this, _children).forEach((child) => ids.indexOf(child.id) > -1 && RenderingRoutines.cacheInvalidator(child));
+        __privateGet(this, _children).forEach((child) => ids.indexOf(child.id) > -1 && cacheInvalidator(child));
       return this;
     }
     invalidateChildElements(childs) {
       if (isAssignedArray5(childs))
-        childs.forEach(RenderingRoutines.cacheInvalidator);
+        childs.forEach(cacheInvalidator);
       return this;
     }
     lockInstanceFields() {
@@ -2103,10 +2110,10 @@
       return this;
     }
     makeExternalReactiveField(mirror, name, value, handler, initial = true) {
-      return __privateMethod(this, _validateField, validateField_fn).call(this, name) ? this.makeReactiveField(name, mirror[name] || value, (actions) => {
+      return this.makeReactiveField(name, mirror[name] || value, (actions) => {
         mirror[name] = this[name];
         handler(actions);
-      }, initial) : this;
+      }, initial);
     }
     hasField(name) {
       return __privateGet(this, _fields).getIndexOf(name) > -1;
@@ -2135,6 +2142,9 @@
         __privateGet(this, _stateManager).writeState();
       }
       return this;
+    }
+    snapshotInstanceFields() {
+      return __privateGet(this, _fields).snapshot();
     }
     suspendRender() {
       __privateSet(this, _rendering, false);
@@ -2170,11 +2180,11 @@
       }
     }
     static register() {
-      return Wuse.register(this);
+      return window.Wuse.register(this);
     }
     static create(parameters, at = "body") {
       const target = at instanceof window.HTMLElement ? { node: at } : typeof at === "string" ? { selector: at } : at;
-      return Wuse.create({ element: { type: this }, target, instance: { parameters } });
+      return window.Wuse.create({ element: { type: this }, target, instance: { parameters } });
     }
   };
   var BaseElement = _BaseElement;
@@ -2206,12 +2216,12 @@
   _measurement = new WeakMap();
   _insertStyle = new WeakSet();
   insertStyle_fn = function() {
-    if (__privateSet(this, _styled, __privateSet(this, _style, !__privateGet(this, _rules).length ? null : new NodeManager(__privateGet(this, _root), ElementParts.makeStyleNode(__privateGet(this, _options).styleMedia, __privateGet(this, _options).styleType)))))
+    if (__privateSet(this, _styled, __privateSet(this, _style, !__privateGet(this, _rules).length ? null : new NodeManager(__privateGet(this, _root), makeStyleNode(__privateGet(this, _options).styleMedia, __privateGet(this, _options).styleType)))))
       __privateGet(this, _style).affiliate();
   };
   _insertMain = new WeakSet();
   insertMain_fn = function() {
-    __privateSet(this, _main, new NodeManager(__privateGet(this, _root), ElementParts.makeMainNode(__privateGet(this, _options).mainDefinition))).affiliate();
+    __privateSet(this, _main, new NodeManager(__privateGet(this, _root), makeMainNode(__privateGet(this, _options).mainDefinition))).affiliate();
   };
   _extirpateElements = new WeakSet();
   extirpateElements_fn = function() {
@@ -2246,9 +2256,9 @@
   _clearContents = new WeakSet();
   clearContents_fn = function() {
     if (!!__privateGet(this, _children).length)
-      __privateGet(this, _children).forEach(RenderingRoutines.cacheInvalidator);
+      __privateGet(this, _children).forEach(cacheInvalidator);
     if (!!__privateGet(this, _rules).length)
-      __privateGet(this, _rules).forEach(RenderingRoutines.cacheInvalidator);
+      __privateGet(this, _rules).forEach(cacheInvalidator);
   };
   _prepareContents = new WeakSet();
   prepareContents_fn = function() {
@@ -2333,15 +2343,18 @@
   _fieldRender = new WeakSet();
   fieldRender_fn = function(name, label = "$none") {
     if (__privateGet(this, _binded)) {
-      const rulesHits = TextReplacements.scanRulesForReplacements(__privateGet(this, _rules), name);
-      rulesHits.forEach(RenderingRoutines.cacheInvalidator);
-      const childrenHits = TextReplacements.scanChildrenForReplacements(__privateGet(this, _children), name);
-      childrenHits.forEach(RenderingRoutines.cacheInvalidator);
+      let hittedRules, hittedChildren;
+      const rulesHits = scanRulesForReplacements(__privateGet(this, _rules), name);
+      if (hittedRules = !!rulesHits.length)
+        rulesHits.forEach(cacheInvalidator);
+      const childrenHits = scanChildrenForReplacements(__privateGet(this, _children), name);
+      if (hittedChildren = !!childrenHits.length)
+        childrenHits.forEach(cacheInvalidator);
       if (window.Wuse.DEBUG && __privateGet(this, _identified))
         debug(this, `reactive render (label: ${label}, field: ${name}, children: ${childrenHits.length}, rules: ${rulesHits.length})`);
-      if (!!rulesHits.length || !!childrenHits.length) {
+      if (hittedChildren || hittedRules) {
         if (childrenHits.some((x) => !!x.kind.length)) {
-          __privateGet(this, _children).forEach(RenderingRoutines.slotsInvalidator);
+          __privateGet(this, _children).forEach(slotsInvalidator);
         }
         this.render();
       }
@@ -2377,7 +2390,7 @@
   __publicField(BaseElement, "instancesCount", 0);
 
   // src/wuse.initialization-routines.js
-  var defineReadOnlyMembers = (instance, items) => window.Object.getOwnPropertyNames(items).forEach((name) => Object.defineProperty(instance, name, {
+  var defineReadOnlyMembers = (instance, items) => window.Object.getOwnPropertyNames(items).forEach((name) => window.Object.defineProperty(instance, name, {
     value: items[name],
     writable: false,
     configurable: false,
@@ -2584,7 +2597,7 @@
   };
 
   // package.json
-  var version = "0.7.4";
+  var version = "0.7.5";
 
   // src/wuse.js
   var _a2;

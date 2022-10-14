@@ -1,12 +1,12 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
-import WuseRuntimeErrors from './wuse.runtime-errors.js';
-import WuseTemplateImporter from './wuse.template-importer.js';
-import WuseElementClasses from './wuse.element-classes.js';
-import WuseBaseElement from './wuse.base-element.js';
+import RuntimeErrors from './wuse.runtime-errors.js';
+import TemplateImporter from './wuse.template-importer.js';
+import ElementClasses from './wuse.element-classes.js';
+import BaseElement from './wuse.base-element.js';
 
 const defineReadOnlyMembers = (instance, items) => window.Object.getOwnPropertyNames(items).forEach(
-  name => Object.defineProperty(instance, name, {
+  name => window.Object.defineProperty(instance, name, {
     value: items[name], writable: false, configurable: false, enumerable: false
   })
 );
@@ -14,13 +14,13 @@ const defineReadOnlyMembers = (instance, items) => window.Object.getOwnPropertyN
 export default class InitializationRoutines {
 
   static detectFeatures(instance) {
-    const detectFeature = (flag, msg) => !flag && WuseRuntimeErrors.UNSUPPORTED_FEATURE.emit(msg);
+    const detectFeature = (flag, msg) => !flag && RuntimeErrors.UNSUPPORTED_FEATURE.emit(msg);
     try {
       detectFeature(instance.JsHelpers.isOf(window.document, window.HTMLDocument), "HTML Document");
       detectFeature(instance.JsHelpers.isOf(window.customElements, window.CustomElementRegistry), "Custom Elements");
       instance.WebHelpers.onDOMContentLoaded(() => detectFeature(instance.JsHelpers.isOf(window.document.body.attachShadow, window.Function), "Shadow DOM"));
     } catch (e) {
-      WuseRuntimeErrors.UNKNOWN_ERROR.emit();
+      RuntimeErrors.UNKNOWN_ERROR.emit();
     }
   }
 
@@ -37,32 +37,32 @@ export default class InitializationRoutines {
           break;
       }
     }))));
-    WuseTemplateImporter.initialize({
-      onExtinctTemplate: WuseRuntimeErrors.EXTINCT_TEMPLATE.emit,
-      onInvalidTemplate: WuseRuntimeErrors.INVALID_TEMPLATE.emit
+    TemplateImporter.initialize({
+      onExtinctTemplate: RuntimeErrors.EXTINCT_TEMPLATE.emit,
+      onInvalidTemplate: RuntimeErrors.INVALID_TEMPLATE.emit
     });
-    WuseElementClasses.initialize({
-      onBadTarget: WuseRuntimeErrors.BAD_TARGET.emit,
-      onMisnamedClass: WuseRuntimeErrors.MISNAMED_CLASS.emit,
-      onUnregistrableClass: WuseRuntimeErrors.UNREGISTRABLE_CLASS.emit,
-      onUnregisteredClass: WuseRuntimeErrors.UNREGISTERED_CLASS.emit,
-      onAlreadyRegistered: WuseRuntimeErrors.ALREADY_REGISTERED.emit,
-      onInvalidClass: WuseRuntimeErrors.INVALID_CLASS.emit,
+    ElementClasses.initialize({
+      onBadTarget: RuntimeErrors.BAD_TARGET.emit,
+      onMisnamedClass: RuntimeErrors.MISNAMED_CLASS.emit,
+      onUnregistrableClass: RuntimeErrors.UNREGISTRABLE_CLASS.emit,
+      onUnregisteredClass: RuntimeErrors.UNREGISTERED_CLASS.emit,
+      onAlreadyRegistered: RuntimeErrors.ALREADY_REGISTERED.emit,
+      onInvalidClass: RuntimeErrors.INVALID_CLASS.emit,
       onDeferredInstantiation: instance.WebHelpers.onDOMContentLoaded
     });
-    WuseBaseElement.initialize({
-      onAllowHTML: WuseRuntimeErrors.ALLOW_HTML.emit,
-      onInvalidKey: WuseRuntimeErrors.INVALID_KEY.emit,
-      onInvalidDefinition: WuseRuntimeErrors.INVALID_DEFINITION.emit,
-      onLockedDefinition: WuseRuntimeErrors.LOCKED_DEFINITION.emit,
-      onInexistentTemplate: WuseRuntimeErrors.INEXISTENT_TEMPLATE.emit,
-      onUnespecifiedSlot: WuseRuntimeErrors.UNESPECIFIED_SLOT.emit,
-      onUnknownTag: WuseRuntimeErrors.UNKNOWN_TAG.emit,
-      onInvalidId: WuseRuntimeErrors.INVALID_ID.emit,
-      onTakenId: WuseRuntimeErrors.TAKEN_ID.emit,
-      onMisnamedField: WuseRuntimeErrors.MISNAMED_FIELD.emit,
-      onInvalidState: WuseRuntimeErrors.INVALID_STATE.emit,
-      onFetchTemplate: WuseTemplateImporter.fetch
+    BaseElement.initialize({
+      onAllowHTML: RuntimeErrors.ALLOW_HTML.emit,
+      onInvalidKey: RuntimeErrors.INVALID_KEY.emit,
+      onInvalidDefinition: RuntimeErrors.INVALID_DEFINITION.emit,
+      onLockedDefinition: RuntimeErrors.LOCKED_DEFINITION.emit,
+      onInexistentTemplate: RuntimeErrors.INEXISTENT_TEMPLATE.emit,
+      onUnespecifiedSlot: RuntimeErrors.UNESPECIFIED_SLOT.emit,
+      onUnknownTag: RuntimeErrors.UNKNOWN_TAG.emit,
+      onInvalidId: RuntimeErrors.INVALID_ID.emit,
+      onTakenId: RuntimeErrors.TAKEN_ID.emit,
+      onMisnamedField: RuntimeErrors.MISNAMED_FIELD.emit,
+      onInvalidState: RuntimeErrors.INVALID_STATE.emit,
+      onFetchTemplate: TemplateImporter.fetch
     });
   }
 

@@ -1,23 +1,27 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
 import JsHelpers from './wuse.javascript-helpers.js';
-const { EMPTY_STRING, noop, ensureFunction, isOf, isAssignedObject, isAssignedArray, isNonEmptyArray, isNonEmptyString, forcedStringSplit, forEachOwnProperty } = JsHelpers;
+const { EMPTY_STRING, noop, ensureFunction, isOf, isAssignedObject, isAssignedArray, isNonEmptyArray, isNonEmptyString, forcedStringSplit, forEachOwnProperty, buildArray } = JsHelpers;
 import WebHelpers from './wuse.web-helpers.js';
 const { removeChildren, isHTMLAttribute } = WebHelpers;
 import StringConstants from './wuse.string-constants.js';
 const { WUSEKEY_ATTRIBUTE, DEFAULT_STYLE_TYPE, DEFAULT_STYLE_MEDIA, DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE, SLOTS_KIND } = StringConstants;
 import ReactiveField from './wuse.reactive-field.js';
 const { createReactiveField } = ReactiveField;
-import WuseTextReplacements from './wuse.text-replacements.js';
-import WuseRenderingRoutines from './wuse.rendering-routines.js';
-import WuseEqualityAnalyzer from './wuse.equality-analyzer.js';
-import WuseStateManager from './wuse.state-manager.js';
-import WuseNodeManager from './wuse.node-manager.js';
-import WuseContentManager from './wuse.content-manager.js';
-import WusePartsHolder from './wuse.parts-holder.js';
+import ElementModes from './wuse.element-modes.js';
+const { REGULAR } = ElementModes;
+import ElementEvents from './wuse.element-events.js';
 import WuseElementParts from './wuse.element-parts.js';
-import WuseElementModes from './wuse.element-modes.js';
-import WuseElementEvents from './wuse.element-events.js';
+const { newDefinition, newState, makeMainNode, makeStyleNode, performValidations, newChild, newRule, newNestedRule, tryToJoinRules, tryToJoinNestedRules } = WuseElementParts;
+import WuseTextReplacements from './wuse.text-replacements.js';
+const { extractReplacementsFromChild, extractReplacementsFromRule, scanChildrenForReplacements, scanRulesForReplacements } = WuseTextReplacements;
+import WuseRenderingRoutines from './wuse.rendering-routines.js';
+const { renderChild, renderRule, renderingIncluder, renderingExcluder, cacheInvalidator, slotsInvalidator } = WuseRenderingRoutines;
+import WuseStateManager from './wuse.state-manager.js';
+import NodeManager from './wuse.node-manager.js';
+import ContentManager from './wuse.content-manager.js';
+import PartsHolder from './wuse.parts-holder.js';
+import EqualityAnalyzer from './wuse.equality-analyzer.js';
 
 let RuntimeErrors = {
   onInvalidState: noop,
@@ -31,12 +35,12 @@ let RuntimeErrors = {
 
 const debug = (wel, msg) => window.Wuse.debug(`#${wel.id} (${wel.info.instanceNumber}) | ${(typeof msg === "string" ? msg : JSON.stringify(msg))}`);
 
-const parseElement = (shorthandNotation, rules) => WuseElementParts.performValidations(WuseElementParts.newChild(shorthandNotation, rules));
+const parseElement = (shorthandNotation, rules) => performValidations(newChild(shorthandNotation, rules));
 
 const isInvalidFieldName = name => typeof name !== "string" || !name.trim().length || name.startsWith("data") || isHTMLAttribute(name);
 
 const makeUserOptions = () => ({
-  mainDefinition: WuseElementParts.newDefinition(),
+  mainDefinition: newDefinition(),
   styleMedia: DEFAULT_STYLE_MEDIA,
   styleType: DEFAULT_STYLE_TYPE,
   rawContent: false, // when on, allows the inclusion of raw html content
@@ -54,8 +58,8 @@ const makePerformanceWatches = () => ({
 });
 
 const makeWasteAnalyzers = () => ({
-  main: new WuseEqualityAnalyzer(window.Wuse.hashRoutine),
-  style: new WuseEqualityAnalyzer(window.Wuse.hashRoutine)
+  main: new EqualityAnalyzer(window.Wuse.hashRoutine),
+  style: new EqualityAnalyzer(window.Wuse.hashRoutine)
 });
 
 export default class BaseElement extends window.HTMLElement {
@@ -66,12 +70,12 @@ export default class BaseElement extends window.HTMLElement {
 
   // CONTENT HOLDERS
   #html = new window.String(); // RAW HTML
-  #rules = new (class extends WusePartsHolder {
+  #rules = new (class extends PartsHolder {
     getIndexOf = value => super.getIndexOf("selector", value)
     on_version_change = () => {
       if (this.last !== null) {
         this.last.version = this.version;
-        this.last.replacements = WuseTextReplacements.extractReplacementsFromRule(this.last);
+        this.last.replacements = extractReplacementsFromRule(this.last);
       }
       if (window.Wuse.DEBUG && this.owner.#identified) debug(this.owner, `rules list version change: ${this.version}`);
     }
@@ -80,12 +84,12 @@ export default class BaseElement extends window.HTMLElement {
       RuntimeErrors.onLockedDefinition(this.owner.#options.mainDefinition.id);
     }
   })(this); // CSS RULES
-  #children = new (class extends WusePartsHolder {
+  #children = new (class extends PartsHolder {
     getIndexOf = value => super.getIndexOf("id", value)
     on_version_change = () => {
       if (this.last !== null) {
         this.last.version = this.version;
-        this.last.replacements = WuseTextReplacements.extractReplacementsFromChild(this.last);
+        this.last.replacements = extractReplacementsFromChild(this.last);
       }
       if (!this.owner.#slotted) this.owner.#slotted |= this.some(child => child.kind === SLOTS_KIND);
       if (window.Wuse.DEBUG && this.owner.#identified) debug(this.owner, `children list version change: ${this.version}`);
@@ -96,15 +100,18 @@ export default class BaseElement extends window.HTMLElement {
     }
     on_recall_part = part => this.owner.#filiatedKeys.tryToRemember(part);
   })(this); // HTML ELEMENTS
-  #fields = new (class extends WusePartsHolder {
-    establish(name, value) {
+  #fields = new (class extends PartsHolder {
+    establish = (name, value) => {
       if (this.prepare()) {
-        const idx = super.getIndexOf("name", value);
+        const idx = super.getIndexOf("name", name);
         idx > -1 ? this[idx].value = value : this.append({ name, value });
         return true;
       }
       return false;
     }
+    snapshot = () => buildArray(instance => this.persist().forEach(
+      item => instance.push({ name: item.name, value: item.value })
+    ))
     getIndexOf = value => super.getIndexOf("name", value)
     on_version_change = () => {
       if (window.Wuse.DEBUG && this.owner.#identified) debug(this.owner, `fields list version change: ${this.version}`);
@@ -120,7 +127,7 @@ export default class BaseElement extends window.HTMLElement {
   // USER CUSTOMIZATION
   #options = makeUserOptions();
   #parameters = undefined;
-  #elementEvents = new WuseElementEvents(this);
+  #elementEvents = new ElementEvents(this);
 
   // CONTENT FLAGS
   #initialized = false;
@@ -159,6 +166,7 @@ export default class BaseElement extends window.HTMLElement {
       this.#children.restore(this, data.children);
       this.#rules.restore(this, data.rules);
       this.#fields.restore(this, data.fields);
+      this.parameters = data.parameters;
     }
   };
   #stateWriter = () => {
@@ -169,7 +177,8 @@ export default class BaseElement extends window.HTMLElement {
       rules: this.#rules.persist(),
       fields: this.#fields.persist(),
       slotted: this.#slotted,
-      identified: this.#identified
+      identified: this.#identified,
+      parameters: this.#parameters
     };
   };
   #stateManager = new (class extends WuseStateManager {
@@ -179,7 +188,7 @@ export default class BaseElement extends window.HTMLElement {
     on_invalid_key() {
       RuntimeErrors.onInvalidKey();
     }
-  })(WuseElementParts.newState, this.#stateReader, this.#stateWriter, window.Wuse.elementsStorage);
+  })(newState, this.#stateReader, this.#stateWriter, window.Wuse.elementsStorage);
 
   // ELEMENTS BINDING
   #binding = {
@@ -212,15 +221,15 @@ export default class BaseElement extends window.HTMLElement {
 
   // RENDERING STATE
   #contents = {
-    root: new WuseContentManager(
+    root: new ContentManager(
       content => this.innerHTML = content, // slot change promoter
       content => true
     ),
-    style: new WuseContentManager(
+    style: new ContentManager(
       content => this.#style && this.#style.promote(content), // rule change promoter
       content => !this.#waste.style.compute(content)
     ),
-    main: new WuseContentManager(
+    main: new ContentManager(
       content => this.#main.promote(content), // child change promoter
       content => !this.#waste.main.compute(content)
     ),
@@ -228,19 +237,19 @@ export default class BaseElement extends window.HTMLElement {
       replacer: (str, rep) => str.replace(rep.find, this[rep.field] !== undefined ? this[rep.field] : EMPTY_STRING),
       rule: rule => {
         const cts = this.#contents;
-        return cts.style.append(rule.cache ? rule.cache : rule.cache = WuseRenderingRoutines.renderRule(cts.renderizers.replacer, rule));
+        return cts.style.append(rule.cache ? rule.cache : rule.cache = renderRule(cts.renderizers.replacer, rule));
       },
       children: {
         mixed: child => child.kind === SLOTS_KIND ? this.#contents.renderizers.children.slot(child) : this.#contents.renderizers.children.normal(child),
         slot: child => {
           if (!child.cache) {
             const cts = this.#contents;
-            return cts.root.append(child.cache = WuseRenderingRoutines.renderChild(cts.renderizers.replacer, child), cts.root.verify());
+            return cts.root.append(child.cache = renderChild(cts.renderizers.replacer, child), cts.root.verify());
           }
         },
         normal: child => {
           const cts = this.#contents;
-          cts.main.append(child.cache ? child.cache : child.cache = WuseRenderingRoutines.renderChild(cts.renderizers.replacer, child));
+          cts.main.append(child.cache ? child.cache : child.cache = renderChild(cts.renderizers.replacer, child));
           if (!!child.rules.length) child.rules.forEach(cts.renderizers.rule);
         }
       }
@@ -257,14 +266,14 @@ export default class BaseElement extends window.HTMLElement {
 
   // DOM ROUTINES
   #insertStyle() {
-    if (this.#styled = (this.#style = !this.#rules.length ? null : new WuseNodeManager(
-      this.#root, WuseElementParts.makeStyleNode(this.#options.styleMedia, this.#options.styleType)
+    if (this.#styled = (this.#style = !this.#rules.length ? null : new NodeManager(
+      this.#root, makeStyleNode(this.#options.styleMedia, this.#options.styleType)
     ))) this.#style.affiliate();
   }
 
   #insertMain() {
-    (this.#main = new WuseNodeManager(
-      this.#root, WuseElementParts.makeMainNode(this.#options.mainDefinition)
+    (this.#main = new NodeManager(
+      this.#root, makeMainNode(this.#options.mainDefinition)
     )).affiliate();
   }
 
@@ -294,8 +303,8 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   #clearContents() {
-    if (!!this.#children.length) this.#children.forEach(WuseRenderingRoutines.cacheInvalidator);
-    if (!!this.#rules.length) this.#rules.forEach(WuseRenderingRoutines.cacheInvalidator);
+    if (!!this.#children.length) this.#children.forEach(cacheInvalidator);
+    if (!!this.#rules.length) this.#rules.forEach(cacheInvalidator);
   }
 
   #prepareContents() {
@@ -375,16 +384,17 @@ export default class BaseElement extends window.HTMLElement {
   // PARTS ROUTINES
   #fieldRender(name, label = "$none") {
     if (this.#binded) {
-      const rulesHits = WuseTextReplacements.scanRulesForReplacements(this.#rules, name);
-      rulesHits.forEach(WuseRenderingRoutines.cacheInvalidator);
-      const childrenHits = WuseTextReplacements.scanChildrenForReplacements(this.#children, name);
-      childrenHits.forEach(WuseRenderingRoutines.cacheInvalidator);
+      let hittedRules, hittedChildren;
+      const rulesHits = scanRulesForReplacements(this.#rules, name);
+      if (hittedRules = !!rulesHits.length) rulesHits.forEach(cacheInvalidator);
+      const childrenHits = scanChildrenForReplacements(this.#children, name);
+      if (hittedChildren = !!childrenHits.length) childrenHits.forEach(cacheInvalidator);
       if (window.Wuse.DEBUG && this.#identified) debug(this, `reactive render (label: ${label}, field: ${name}, children: ${childrenHits.length}, rules: ${rulesHits.length})`);
-      if (!!rulesHits.length || !!childrenHits.length) {
+      if (hittedChildren || hittedRules) {
         if (childrenHits.some(x => !!x.kind.length)) {
           // NOTE: when a slot gets invalidated the replaceChild will drop all other slots,
           // so to avoid a full redraw, all other slots are required to be invalidated too.
-          this.#children.forEach(WuseRenderingRoutines.slotsInvalidator);
+          this.#children.forEach(slotsInvalidator);
         }
         this.render();
       }
@@ -428,7 +438,7 @@ export default class BaseElement extends window.HTMLElement {
 
   constructor(mode) {
     super();
-    this.#root = mode === WuseElementModes.REGULAR ? this : this.shadowRoot || this.attachShadow({ mode });
+    this.#root = mode === REGULAR ? this : this.shadowRoot || this.attachShadow({ mode });
     const evs = this.#elementEvents;
     evs.detect();
     evs.immediateTrigger("on_create");
@@ -636,8 +646,8 @@ export default class BaseElement extends window.HTMLElement {
   appendCSSRule(selector, properties, nesting) {
     if (nesting) return this.appendCSSNestedRule(selector, properties, nesting);
     const sliced = this.#rules.slice(-1);
-    const rule = WuseElementParts.newRule(selector, properties);
-    if (!sliced.length || !WuseElementParts.tryToJoinRules(sliced[0], rule)) {
+    const rule = newRule(selector, properties);
+    if (!sliced.length || !tryToJoinRules(sliced[0], rule)) {
       this.#rules.append(rule);
     }
     return this;
@@ -646,8 +656,8 @@ export default class BaseElement extends window.HTMLElement {
   prependCSSRule(selector, properties, nesting) {
     if (nesting) return this.prependCSSNestedRule(selector, properties, nesting);
     const sliced = this.#rules.slice(0, 1);
-    const rule = WuseElementParts.newRule(selector, properties);
-    if (!sliced.length || !WuseElementParts.tryToJoinRules(sliced[0], rule)) {
+    const rule = newRule(selector, properties);
+    if (!sliced.length || !tryToJoinRules(sliced[0], rule)) {
       this.#rules.prepend(rule);
     }
     return this;
@@ -655,8 +665,8 @@ export default class BaseElement extends window.HTMLElement {
 
   appendCSSNestedRule(selector, subselector, properties) {
     const sliced = this.#rules.slice(-1);
-    const rule = WuseElementParts.newNestedRule(selector, subselector, properties);
-    if (!sliced.length || !WuseElementParts.tryToJoinNestedRules(sliced[0], rule)) {
+    const rule = newNestedRule(selector, subselector, properties);
+    if (!sliced.length || !tryToJoinNestedRules(sliced[0], rule)) {
       this.#rules.append(rule);
     }
     return this;
@@ -664,8 +674,8 @@ export default class BaseElement extends window.HTMLElement {
 
   prependCSSNestedRule(selector, subselector, properties) {
     const sliced = this.#rules.slice(0, 1);
-    const rule = WuseElementParts.newNestedRule(selector, subselector, properties);
-    if (!sliced.length || !WuseElementParts.tryToJoinNestedRules(sliced[0], rule)) {
+    const rule = newNestedRule(selector, subselector, properties);
+    if (!sliced.length || !tryToJoinNestedRules(sliced[0], rule)) {
       this.#rules.prepend(rule);
     }
     return this;
@@ -676,7 +686,7 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   replaceCSSRuleBySelector(selector, properties) {
-    this.#rules.replace(this.#rules.getIndexOf(selector), WuseElementParts.newRule(selector, properties));
+    this.#rules.replace(this.#rules.getIndexOf(selector), newRule(selector, properties));
     return this;
   }
 
@@ -749,22 +759,22 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   includeChildElementById(id) {
-    if (!!this.#children.length) this.#children.forEach(child => (child.id === id) && WuseRenderingRoutines.renderingIncluder(child));
+    if (!!this.#children.length) this.#children.forEach(child => (child.id === id) && renderingIncluder(child));
     return this;
   }
 
   excludeChildElementById(id) {
-    if (!!this.#children.length) this.#children.forEach(child => (child.id === id) && WuseRenderingRoutines.renderingExcluder(child));
+    if (!!this.#children.length) this.#children.forEach(child => (child.id === id) && renderingExcluder(child));
     return this;
   }
 
   invalidateChildElementsById(ids) {
-    if (!!this.#children.length) this.#children.forEach(child => (ids.indexOf(child.id) > -1) && WuseRenderingRoutines.cacheInvalidator(child));
+    if (!!this.#children.length) this.#children.forEach(child => (ids.indexOf(child.id) > -1) && cacheInvalidator(child));
     return this;
   }
 
   invalidateChildElements(childs) {
-    if (isAssignedArray(childs)) childs.forEach(WuseRenderingRoutines.cacheInvalidator);
+    if (isAssignedArray(childs)) childs.forEach(cacheInvalidator);
     return this;
   }
 
@@ -797,9 +807,7 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   makeExternalReactiveField(mirror, name, value, handler, initial = true) {
-    return this.#validateField(name) ? this.makeReactiveField(
-      name, mirror[name] || value, actions => { mirror[name] = this[name]; handler(actions) }, initial
-    ) : this;
+    return this.makeReactiveField(name, mirror[name] || value, actions => { mirror[name] = this[name]; handler(actions) }, initial);
   }
 
   hasField(name) {
@@ -830,6 +838,10 @@ export default class BaseElement extends window.HTMLElement {
       this.#stateManager.writeState();
     }
     return this;
+  }
+
+  snapshotInstanceFields() {
+    return this.#fields.snapshot();
   }
 
   suspendRender() {
@@ -873,12 +885,12 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   static register() {
-    return Wuse.register(this);
+    return window.Wuse.register(this);
   }
 
   static create(parameters, at = "body") {
     const target = at instanceof window.HTMLElement ? { node: at } : (typeof at === "string" ? { selector: at } : at);
-    return Wuse.create({ element: { type: this }, target, instance: { parameters } });
+    return window.Wuse.create({ element: { type: this }, target, instance: { parameters } });
   }
 
 }
