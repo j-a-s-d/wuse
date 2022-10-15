@@ -39,6 +39,10 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.7.6] 2022-oct-15
+  - renamed all the es6 modules to the .mjs file extension
+  - splitted demos at directory examples into simple-samples and third-party subdirectories
+  - added `Siimple_SignIn_Sample` example
 * [0.7.5] 2022-oct-14
   - added `snapshotInstanceFields` to the `BaseElement` class
   - added `Canvas_Text_Wrapper` example

@@ -1,6 +1,6 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
-import StringConstants from './wuse.string-constants.js';
+import StringConstants from './wuse.string-constants.mjs';
 const { WUSENODE_ATTRIBUTE } = StringConstants;
 
 export default class NodeManager {

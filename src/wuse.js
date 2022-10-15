@@ -1,15 +1,16 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
-import WuseInitializationRoutines from './wuse.initialization-routines.js';
-import WuseJsHelpers from './wuse.javascript-helpers.js';
+import WuseInitializationRoutines from './wuse.initialization-routines.mjs';
+import WuseWebHelpers from './wuse.web-helpers.mjs';
+import WuseJsHelpers from './wuse.javascript-helpers.mjs';
 const { noop, isOf } = WuseJsHelpers;
-import WuseWebHelpers from './wuse.web-helpers.js';
-import WusePerformanceMeasurement from './wuse.performance-measurement.js';
-import WuseSimpleStorage from './wuse.simple-storage.js';
-import WuseElementClasses from './wuse.element-classes.js';
-import WuseElementModes from './wuse.element-modes.js';
-import WuseBaseElement from './wuse.base-element.js';
-import WuseStringHashing from './wuse.string-hashing.js';
+import WuseElementModes from './wuse.element-modes.mjs';
+const { specializeClass, REGULAR, OPEN, CLOSED } = WuseElementModes;
+import WuseElementClasses from './wuse.element-classes.mjs';
+import WusePerformanceMeasurement from './wuse.performance-measurement.mjs';
+import WuseSimpleStorage from './wuse.simple-storage.mjs';
+import WuseStringHashing from './wuse.string-hashing.mjs';
+import WuseBaseElement from './wuse.base-element.mjs';
 import { version } from '../package.json';
 
 window.Wuse = window.Wuse || class {
@@ -73,9 +74,9 @@ window.Wuse = window.Wuse || class {
         WebHelpers: WuseWebHelpers,
         JsHelpers: WuseJsHelpers,
         PerformanceMeasurement: WusePerformanceMeasurement,
-        NonShadowElement: WuseElementModes.specializeClass(WuseBaseElement, WuseElementModes.REGULAR),
-        OpenShadowElement: WuseElementModes.specializeClass(WuseBaseElement, WuseElementModes.OPEN),
-        ClosedShadowElement: WuseElementModes.specializeClass(WuseBaseElement, WuseElementModes.CLOSED)
+        NonShadowElement: specializeClass(WuseBaseElement, REGULAR),
+        OpenShadowElement: specializeClass(WuseBaseElement, OPEN),
+        ClosedShadowElement: specializeClass(WuseBaseElement, CLOSED)
       },
       methods: {
         debug: msg => window.console.log("[WUSE:DEBUG]", msg),

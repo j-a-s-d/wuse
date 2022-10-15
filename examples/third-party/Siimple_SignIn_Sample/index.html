@@ -1,0 +1,76 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" text="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/siimple/siimple.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/siimple-icons/siimple-icons.css" />
+  <title>Wuse | Siimple SignIn Sample</title>
+  <script src="../../dist/wuse.min.js"></script>
+</head>
+<body class="has-bg-light">
+  <p>This is a port of the <a href="https://siimple.xyz/examples/sign-in.html" target="_blank">Siimple 4.3.1 Sign In example</a>.</p>
+  <hr/>
+  <script>
+    class Siimple_SignIn_Sample extends Wuse.NonShadowElement {
+
+      static {
+        Wuse.register([this, class Siimple_SignIn_Email extends Wuse.NonShadowElement {
+          on_create() {
+            this
+              .setMainElement("div.has-mb-4")
+              .appendChildElement("label.label=Your email")
+              .appendChildElement("input.input[type=text|placeholder=you@email.com]")
+          }
+        }, class Siimple_SignIn_Password extends Wuse.NonShadowElement {
+          on_create() {
+            this
+              .setMainElement("div.has-mb-6")
+              .appendChildElement("label.label=Your password")
+              .appendChildElement("input.input[type=password|placeholder=Password]")
+          }
+        }, class Siimple_SignIn_Button extends Wuse.NonShadowElement {
+          on_create() {
+            this
+              .setMainElement("button.button.is-full")
+              .appendChildElement("i.si-lock.has-pr-1")
+              .appendChildElement("span=Sign in")
+          }
+        }, class Siimple_SignIn_Panel extends Wuse.NonShadowElement {
+          on_create() {
+            this
+              .setMainElement("div.card.is-shadowed")
+              .appendChildElement("h3=Sign in")
+              .appendChildElement("siimple-signin-email")
+              .appendChildElement("siimple-signin-password")
+              .appendChildElement("siimple-signin-button")
+          }
+        }, class Siimple_SignIn_Frame extends Wuse.NonShadowElement {
+          on_create() {
+            this
+              .setMainElement("div.has-w-96.has-pl-4.has-pr-4.has-ml-auto.has-mr-auto")
+              .appendChildElement("siimple-signin-panel")
+              .appendChildElement("siimple-signin-forgot")
+          }
+        }, class Siimple_SignIn_Forgot extends Wuse.NonShadowElement {
+          on_create() {
+            this
+              .setMainElement("div.has-mt-8[align=center]")
+              .appendChildElement("a.is-not-underlined.has-text-current.has-text-primary-hover[href=#]=<strong>Forgot your password?</strong>")
+          }
+        }]);
+      }
+
+      on_create() {
+        this
+          .setMainElement("div.container.has-pt-16.has-pb-16")
+          .appendChildElement("siimple-signin-frame")
+      }
+
+    }
+    Siimple_SignIn_Sample.create();
+  </script>
+</body>
+</html>
+

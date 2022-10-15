@@ -42,21 +42,21 @@ class Performing_100K_Updates extends Wuse.NonShadowElement {
   buttonize(amount, changes) {
     const NAME_PREFIX = "btnCounter";
     const inform = spent => document.body.insertAdjacentHTML("afterbegin", `
-      <pre>${spent.toFixed(2)} ms for ${amount * changes} total reactive render updates</pre>
+      <pre>${spent.toFixed(2)} ms for ${amount * changes} total reactive updates</pre>
     `);
     const update = () => {
       // NOTE: don't change the for loops order, otherwise
       // you'll get fake "better" times since it won't be
       // changing of button when applying the updates.
-      for (var y = 0; y < changes; y++)
+      for (var y = 0; y < changes; y++) {
+        Wuse.RENDERING = y + 1 === changes;
         for (var z = 0; z < amount; z++)
           this[`${NAME_PREFIX}${z}`].counter++;
+      }
     }
     const handler = e => {
       const begin = performance.now();
-      Wuse.RENDERING = false;
       update();
-      Wuse.RENDERING = true;
       inform(performance.now() - begin);
     }
     for (var x = 0; x < amount; x++) this.appendChildElement(

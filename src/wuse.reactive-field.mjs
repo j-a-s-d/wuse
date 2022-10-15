@@ -1,6 +1,6 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
-import JsHelpers from './wuse.javascript-helpers.js';
+import JsHelpers from './wuse.javascript-helpers.mjs';
 const { noop, isOf, isNonEmptyString } = JsHelpers;
 
 const isNotFunction = x => !isOf(x, window.Function);

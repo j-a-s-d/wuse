@@ -1,12 +1,12 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
-import WebHelpers from './wuse.web-helpers.js';
+import WebHelpers from './wuse.web-helpers.mjs';
 const { isHTMLTag } = WebHelpers;
-import JsHelpers from './wuse.javascript-helpers.js';
+import JsHelpers from './wuse.javascript-helpers.mjs';
 const { EMPTY_STRING, EMPTY_ARRAY, noop, buildArray, buildObject, isAssignedObject, isAssignedArray, ensureFunction, hasObjectKeys, isNonEmptyString, forcedStringSplit } = JsHelpers;
-import StringConstants from './wuse.string-constants.js';
+import StringConstants from './wuse.string-constants.mjs';
 const { WUSENODE_ATTRIBUTE, DEFAULT_TAG, DEFAULT_KIND, TEMPLATES_KIND, SLOTS_KIND, TEXTNODE_TAG } = StringConstants;
-import StringHashing from './wuse.string-hashing.js';
+import StringHashing from './wuse.string-hashing.mjs';
 const hash = StringHashing.defaultRoutine;
 
 const RuntimeErrors = {

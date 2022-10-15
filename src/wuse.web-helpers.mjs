@@ -1,6 +1,6 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
-import StringHashing from './wuse.string-hashing.js';
+import StringHashing from './wuse.string-hashing.mjs';
 const hash = StringHashing.defaultRoutine;
 
 const HTML_TAGS = [ // NOTE: it includes deprecated and non-standard ones

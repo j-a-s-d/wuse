@@ -1,6 +1,6 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
-import JsHelpers from './wuse.javascript-helpers.js';
+import JsHelpers from './wuse.javascript-helpers.mjs';
 const { noop, ensureFunction, isAssignedObject } = JsHelpers;
 
 export default class TemplateImporter {

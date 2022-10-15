@@ -28,7 +28,7 @@
     return method;
   };
 
-  // src/wuse.runtime-errors.js
+  // src/wuse.runtime-errors.mjs
   var makeError = (code, writer) => ({ code, emit: (arg) => {
     const lvl = code < 80 ? "error" : "warn";
     const msg = `[WUSE:${lvl.toUpperCase()}] ${code} | ${writer(arg)}`;
@@ -105,7 +105,7 @@
     }
   };
 
-  // src/wuse.javascript-helpers.js
+  // src/wuse.javascript-helpers.mjs
   var _EMPTY_STRING, _EMPTY_ARRAY;
   var instanceBuilder = (instance, initializer) => {
     if (typeof initializer === "function")
@@ -179,7 +179,7 @@
   __privateAdd(JavascriptHelpers, _EMPTY_STRING, new window.String().valueOf());
   __privateAdd(JavascriptHelpers, _EMPTY_ARRAY, window.Object.freeze(new window.Array()));
 
-  // src/wuse.template-importer.js
+  // src/wuse.template-importer.mjs
   var _onExtinctTemplate, _onInvalidTemplate;
   var { noop, ensureFunction, isAssignedObject } = JavascriptHelpers;
   var TemplateImporter = class {
@@ -205,7 +205,7 @@
   __privateAdd(TemplateImporter, _onExtinctTemplate, noop);
   __privateAdd(TemplateImporter, _onInvalidTemplate, noop);
 
-  // src/wuse.element-classes.js
+  // src/wuse.element-classes.mjs
   var _onBadTarget, _onDeferredInstantiation, _onMisnamedClass, _onInvalidClass, _onUnregistrableClass, _onUnregisteredClass, _onAlreadyRegistered, _registrationPerformer, registrationPerformer_fn, _registrationIntender, registrationIntender_fn, _classRegistrar, classRegistrar_fn, _immediateClassInstantiator, immediateClassInstantiator_fn, _instantiateClass, instantiateClass_fn;
   var { noop: noop2, ensureFunction: ensureFunction2, isAssignedObject: isAssignedObject2, isAssignedArray, isNonEmptyArray, isOf, forEachOwnProperty } = JavascriptHelpers;
   var convertClassNameToKebabCaseTag = (name) => name.toLowerCase().replaceAll("_", "-");
@@ -302,7 +302,7 @@
   __privateAdd(ElementClasses, _onUnregisteredClass, noop2);
   __privateAdd(ElementClasses, _onAlreadyRegistered, noop2);
 
-  // src/wuse.string-hashing.js
+  // src/wuse.string-hashing.mjs
   var StringHashing = class {
     static defaultRoutine(str = "") {
       var h = 0;
@@ -313,7 +313,7 @@
     }
   };
 
-  // src/wuse.web-helpers.js
+  // src/wuse.web-helpers.mjs
   var hash = StringHashing.defaultRoutine;
   var HTML_TAGS = [
     "a",
@@ -620,7 +620,7 @@
     }
   };
 
-  // src/wuse.string-constants.js
+  // src/wuse.string-constants.mjs
   var StringConstants = class {
     static get TEMPLATES_KIND() {
       return "%templates%";
@@ -657,7 +657,7 @@
     }
   };
 
-  // src/wuse.reactive-field.js
+  // src/wuse.reactive-field.mjs
   var { noop: noop3, isOf: isOf2, isNonEmptyString } = JavascriptHelpers;
   var isNotFunction = (x) => !isOf2(x, window.Function);
   var setReactiveField = (name, value, handler, renderizer, redefiner, recreator, dereactor, remover) => redefiner(() => value, (v) => {
@@ -692,7 +692,7 @@
     }
   };
 
-  // src/wuse.element-modes.js
+  // src/wuse.element-modes.mjs
   var ElementModes = class {
     static get REGULAR() {
       return "regular";
@@ -710,7 +710,7 @@
     }
   });
 
-  // src/wuse.element-events.js
+  // src/wuse.element-events.mjs
   var _owner, _events;
   var EVENT_NAMES = [
     "on_create",
@@ -747,7 +747,7 @@
   _owner = new WeakMap();
   _events = new WeakMap();
 
-  // src/wuse.element-parts.js
+  // src/wuse.element-parts.mjs
   var _extractAttributes, extractAttributes_fn, _extractContent, extractContent_fn, _extractEvents, extractEvents_fn, _extractClasses, extractClasses_fn, _extractIdAndTag, extractIdAndTag_fn, _extractData, extractData_fn, _process, process_fn;
   var { isHTMLTag } = WebHelpers;
   var { EMPTY_STRING, EMPTY_ARRAY, noop: noop4, buildArray, buildObject, isAssignedObject: isAssignedObject3, isAssignedArray: isAssignedArray2, ensureFunction: ensureFunction3, hasObjectKeys, isNonEmptyString: isNonEmptyString2, forcedStringSplit } = JavascriptHelpers;
@@ -1032,7 +1032,7 @@
   __publicField(ElementParts, "newEvent", makeEvent);
   __publicField(ElementParts, "newState", makeState);
 
-  // src/wuse.text-replacements.js
+  // src/wuse.text-replacements.mjs
   var _regExp, _addReplacement, _includeMatches, _includeStringMatches, _includeKeysMatches;
   var { EMPTY_ARRAY: EMPTY_ARRAY2, buildArray: buildArray2, buildObject: buildObject2, isNonEmptyString: isNonEmptyString3, isAssignedArray: isAssignedArray3 } = JavascriptHelpers;
   var _ReplacementMarkers = class {
@@ -1122,7 +1122,7 @@
   __publicField(TextReplacements, "scanRulesForReplacements", ReplacementsScanners.rules);
   __publicField(TextReplacements, "scanChildrenForReplacements", ReplacementsScanners.children);
 
-  // src/wuse.rendering-routines.js
+  // src/wuse.rendering-routines.mjs
   var _onFetchTemplate;
   var { noop: noop5, isAssignedArray: isAssignedArray4, hasObjectKeys: hasObjectKeys2, isNonEmptyString: isNonEmptyString4, isNonEmptyArray: isNonEmptyArray2, isAssignedObject: isAssignedObject4, ensureFunction: ensureFunction4 } = JavascriptHelpers;
   var { htmlEncode } = WebHelpers;
@@ -1199,7 +1199,7 @@
     return result;
   });
 
-  // src/wuse.state-manager.js
+  // src/wuse.state-manager.mjs
   var _key, _keyed, _maker, _reader, _writer, _state, _store, _filiated, _persistState, persistState_fn;
   var { ensureFunction: ensureFunction5, isNonEmptyString: isNonEmptyString5, isAssignedObject: isAssignedObject5 } = JavascriptHelpers;
   var StateManager = class {
@@ -1326,7 +1326,7 @@
     }
   };
 
-  // src/wuse.node-manager.js
+  // src/wuse.node-manager.mjs
   var _parent, _actual, _clone, _drop, drop_fn, _roll, roll_fn;
   var { WUSENODE_ATTRIBUTE: WUSENODE_ATTRIBUTE2 } = StringConstants;
   var NodeManager = class {
@@ -1378,7 +1378,7 @@
     __privateSet(this, _actual, tmp);
   };
 
-  // src/wuse.content-manager.js
+  // src/wuse.content-manager.mjs
   var _invalidated, _content;
   var { isOf: isOf3 } = JavascriptHelpers;
   var ContentManager = class {
@@ -1415,7 +1415,7 @@
   _invalidated = new WeakMap();
   _content = new WeakMap();
 
-  // src/wuse.parts-holder.js
+  // src/wuse.parts-holder.mjs
   var _roll2, roll_fn2;
   var { isIntegerNumber, isAssignedObject: isAssignedObject6, cloneObject, forEachOwnProperty: forEachOwnProperty2, buildArray: buildArray3 } = JavascriptHelpers;
   var partsLooper = (holder, partCallback, metaCallback) => forEachOwnProperty2(holder, (key) => {
@@ -1515,7 +1515,7 @@
     this.on_version_change();
   };
 
-  // src/wuse.equality-analyzer.js
+  // src/wuse.equality-analyzer.mjs
   var _last, _current, _equal, _analyzer;
   var { ensureFunction: ensureFunction6 } = JavascriptHelpers;
   var EqualityAnalyzer = class {
@@ -1538,7 +1538,7 @@
   _equal = new WeakMap();
   _analyzer = new WeakMap();
 
-  // src/wuse.base-element.js
+  // src/wuse.base-element.mjs
   var _html, _rules, _children, _fields, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binding, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _getElementByIdFromRoot, getElementByIdFromRoot_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
   var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3, buildArray: buildArray4 } = JavascriptHelpers;
   var { removeChildren, isHTMLAttribute } = WebHelpers;
@@ -2389,7 +2389,7 @@
   };
   __publicField(BaseElement, "instancesCount", 0);
 
-  // src/wuse.initialization-routines.js
+  // src/wuse.initialization-routines.mjs
   var defineReadOnlyMembers = (instance, items) => window.Object.getOwnPropertyNames(items).forEach((name) => window.Object.defineProperty(instance, name, {
     value: items[name],
     writable: false,
@@ -2454,7 +2454,7 @@
     }
   };
 
-  // src/wuse.performance-measurement.js
+  // src/wuse.performance-measurement.mjs
   var _finish, finish_fn, _a, _b, _c, _debugCallback;
   var formatTime = (time) => time > 1e3 ? (time / 1e3).toFixed(2) + "s" : time.toFixed(2) + "ms";
   var MeasureRound = class {
@@ -2561,7 +2561,7 @@
   __publicField(PerformanceMeasurement, "BrowserRender", (_c = class {
   }, __publicField(_c, "check", false), __publicField(_c, "overall", null), _c));
 
-  // src/wuse.simple-storage.js
+  // src/wuse.simple-storage.mjs
   var _items, _getKeys, getKeys_fn;
   var SimpleStorage = class {
     constructor() {
@@ -2597,11 +2597,12 @@
   };
 
   // package.json
-  var version = "0.7.5";
+  var version = "0.7.6";
 
   // src/wuse.js
   var _a2;
   var { noop: noop7, isOf: isOf5 } = JavascriptHelpers;
+  var { specializeClass, REGULAR: REGULAR2, OPEN, CLOSED } = ElementModes;
   window.Wuse = window.Wuse || (_a2 = class {
     static get VERSION() {
       return version;
@@ -2616,9 +2617,9 @@
         WebHelpers,
         JsHelpers: JavascriptHelpers,
         PerformanceMeasurement,
-        NonShadowElement: ElementModes.specializeClass(BaseElement, ElementModes.REGULAR),
-        OpenShadowElement: ElementModes.specializeClass(BaseElement, ElementModes.OPEN),
-        ClosedShadowElement: ElementModes.specializeClass(BaseElement, ElementModes.CLOSED)
+        NonShadowElement: specializeClass(BaseElement, REGULAR2),
+        OpenShadowElement: specializeClass(BaseElement, OPEN),
+        ClosedShadowElement: specializeClass(BaseElement, CLOSED)
       },
       methods: {
         debug: (msg) => window.console.log("[WUSE:DEBUG]", msg),

@@ -1,27 +1,27 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
-import JsHelpers from './wuse.javascript-helpers.js';
+import JsHelpers from './wuse.javascript-helpers.mjs';
 const { EMPTY_STRING, noop, ensureFunction, isOf, isAssignedObject, isAssignedArray, isNonEmptyArray, isNonEmptyString, forcedStringSplit, forEachOwnProperty, buildArray } = JsHelpers;
-import WebHelpers from './wuse.web-helpers.js';
+import WebHelpers from './wuse.web-helpers.mjs';
 const { removeChildren, isHTMLAttribute } = WebHelpers;
-import StringConstants from './wuse.string-constants.js';
+import StringConstants from './wuse.string-constants.mjs';
 const { WUSEKEY_ATTRIBUTE, DEFAULT_STYLE_TYPE, DEFAULT_STYLE_MEDIA, DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE, SLOTS_KIND } = StringConstants;
-import ReactiveField from './wuse.reactive-field.js';
+import ReactiveField from './wuse.reactive-field.mjs';
 const { createReactiveField } = ReactiveField;
-import ElementModes from './wuse.element-modes.js';
+import ElementModes from './wuse.element-modes.mjs';
 const { REGULAR } = ElementModes;
-import ElementEvents from './wuse.element-events.js';
-import WuseElementParts from './wuse.element-parts.js';
+import ElementEvents from './wuse.element-events.mjs';
+import WuseElementParts from './wuse.element-parts.mjs';
 const { newDefinition, newState, makeMainNode, makeStyleNode, performValidations, newChild, newRule, newNestedRule, tryToJoinRules, tryToJoinNestedRules } = WuseElementParts;
-import WuseTextReplacements from './wuse.text-replacements.js';
+import WuseTextReplacements from './wuse.text-replacements.mjs';
 const { extractReplacementsFromChild, extractReplacementsFromRule, scanChildrenForReplacements, scanRulesForReplacements } = WuseTextReplacements;
-import WuseRenderingRoutines from './wuse.rendering-routines.js';
+import WuseRenderingRoutines from './wuse.rendering-routines.mjs';
 const { renderChild, renderRule, renderingIncluder, renderingExcluder, cacheInvalidator, slotsInvalidator } = WuseRenderingRoutines;
-import WuseStateManager from './wuse.state-manager.js';
-import NodeManager from './wuse.node-manager.js';
-import ContentManager from './wuse.content-manager.js';
-import PartsHolder from './wuse.parts-holder.js';
-import EqualityAnalyzer from './wuse.equality-analyzer.js';
+import WuseStateManager from './wuse.state-manager.mjs';
+import NodeManager from './wuse.node-manager.mjs';
+import ContentManager from './wuse.content-manager.mjs';
+import PartsHolder from './wuse.parts-holder.mjs';
+import EqualityAnalyzer from './wuse.equality-analyzer.mjs';
 
 let RuntimeErrors = {
   onInvalidState: noop,

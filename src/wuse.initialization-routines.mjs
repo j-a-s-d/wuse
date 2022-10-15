@@ -1,9 +1,9 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
-import RuntimeErrors from './wuse.runtime-errors.js';
-import TemplateImporter from './wuse.template-importer.js';
-import ElementClasses from './wuse.element-classes.js';
-import BaseElement from './wuse.base-element.js';
+import RuntimeErrors from './wuse.runtime-errors.mjs';
+import TemplateImporter from './wuse.template-importer.mjs';
+import ElementClasses from './wuse.element-classes.mjs';
+import BaseElement from './wuse.base-element.mjs';
 
 const defineReadOnlyMembers = (instance, items) => window.Object.getOwnPropertyNames(items).forEach(
   name => window.Object.defineProperty(instance, name, {
