@@ -38,8 +38,8 @@ const INFO = `<i>Open the development tools console (usually F12) to see the eve
     <li><i>on_[element-id]_[event-type] (besides it's not part of the element event cycle, it's printed for your better understanding)</i></li>
     <li>on_unload</li>
     <li>on_inject</li>
-    <li>on_reload</li>
-    <li>on_repaint</li>
+    <li>on_reload (if you disable it via fireSpecificRedrawEvents then this event won't fire, on_load will be fired instead)</li>
+    <li>on_repaint (if you disable it via fireSpecificRedrawEvents then this event won't fire, on_refresh will be fired instead)</li>
   </ul>
   <hr>
   After clicking <b>FORCE RECONSTRUCTION (CSS)</b>, render() will be called (in this demo that is done automatically via the reactive field change) after an invalidating modification (CSS element position change) on the parent element of the buttons panel causing it's reconstruction (in this demo the buttons panel is being persisted/recovered from the elements store), and you will see:<br>

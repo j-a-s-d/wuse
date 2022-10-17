@@ -1,0 +1,202 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+  <title>Wuse | Spectre Timeline Sample example</title>
+  <script src="../../../dist/wuse.min.js"></script>
+</head>
+<body>
+  <p>This is a port of the <a href="https://picturepan2.github.io/spectre/experimentals/timelines.html" target="_blank">Spectre 0.5.9 Timeline example</a>.</p>
+  <hr/>
+  <script>
+    class Spectre_Timeline_Sample extends Wuse.NonShadowElement {
+
+      static {
+        Wuse.register([class Spectre_Timeline_TileContent extends Wuse.NonShadowElement {
+
+          on_create() {
+            this
+              .setAttributesAsKeys(true)
+              .setMainElement("div.tile-content")
+              .appendChildElement("p.tile-subtitle=~{_subtitle}~")
+              .appendChildElement("p.tile-title=~{_title}~")
+              .makeReactiveField("_title", "")
+              .makeReactiveField("_subtitle", "")
+          }
+
+          set _index(value) {
+            this.setMainAttribute("id", "item" + value);
+          }
+
+        }, class Spectre_Timeline_TileAction extends Wuse.NonShadowElement {
+
+          on_create() {
+            this
+              .setAttributesAsKeys(true)
+              .setMainElement("div.tile-action")
+              .appendChildElement("button.btn=~{_caption}~")
+              .makeReactiveField("_caption", "")
+          }
+
+        }, class Spectre_Timeline_Tile extends Wuse.NonShadowElement {
+
+          on_create() {
+            this
+              .setAttributesAsKeys(true)
+              .setMainElement("div.tile")
+              .appendChildElement("spectre-timeline-tilecontent[_index=~{_index}~|_title='~{_title}~'|_subtitle='~{_subtitle}~'|_items=~{_items}~]")
+              .makeReactiveField("_title", "")
+              .makeReactiveField("_subtitle", "")
+          }
+
+          set _caption(value) {
+            if (value !== "") this.appendChildElement(`spectre-timeline-tileaction[_caption='${value}']`);
+          }
+
+        }, class Spectre_Timeline_Content extends Wuse.NonShadowElement {
+
+          on_create() {
+            this
+              .setAttributesAsKeys(true)
+              .setMainElement("div.timeline-content")
+              .appendChildElement("spectre-timeline-tile[_index=~{_index}~|_title='~{_title}~'|_subtitle='~{_subtitle}~'|_caption='~{_caption}~'|_items=~{_items}~]")
+              .makeReactiveField("_title", "")
+              .makeReactiveField("_subtitle", "")
+              .makeReactiveField("_caption", "")
+          }
+
+        }, class Spectre_Timeline_LeftWithoutIcon extends Wuse.NonShadowElement {
+
+          on_create() {
+            this
+              .setAttributesAsKeys(true)
+              .setMainElement("div.timeline-left")
+              .appendChildElement("a.timeline-icon.tooltip[href='~{_href}~'|data-tooltip='~{_tooltip}~']")
+              .makeReactiveField("_href", "")
+              .makeReactiveField("_tooltip", "")
+          }
+
+        }, class Spectre_Timeline_LeftWithIcon extends Wuse.NonShadowElement {
+
+          on_create() {
+            this
+              .setAttributesAsKeys(true)
+              .setMainElement("div.timeline-left")
+              .appendChildElement("a.timeline-icon.icon-lg.tooltip[href='~{_href}~'|data-tooltip='~{_tooltip}~']=<i class='icon icon-~{_icon}~'/>")
+              .makeReactiveField("_href", "")
+              .makeReactiveField("_tooltip", "")
+              .makeReactiveField("_icon", "")
+          }
+
+        }, class Spectre_Timeline_ItemWithIcon extends Wuse.NonShadowElement {
+
+          on_create() {
+            this
+              .setAttributesAsKeys(true)
+              .setMainElement("div.timeline-item")
+              .appendChildElement("spectre-timeline-leftwithicon[_icon=~{_icon}~|_href=~{_href}~|_tooltip='~{_tooltip}~']")
+              .appendChildElement("spectre-timeline-content[_index=~{_index}~|_title='~{_title}~'|_subtitle='~{_subtitle}~'|_caption='~{_caption}~'|_items=~{_items}~]")
+              .makeReactiveField("_title", "")
+              .makeReactiveField("_subtitle", "")
+              .makeReactiveField("_caption", "")
+              .makeReactiveField("_href", "")
+              .makeReactiveField("_tooltip", "")
+              .makeReactiveField("_icon", "")
+          }
+
+        }, class Spectre_Timeline_ItemWithoutIcon extends Wuse.NonShadowElement {
+
+          on_create() {
+            this
+              .setAttributesAsKeys(true)
+              .setMainElement("div.timeline-item")
+              .appendChildElement("spectre-timeline-leftwithouticon[_href=~{_href}~|_tooltip='~{_tooltip}~']")
+              .appendChildElement("spectre-timeline-content[_index=~{_index}~|_title='~{_title}~'|_subtitle='~{_subtitle}~'|_caption='~{_caption}~'|_items=~{_items}~]")
+              .makeReactiveField("_title", "")
+              .makeReactiveField("_subtitle", "")
+              .makeReactiveField("_caption", "")
+              .makeReactiveField("_href", "")
+              .makeReactiveField("_tooltip", "")
+          }
+
+        }, class Spectre_Timeline_Items extends Wuse.NonShadowElement {
+
+          on_create() {
+            this
+              .setMainElement("div.timeline")
+          }
+
+          load(value) {
+            var x = 0;
+            (value || []).forEach(item => this.appendChildElement(item.icon ?
+              `spectre-timeline-itemwithicon[_index=${++x}|_icon=${item.icon}|_href=${item.href}|_tooltip='${item.tooltip}'|_title='${item.title}'|_subtitle='${item.subtitle}'|_caption='${item.action ? item.action : ""}'}]` :
+              `spectre-timeline-itemwithouticon[_index=${++x}|_href=${item.href}|_tooltip='${item.tooltip}'|_title='${item.title}'|_subtitle='${item.subtitle}'|_caption='${item.action ? item.action : ""}'}]`
+            ));
+            this.render();
+            x = 0;
+            (value || []).forEach(item => {
+              const el = this.selectChildElement("#item" + ++x);
+              (item.items || []).reverse().forEach(it => el.insertAdjacentHTML("afterend", `<p class="tile-title">${it}</p>`));
+            });
+          }
+
+        }, this]);
+      }
+
+      on_create() {
+        this
+          .setMainElement("div.columns[style=padding-top: 2em]")
+          .appendCSSRule(["spectre-timeline-content", "spectre-timeline-tilecontent"], "flex: 1 1 auto")
+          .appendChildElement("div.column.col-2")
+          .appendChildElement("div.column.col-8=<spectre-timeline-items/>")
+      }
+
+      on_load() {
+        this.selectChildElement("spectre-timeline-items").load(this.items);
+      }
+
+    }
+
+    Spectre_Timeline_Sample.create({
+      items: [{
+        title: "Title 1",
+        subtitle: "SubTitle 1",
+        href: "#",
+        tooltip: "Tooltip 1"
+      }, {
+        title: "Title 2",
+        subtitle: "SubTitle 2",
+        href: "#",
+        tooltip: "Tooltip 2",
+        icon: "check",
+        items: [
+          "Something 2",
+          "<a href='#'>Test1</a>: test item 2.1",
+          "<a href='#'>Test2</a>: test item 2.2",
+          "<a href='#'>Test3</a>: test item 2.3",
+        ],
+        action: "Action 2"
+      }, {
+        title: "Title 3",
+        subtitle: "SubTitle 3",
+        href: "#",
+        tooltip: "Tooltip 3",
+        icon: "check",
+        items: [
+          "Something 3",
+          "<a href='#'>Test1</a>: test item 3.1",
+          "<a href='#'>Test2</a>: test item 3.2",
+          "<a href='#'>Test3</a>: test item 3.3",
+        ],
+        action: "Action 3"
+      }]
+    });
+  </script>
+</body>
+</html>
+

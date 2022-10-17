@@ -1539,7 +1539,7 @@
   _analyzer = new WeakMap();
 
   // src/wuse.base-element.mjs
-  var _html, _rules, _children, _fields, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binding, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _getElementByIdFromRoot, getElementByIdFromRoot_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
+  var _html, _rules, _children, _fields, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binding, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _revise, revise_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
   var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3, buildArray: buildArray4 } = JavascriptHelpers;
   var { removeChildren, isHTMLAttribute } = WebHelpers;
   var { WUSEKEY_ATTRIBUTE, DEFAULT_STYLE_TYPE, DEFAULT_STYLE_MEDIA, DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE, SLOTS_KIND: SLOTS_KIND3 } = StringConstants;
@@ -1559,6 +1559,7 @@
   };
   var debug = (wel, msg) => window.Wuse.debug(`#${wel.id} (${wel.info.instanceNumber}) | ${typeof msg === "string" ? msg : JSON.stringify(msg)}`);
   var parseElement = (shorthandNotation, rules) => performValidations(newChild(shorthandNotation, rules));
+  var getElementByIdFromRoot = (instance, id) => isNonEmptyString6(id) ? instance.selectChildElement(`#${id}`) : void 0;
   var isInvalidFieldName = (name) => typeof name !== "string" || !name.trim().length || name.startsWith("data") || isHTMLAttribute(name);
   var makeUserOptions = () => ({
     mainDefinition: newDefinition(),
@@ -1568,7 +1569,9 @@
     attributeKeys: false,
     elementKeys: true,
     autokeyChildren: true,
-    automaticallyRestore: false
+    automaticallyRestore: false,
+    redrawReload: true,
+    redrawRepaint: true
   });
   var makePerformanceWatches = () => ({
     attachment: new window.Wuse.PerformanceMeasurement.StopWatch(),
@@ -1587,13 +1590,13 @@
       __privateAdd(this, _insertMain);
       __privateAdd(this, _extirpateElements);
       __privateAdd(this, _bind);
-      __privateAdd(this, _getElementByIdFromRoot);
       __privateAdd(this, _clearContents);
       __privateAdd(this, _prepareContents);
       __privateAdd(this, _commitContents);
       __privateAdd(this, _render);
       __privateAdd(this, _inject);
       __privateAdd(this, _redraw);
+      __privateAdd(this, _revise);
       __privateAdd(this, _fieldRender);
       __privateAdd(this, _createField);
       __privateAdd(this, _validateField);
@@ -1726,7 +1729,11 @@
         }
       }(newState, __privateGet(this, _stateReader), __privateGet(this, _stateWriter), window.Wuse.elementsStorage));
       __privateAdd(this, _binding, {
-        binder: (id) => isNonEmptyString6(id) && (this[id] = __privateMethod(this, _getElementByIdFromRoot, getElementByIdFromRoot_fn).call(this, id)),
+        binder: (id) => {
+          const el = getElementByIdFromRoot(this, id);
+          if (el)
+            this[id] = el;
+        },
         unbinder: (id) => delete this[id],
         makePerformers: (event, doer) => ({
           event,
@@ -1741,7 +1748,7 @@
           event: (id, event, capture) => {
             const handler = this[`on_${id}_${event}`];
             if (handler) {
-              const el = __privateMethod(this, _getElementByIdFromRoot, getElementByIdFromRoot_fn).call(this, id);
+              const el = getElementByIdFromRoot(this, id);
               if (el)
                 el[performers.event](event, handler, capture);
             }
@@ -1811,10 +1818,10 @@
         forEachOwnProperty3(value, (name) => this[name] = value[name]);
     }
     render() {
-      window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _render, render_fn).call(this);
+      window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _revise, revise_fn).call(this, true);
     }
     redraw() {
-      window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _redraw, redraw_fn).call(this);
+      window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _revise, revise_fn).call(this, false);
     }
     connectedCallback() {
       if (window.Wuse.MEASURE)
@@ -1861,6 +1868,11 @@
     }
     restoreOnReconstruct(value) {
       __privateGet(this, _options).automaticallyRestore = value;
+      return this;
+    }
+    fireSpecificRedrawEvents(reload, repaint) {
+      __privateGet(this, _options).redrawReload = !!reload;
+      __privateGet(this, _options).redrawRepaint = !!repaint;
       return this;
     }
     persistToElementsStore() {
@@ -2249,10 +2261,6 @@
       __privateSet(this, _binded, value);
     }
   };
-  _getElementByIdFromRoot = new WeakSet();
-  getElementByIdFromRoot_fn = function(id) {
-    return isNonEmptyString6(id) ? __privateGet(this, _root).querySelector(`#${id}`) : void 0;
-  };
   _clearContents = new WeakSet();
   clearContents_fn = function() {
     if (!!__privateGet(this, _children).length)
@@ -2285,15 +2293,14 @@
   };
   _render = new WeakSet();
   render_fn = function() {
-    if (window.Wuse.MEASURE)
-      __privateGet(this, _measurement).partial.start();
     if (!__privateGet(this, _styled))
       __privateMethod(this, _insertStyle, insertStyle_fn).call(this);
     const evs = __privateGet(this, _elementEvents);
     evs.immediateTrigger("on_prerender");
     __privateMethod(this, _prepareContents, prepareContents_fn).call(this);
     const cts = __privateGet(this, _contents);
-    if (cts.root.invalidated || cts.main.invalidated || cts.style.invalidated) {
+    const result = cts.root.invalidated || cts.main.invalidated || cts.style.invalidated;
+    if (result) {
       __privateMethod(this, _bind, bind_fn).call(this, false);
       __privateMethod(this, _commitContents, commitContents_fn).call(this, false, false, false);
       __privateMethod(this, _bind, bind_fn).call(this, true);
@@ -2307,8 +2314,7 @@
     if (window.Wuse.DEBUG && __privateGet(this, _identified))
       debug(this, `unmodified: ${this.info.unmodifiedRounds} (main: ${__privateGet(this, _waste).main.rounds}, style: ${__privateGet(this, _waste).style.rounds}) | updated: ${this.info.updatedRounds}`);
     evs.immediateTrigger("on_postrender");
-    if (window.Wuse.MEASURE)
-      __privateGet(this, _measurement).partial.stop(window.Wuse.DEBUG);
+    return result;
   };
   _inject = new WeakSet();
   inject_fn = function(evs, event) {
@@ -2325,8 +2331,6 @@
   };
   _redraw = new WeakSet();
   redraw_fn = function() {
-    if (window.Wuse.MEASURE)
-      __privateGet(this, _measurement).full.start();
     __privateMethod(this, _bind, bind_fn).call(this, false);
     if (__privateGet(this, _inserted)) {
       __privateMethod(this, _extirpateElements, extirpateElements_fn).call(this);
@@ -2335,10 +2339,22 @@
     const evs = __privateGet(this, _elementEvents);
     evs.immediateTrigger("on_unload");
     evs.detect();
-    __privateMethod(this, _inject, inject_fn).call(this, evs, "on_reload");
-    evs.committedTrigger("on_repaint");
-    if (window.Wuse.MEASURE)
-      __privateGet(this, _measurement).full.stop(window.Wuse.DEBUG);
+    const opt = __privateGet(this, _options);
+    __privateMethod(this, _inject, inject_fn).call(this, evs, opt.redrawReload ? "on_reload" : "on_load");
+    evs.committedTrigger(opt.redrawRepaint ? "on_repaint" : "on_refresh");
+    return true;
+  };
+  _revise = new WeakSet();
+  revise_fn = function(partial) {
+    if (window.Wuse.MEASURE) {
+      const measure = partial ? __privateGet(this, _measurement).partial : __privateGet(this, _measurement).full;
+      measure.start();
+      const result = partial ? __privateMethod(this, _render, render_fn).call(this) : __privateMethod(this, _redraw, redraw_fn).call(this);
+      measure.stop(window.Wuse.DEBUG);
+      return result;
+    } else {
+      return partial ? __privateMethod(this, _render, render_fn).call(this) : __privateMethod(this, _redraw, redraw_fn).call(this);
+    }
   };
   _fieldRender = new WeakSet();
   fieldRender_fn = function(name, label = "$none") {
@@ -2378,7 +2394,7 @@
   _filiateChild = new WeakSet();
   filiateChild_fn = function(tmp) {
     if (tmp !== null) {
-      if (__privateGet(this, _initialized) && __privateMethod(this, _getElementByIdFromRoot, getElementByIdFromRoot_fn).call(this, tmp.id)) {
+      if (__privateGet(this, _initialized) && getElementByIdFromRoot(this, tmp.id)) {
         return RuntimeErrors3.onTakenId(tmp.id);
       }
       if (tmp.custom && __privateGet(this, _options).autokeyChildren && __privateGet(this, _stateManager).hasKey()) {
@@ -2597,7 +2613,7 @@
   };
 
   // package.json
-  var version = "0.7.6";
+  var version = "0.7.7";
 
   // src/wuse.js
   var _a2;

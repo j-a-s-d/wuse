@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.7.7] 2022-oct-17
+  - added `fireSpecificRedrawEvents` to the `BaseElement` class
+  - added `Spectre_Timeline_Sample` demo
 * [0.7.6] 2022-oct-15
   - renamed all the es6 modules to the .mjs file extension
   - splitted demos at directory examples into simple-samples and third-party subdirectories

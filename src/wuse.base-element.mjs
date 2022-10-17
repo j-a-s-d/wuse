@@ -37,6 +37,8 @@ const debug = (wel, msg) => window.Wuse.debug(`#${wel.id} (${wel.info.instanceNu
 
 const parseElement = (shorthandNotation, rules) => performValidations(newChild(shorthandNotation, rules));
 
+const getElementByIdFromRoot = (instance, id) => isNonEmptyString(id) ? instance.selectChildElement(`#${id}`) : undefined;
+
 const isInvalidFieldName = name => typeof name !== "string" || !name.trim().length || name.startsWith("data") || isHTMLAttribute(name);
 
 const makeUserOptions = () => ({
@@ -47,7 +49,9 @@ const makeUserOptions = () => ({
   attributeKeys: false, // when on, sets the received node attributes as element keys
   elementKeys: true, // when on, add the main element and it's children as element keys using their ids
   autokeyChildren: true, // when on, automatically add store key to children elements
-  automaticallyRestore: false // when on, it ignores any on_reconstruct event handler set and simply does call to the restoreFromElementsStore method directly
+  automaticallyRestore: false, // when on, it ignores any on_reconstruct event handler set and simply does call to the restoreFromElementsStore method directly
+  redrawReload: true, // when on, the redraw method fires on_reload events, when off it fires on_load like onConnected
+  redrawRepaint: true // when on, the redraw method fires on_repaint events, when off it fires on_refresh like render
 });
 
 const makePerformanceWatches = () => ({
@@ -192,7 +196,10 @@ export default class BaseElement extends window.HTMLElement {
 
   // ELEMENTS BINDING
   #binding = {
-    binder: id => isNonEmptyString(id) && (this[id] = this.#getElementByIdFromRoot(id)),
+    binder: id => {
+      const el = getElementByIdFromRoot(this, id);
+      if (el) this[id] = el;
+    },
     unbinder: id => delete this[id],
     makePerformers: (event, doer) => ({
       event, key: () => {
@@ -205,7 +212,7 @@ export default class BaseElement extends window.HTMLElement {
       event: (id, event, capture) => {
         const handler = this[`on_${id}_${event}`];
         if (handler) {
-          const el = this.#getElementByIdFromRoot(id);
+          const el = getElementByIdFromRoot(this, id);
           if (el) el[performers.event](event, handler, capture);
         }
       },
@@ -298,10 +305,6 @@ export default class BaseElement extends window.HTMLElement {
     }
   }
 
-  #getElementByIdFromRoot(id) {
-    return isNonEmptyString(id) ? this.#root.querySelector(`#${id}`) : undefined;
-  }
-
   #clearContents() {
     if (!!this.#children.length) this.#children.forEach(cacheInvalidator);
     if (!!this.#rules.length) this.#rules.forEach(cacheInvalidator);
@@ -328,13 +331,13 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   #render() {
-    if (window.Wuse.MEASURE) this.#measurement.partial.start();
     if (!this.#styled) this.#insertStyle();
     const evs = this.#elementEvents;
     evs.immediateTrigger("on_prerender");
     this.#prepareContents();
     const cts = this.#contents;
-    if (cts.root.invalidated || cts.main.invalidated || cts.style.invalidated) {
+    const result = cts.root.invalidated || cts.main.invalidated || cts.style.invalidated;
+    if (result) {
       this.#bind(false);
       this.#commitContents(false, false, false);
       this.#bind(true);
@@ -349,7 +352,7 @@ export default class BaseElement extends window.HTMLElement {
       `unmodified: ${this.info.unmodifiedRounds} (main: ${this.#waste.main.rounds}, style: ${this.#waste.style.rounds}) | updated: ${this.info.updatedRounds}`
     );
     evs.immediateTrigger("on_postrender");
-    if (window.Wuse.MEASURE) this.#measurement.partial.stop(window.Wuse.DEBUG);
+    return result;
   }
 
   #inject(evs, event) {
@@ -367,7 +370,6 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   #redraw() {
-    if (window.Wuse.MEASURE) this.#measurement.full.start();
     this.#bind(false);
     if (this.#inserted) {
       this.#extirpateElements();
@@ -376,9 +378,22 @@ export default class BaseElement extends window.HTMLElement {
     const evs = this.#elementEvents;
     evs.immediateTrigger("on_unload");
     evs.detect();
-    this.#inject(evs, "on_reload");
-    evs.committedTrigger("on_repaint");
-    if (window.Wuse.MEASURE) this.#measurement.full.stop(window.Wuse.DEBUG);
+    const opt = this.#options;
+    this.#inject(evs, opt.redrawReload ? "on_reload" : "on_load");
+    evs.committedTrigger(opt.redrawRepaint ? "on_repaint" : "on_refresh");
+    return true;
+  }
+
+  #revise(partial) {
+    if (window.Wuse.MEASURE) {
+      const measure = partial ? this.#measurement.partial : this.#measurement.full;
+      measure.start();
+      const result = partial ? this.#render() : this.#redraw();
+      measure.stop(window.Wuse.DEBUG);
+      return result;
+    } else {
+      return partial ? this.#render() : this.#redraw();
+    }
   }
 
   // PARTS ROUTINES
@@ -389,7 +404,9 @@ export default class BaseElement extends window.HTMLElement {
       if (hittedRules = !!rulesHits.length) rulesHits.forEach(cacheInvalidator);
       const childrenHits = scanChildrenForReplacements(this.#children, name);
       if (hittedChildren = !!childrenHits.length) childrenHits.forEach(cacheInvalidator);
-      if (window.Wuse.DEBUG && this.#identified) debug(this, `reactive render (label: ${label}, field: ${name}, children: ${childrenHits.length}, rules: ${rulesHits.length})`);
+      if (window.Wuse.DEBUG && this.#identified) debug(this,
+        `reactive render (label: ${label}, field: ${name}, children: ${childrenHits.length}, rules: ${rulesHits.length})`
+      );
       if (hittedChildren || hittedRules) {
         if (childrenHits.some(x => !!x.kind.length)) {
           // NOTE: when a slot gets invalidated the replaceChild will drop all other slots,
@@ -418,7 +435,7 @@ export default class BaseElement extends window.HTMLElement {
 
   #filiateChild(tmp) {
     if (tmp !== null) {
-      if (this.#initialized && this.#getElementByIdFromRoot(tmp.id)) {
+      if (this.#initialized && getElementByIdFromRoot(this, tmp.id)) {
         return RuntimeErrors.onTakenId(tmp.id);
       }
       if (tmp.custom && this.#options.autokeyChildren && this.#stateManager.hasKey()) {
@@ -467,11 +484,11 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   render() {
-    window.Wuse.RENDERING && this.#rendering && this.#binded && this.#render();
+    window.Wuse.RENDERING && this.#rendering && this.#binded && this.#revise(true);
   }
 
   redraw() {
-    window.Wuse.RENDERING && this.#rendering && this.#binded && this.#redraw();
+    window.Wuse.RENDERING && this.#rendering && this.#binded && this.#revise(false);
   }
 
   connectedCallback() {
@@ -523,6 +540,12 @@ export default class BaseElement extends window.HTMLElement {
 
   restoreOnReconstruct(value) {
     this.#options.automaticallyRestore = value;
+    return this;
+  }
+
+  fireSpecificRedrawEvents(reload, repaint) {
+    this.#options.redrawReload = !!reload;
+    this.#options.redrawRepaint = !!repaint;
     return this;
   }
 

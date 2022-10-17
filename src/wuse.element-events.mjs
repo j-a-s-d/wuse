@@ -15,8 +15,8 @@ const EVENT_NAMES =
     "on_postrender", // after the render process finishes (dom updated or not)
     "on_refresh", // after the browser paints the content after a render() call
     "on_unload", // after elements got removed
-    "on_reload", // after any time the elements are reinserted (except the initial time, also by now handled events had been redetected again)
-    "on_repaint", // after the browser paints the content after a redraw() call
+    "on_reload", // after any time the elements are reinserted (except the initial time, also by now handled events had been redetected again, finally you can disable this calling fireSpecificRedrawEvents with false in the 1st parameter -on_load will be fired instead-)
+    "on_repaint", // after the browser paints the content after a redraw() call (you can disable this event calling fireSpecificRedrawEvents in the 2nd argument -on_refresh will be fired instead-)
     "on_disconnect" // on disconnectedCallback
   ];
 
