@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.javascript-helpers.js"
+  file = "./wuse.javascript-helpers.mjs"
 
   suite = (tester, module) => {
     tester.testModuleProperty(module, "EMPTY_STRING", ["existence", "type:string"], this.EMPTY_STRING);

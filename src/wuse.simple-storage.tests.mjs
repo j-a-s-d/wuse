@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.simple-storage.js"
+  file = "./wuse.simple-storage.mjs"
 
   suite = (tester, module) => {
     tester.testClassModule(module, "SimpleStorage", ["existence", "type:function"], this.SimpleStorage);

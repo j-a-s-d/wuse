@@ -2,13 +2,14 @@
 
 export default new class {
 
-  file = "./wuse.web-helpers.js"
+  file = "./wuse.web-helpers.mjs"
 
   suite = (tester, module) => {
     tester.testModuleFunction(module, "onDOMContentLoaded", ["existence", "type:undefined"], this.onDOMContentLoaded);
     tester.testModuleFunction(module, "getUniqueId", ["existence", "type:string", "property:length"], this.getUniqueId);
     tester.testModuleFunction(module, "removeChildren", ["existence", "type:undefined"], this.removeChildren);
     tester.testModuleFunction(module, "isHTMLTag", ["existence", "type:boolean"], this.isHTMLTag);
+    tester.testModuleFunction(module, "isHTMLVoidTag", ["existence", "type:boolean"], this.isHTMLVoidTag);
     tester.testModuleFunction(module, "isHTMLAttribute", ["existence", "type:boolean"], this.isHTMLAttribute);
     tester.testModuleFunction(module, "htmlEncode", ["existence", "type:string"], this.htmlEncode);
     tester.testModuleFunction(module, "getCSSVendorPrefix", ["existence", "type:string"], this.getCSSVendorPrefix);
@@ -35,6 +36,12 @@ export default new class {
 
   isHTMLTag = (tester, module, fn) => {
     tester.testInvokationWithArgsResult(module, fn, ["div"], "valid tag", result => result === true);
+    tester.testInvokationWithArgsResult(module, fn, ["---"], "invalid tag", result => result === false);
+    tester.testInvokationWithArgsResult(module, fn, [null], "null tag", result => result === false);
+  }
+
+  isHTMLVoidTag = (tester, module, fn) => {
+    tester.testInvokationWithArgsResult(module, fn, ["hr"], "valid tag", result => result === true);
     tester.testInvokationWithArgsResult(module, fn, ["---"], "invalid tag", result => result === false);
     tester.testInvokationWithArgsResult(module, fn, [null], "null tag", result => result === false);
   }

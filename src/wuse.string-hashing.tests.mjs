@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.string-hashing.js"
+  file = "./wuse.string-hashing.mjs"
 
   suite = (tester, module) => {
     tester.testModuleFunction(module, "defaultRoutine", ["existence", "type:number"], this.defaultRoutine);

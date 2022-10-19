@@ -447,11 +447,15 @@ export default class BaseElement extends window.HTMLElement {
 
   // PUBLIC
 
+  // FIELDS
+
   info = {
     instanceNumber: ++BaseElement.instancesCount,
     unmodifiedRounds: 0,
     updatedRounds: 0
   }
+
+  // CONSTRUCTORS
 
   constructor(mode) {
     super();
@@ -475,6 +479,8 @@ export default class BaseElement extends window.HTMLElement {
     this.#initialized = true;
   }
 
+  // PROPERTIES
+
   get parameters() {
     return this.#parameters;
   }
@@ -483,6 +489,8 @@ export default class BaseElement extends window.HTMLElement {
     if (isAssignedObject(this.#parameters = value)) forEachOwnProperty(value, name => this[name] = value[name]);
   }
 
+  // METHODS
+
   render() {
     window.Wuse.RENDERING && this.#rendering && this.#binded && this.#revise(true);
   }
@@ -490,6 +498,27 @@ export default class BaseElement extends window.HTMLElement {
   redraw() {
     window.Wuse.RENDERING && this.#rendering && this.#binded && this.#revise(false);
   }
+
+  suspendRender() {
+    this.#rendering = false;
+    return this;
+  }
+
+  resumeRender(autorender = true) {
+    this.#rendering = true;
+    if (autorender) this.render();
+    return this;
+  }
+
+  isRenderSuspended() {
+    return !this.#rendering;
+  }
+
+  selectChildElement(x) {
+    return this.#root.querySelector(x);
+  }
+
+  // NODE EVENTS
 
   connectedCallback() {
     if (window.Wuse.MEASURE) this.#measurement.attachment.start();
@@ -507,6 +536,42 @@ export default class BaseElement extends window.HTMLElement {
     this.#stateManager.writeState();
     if (window.Wuse.MEASURE) this.#measurement.dettachment.stop(window.Wuse.DEBUG);
   }
+
+  // ELEMENT OPTIONS
+
+  deriveChildrenStoreKey(value) {
+    this.#options.autokeyChildren = value;
+    return this;
+  }
+
+  restoreOnReconstruct(value) {
+    this.#options.automaticallyRestore = value;
+    return this;
+  }
+
+  fireSpecificRedrawEvents(reload, repaint) {
+    this.#options.redrawReload = !!reload;
+    this.#options.redrawRepaint = !!repaint;
+    return this;
+  }
+
+  setElementsAsKeys(value) {
+    this.#options.elementKeys = !!value;
+    return this;
+  }
+
+  setAttributesAsKeys(value) {
+    this.#options.attributeKeys = !!value;
+    return this;
+  }
+
+  setStyleOptions(media, type) {
+    this.#options.styleMedia = isNonEmptyString(media) ? media : EMPTY_STRING;
+    this.#options.styleType = isNonEmptyString(type) ? type : EMPTY_STRING;
+    return this;
+  }
+
+  // ELEMENTS STORE
 
   getElementsStore() {
     return this.#stateManager.getStore();
@@ -533,22 +598,6 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
-  deriveChildrenStoreKey(value) {
-    this.#options.autokeyChildren = value;
-    return this;
-  }
-
-  restoreOnReconstruct(value) {
-    this.#options.automaticallyRestore = value;
-    return this;
-  }
-
-  fireSpecificRedrawEvents(reload, repaint) {
-    this.#options.redrawReload = !!reload;
-    this.#options.redrawRepaint = !!repaint;
-    return this;
-  }
-
   persistToElementsStore() {
     return this.#stateManager.validateKey() && this.#stateManager.writeState();
   }
@@ -561,9 +610,7 @@ export default class BaseElement extends window.HTMLElement {
     return this.#stateManager.validateKey() && this.#stateManager.eraseState();
   }
 
-  selectChildElement(x) {
-    return this.#root.querySelector(x);
-  }
+  // MAIN NODE
 
   getMainAttribute(key) {
     return key === "id" && this.#identified ?
@@ -620,21 +667,7 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
-  setStyleOptions(media, type) {
-    this.#options.styleMedia = isNonEmptyString(media) ? media : EMPTY_STRING;
-    this.#options.styleType = isNonEmptyString(type) ? type : EMPTY_STRING;
-    return this;
-  }
-
-  setElementsAsKeys(value) {
-    this.#options.elementKeys = !!value;
-    return this;
-  }
-
-  setAttributesAsKeys(value) {
-    this.#options.attributeKeys = !!value;
-    return this;
-  }
+  // RAW CONTENT
 
   allowRawContent(value) {
     this.#options.rawContent = !!value;
@@ -655,6 +688,8 @@ export default class BaseElement extends window.HTMLElement {
     this.#options.rawContent ? this.#html = html + this.#html : RuntimeErrors.onAllowHTML();
     return this;
   }
+
+  // CSS RULES
 
   lockCSSRules() {
     this.#rules.locked = true;
@@ -723,6 +758,8 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
+  // CHILD ELEMENTS
+
   lockChildElements() {
     this.#children.locked = true;
     return this;
@@ -765,6 +802,33 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
+  transferChildElementById(id, element) {
+    if (isNonEmptyString(id) && typeof element === "object" && typeof element.#filiateChild === "function") {
+      const chn = this.#children;
+      const idx = chn.getIndexOf(id);
+      if (idx > -1) {
+        const cel = chn[idx];
+        const owa = cel.attributes[WUSEKEY_ATTRIBUTE];
+        cel.attributes[WUSEKEY_ATTRIBUTE] = "";
+        const tmp = element.#filiateChild(cel);
+        if (tmp !== null) {
+          element.#children.append(tmp);
+          chn.remove(idx);
+          const clx = `on_${tmp.id}_click`;
+          if (typeof this[clx] === "function") {
+            const handler = this[clx];
+            delete this[clx];
+            element[clx] = handler;
+          }
+          return true;
+        } else {
+          cel.attributes[WUSEKEY_ATTRIBUTE] = owa;
+        }
+      }
+    }
+    return false;
+  }
+
   removeChildElementById(id) {
     this.#children.remove(this.#children.getIndexOf(id));
     return this;
@@ -800,6 +864,8 @@ export default class BaseElement extends window.HTMLElement {
     if (isAssignedArray(childs)) childs.forEach(cacheInvalidator);
     return this;
   }
+
+  // INSTANCE FIELDS
 
   lockInstanceFields() {
     this.#fields.locked = true;
@@ -865,21 +931,6 @@ export default class BaseElement extends window.HTMLElement {
 
   snapshotInstanceFields() {
     return this.#fields.snapshot();
-  }
-
-  suspendRender() {
-    this.#rendering = false;
-    return this;
-  }
-
-  resumeRender(autorender = true) {
-    this.#rendering = true;
-    if (autorender) this.render();
-    return this;
-  }
-
-  isRenderSuspended() {
-    return !this.#rendering;
   }
 
   // STATIC

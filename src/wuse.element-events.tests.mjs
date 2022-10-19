@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.element-events.js"
+  file = "./wuse.element-events.mjs"
 
   suite = (tester, module) => {
     tester.testClassModule(module, "ElementEvents", ["existence", "type:function"], this.ElementEvents);

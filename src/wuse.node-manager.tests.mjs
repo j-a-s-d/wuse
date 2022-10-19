@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.node-manager.js"
+  file = "./wuse.node-manager.mjs"
 
   suite = (tester, module) => {
     tester.testClassModule(module, "NodeManager", ["existence", "type:function"], this.NodeManager);

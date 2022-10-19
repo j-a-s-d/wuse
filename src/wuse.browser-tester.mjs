@@ -45,7 +45,7 @@ export let totals = { ok: 0, error: 0 };
 
 const presentResults = () => {
   var links = "";
-  window.fileList.forEach(file => links += ` ${!!links.length ? "|" : ""} <a href="#${file}">${file.replace("./wuse.", "").replace(".js", "")}</a>`);
+  window.fileList.forEach(file => links += ` ${!!links.length ? "|" : ""} <a href="#${file}">${file.replace("./wuse.", "").replace(".mjs", "")}</a>`);
   present(`
     <h1><b class='total'>[WUSE:TESTS] Total: ${totals.ok + totals.error} (ok: ${totals.ok}, error: ${totals.error})</b></h1>
     ${links}

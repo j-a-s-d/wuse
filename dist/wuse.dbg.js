@@ -342,6 +342,7 @@
     "center",
     "cite",
     "code",
+    "command",
     "content",
     "col",
     "colgroup",
@@ -455,6 +456,21 @@
     "video",
     "xmp",
     "wbr"
+  ].map(hash);
+  var HTML_VOID_TAGS = [
+    "area",
+    "base",
+    "br",
+    "col",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "param",
+    "command",
+    "keygen",
+    "source"
   ].map(hash);
   var HTML_ATTRIBUTES = [
     "accept",
@@ -605,6 +621,9 @@
     }
     static isHTMLTag(tag) {
       return typeof tag === "string" && HTML_TAGS.indexOf(hash(tag)) > -1;
+    }
+    static isHTMLVoidTag(tag) {
+      return typeof tag === "string" && HTML_VOID_TAGS.indexOf(hash(tag)) > -1;
     }
     static isHTMLAttribute(attribute) {
       return typeof attribute === "string" && HTML_ATTRIBUTES.indexOf(hash(attribute)) > -1;
@@ -1823,6 +1842,22 @@
     redraw() {
       window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _revise, revise_fn).call(this, false);
     }
+    suspendRender() {
+      __privateSet(this, _rendering, false);
+      return this;
+    }
+    resumeRender(autorender = true) {
+      __privateSet(this, _rendering, true);
+      if (autorender)
+        this.render();
+      return this;
+    }
+    isRenderSuspended() {
+      return !__privateGet(this, _rendering);
+    }
+    selectChildElement(x) {
+      return __privateGet(this, _root).querySelector(x);
+    }
     connectedCallback() {
       if (window.Wuse.MEASURE)
         __privateGet(this, _measurement).attachment.start();
@@ -1841,6 +1876,32 @@
       __privateGet(this, _stateManager).writeState();
       if (window.Wuse.MEASURE)
         __privateGet(this, _measurement).dettachment.stop(window.Wuse.DEBUG);
+    }
+    deriveChildrenStoreKey(value) {
+      __privateGet(this, _options).autokeyChildren = value;
+      return this;
+    }
+    restoreOnReconstruct(value) {
+      __privateGet(this, _options).automaticallyRestore = value;
+      return this;
+    }
+    fireSpecificRedrawEvents(reload, repaint) {
+      __privateGet(this, _options).redrawReload = !!reload;
+      __privateGet(this, _options).redrawRepaint = !!repaint;
+      return this;
+    }
+    setElementsAsKeys(value) {
+      __privateGet(this, _options).elementKeys = !!value;
+      return this;
+    }
+    setAttributesAsKeys(value) {
+      __privateGet(this, _options).attributeKeys = !!value;
+      return this;
+    }
+    setStyleOptions(media, type) {
+      __privateGet(this, _options).styleMedia = isNonEmptyString6(media) ? media : EMPTY_STRING2;
+      __privateGet(this, _options).styleType = isNonEmptyString6(type) ? type : EMPTY_STRING2;
+      return this;
     }
     getElementsStore() {
       return __privateGet(this, _stateManager).getStore();
@@ -1862,19 +1923,6 @@
       }
       return this;
     }
-    deriveChildrenStoreKey(value) {
-      __privateGet(this, _options).autokeyChildren = value;
-      return this;
-    }
-    restoreOnReconstruct(value) {
-      __privateGet(this, _options).automaticallyRestore = value;
-      return this;
-    }
-    fireSpecificRedrawEvents(reload, repaint) {
-      __privateGet(this, _options).redrawReload = !!reload;
-      __privateGet(this, _options).redrawRepaint = !!repaint;
-      return this;
-    }
     persistToElementsStore() {
       return __privateGet(this, _stateManager).validateKey() && __privateGet(this, _stateManager).writeState();
     }
@@ -1883,9 +1931,6 @@
     }
     removeFromElementsStore() {
       return __privateGet(this, _stateManager).validateKey() && __privateGet(this, _stateManager).eraseState();
-    }
-    selectChildElement(x) {
-      return __privateGet(this, _root).querySelector(x);
     }
     getMainAttribute(key) {
       return key === "id" && __privateGet(this, _identified) ? __privateGet(this, _options).mainDefinition.id : __privateGet(this, _options).mainDefinition.attributes[key];
@@ -1941,19 +1986,6 @@
         if (isAssignedObject7(tmp.attributes))
           def.attributes = tmp.attributes;
       }
-      return this;
-    }
-    setStyleOptions(media, type) {
-      __privateGet(this, _options).styleMedia = isNonEmptyString6(media) ? media : EMPTY_STRING2;
-      __privateGet(this, _options).styleType = isNonEmptyString6(type) ? type : EMPTY_STRING2;
-      return this;
-    }
-    setElementsAsKeys(value) {
-      __privateGet(this, _options).elementKeys = !!value;
-      return this;
-    }
-    setAttributesAsKeys(value) {
-      __privateGet(this, _options).attributeKeys = !!value;
       return this;
     }
     allowRawContent(value) {
@@ -2065,6 +2097,33 @@
         __privateGet(this, _children).replace(__privateGet(this, _children).getIndexOf(id), tmp);
       return this;
     }
+    transferChildElementById(id, element) {
+      var _a3;
+      if (isNonEmptyString6(id) && typeof element === "object" && typeof __privateMethod(element, _filiateChild, filiateChild_fn) === "function") {
+        const chn = __privateGet(this, _children);
+        const idx = chn.getIndexOf(id);
+        if (idx > -1) {
+          const cel = chn[idx];
+          const owa = cel.attributes[WUSEKEY_ATTRIBUTE];
+          cel.attributes[WUSEKEY_ATTRIBUTE] = "";
+          const tmp = __privateMethod(_a3 = element, _filiateChild, filiateChild_fn).call(_a3, cel);
+          if (tmp !== null) {
+            __privateGet(element, _children).append(tmp);
+            chn.remove(idx);
+            const clx = `on_${tmp.id}_click`;
+            if (typeof this[clx] === "function") {
+              const handler = this[clx];
+              delete this[clx];
+              element[clx] = handler;
+            }
+            return true;
+          } else {
+            cel.attributes[WUSEKEY_ATTRIBUTE] = owa;
+          }
+        }
+      }
+      return false;
+    }
     removeChildElementById(id) {
       __privateGet(this, _children).remove(__privateGet(this, _children).getIndexOf(id));
       return this;
@@ -2157,19 +2216,6 @@
     }
     snapshotInstanceFields() {
       return __privateGet(this, _fields).snapshot();
-    }
-    suspendRender() {
-      __privateSet(this, _rendering, false);
-      return this;
-    }
-    resumeRender(autorender = true) {
-      __privateSet(this, _rendering, true);
-      if (autorender)
-        this.render();
-      return this;
-    }
-    isRenderSuspended() {
-      return !__privateGet(this, _rendering);
     }
     static initialize(options) {
       TextReplacements.initialize(DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE);
@@ -2613,7 +2659,7 @@
   };
 
   // package.json
-  var version = "0.7.7";
+  var version = "0.7.8";
 
   // src/wuse.js
   var _a2;

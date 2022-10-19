@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.parts-holder.js"
+  file = "./wuse.parts-holder.mjs"
 
   suite = (tester, module) => {
     tester.testClassModule(module, "PartsHolder", ["existence", "type:function"], this.PartsHolder);

@@ -3,10 +3,12 @@
 import StringHashing from './wuse.string-hashing.mjs';
 const hash = StringHashing.defaultRoutine;
 
-const HTML_TAGS = [ // NOTE: it includes deprecated and non-standard ones
+// NOTE: the following lists include obsolete, deprecated and non-standard items on purpose
+
+const HTML_TAGS = [
   "a", "abbr", "acronym", "address", "applet", "area", "article", "aside", "audio",
   "b", "base", "basefont", "bdi", "bdo", "bgsound", "big", "blink", "blockquote", "body", "br", "button",
-  "canvas", "caption", "center", "cite", "code", "content", "col", "colgroup",
+  "canvas", "caption", "center", "cite", "code", "command", "content", "col", "colgroup",
   "datalist", "dd", "del", "details", "dfn", "dialog", "dir", "div", "dl", "dt",
   "em", "embed",
   "fieldset", "figcaption", "figure", "font", "footer", "form", "frame", "frameset",
@@ -26,6 +28,11 @@ const HTML_TAGS = [ // NOTE: it includes deprecated and non-standard ones
   "var", "video",
   "xmp",
   "wbr"
+].map(hash);
+
+const HTML_VOID_TAGS = [
+  "area", "base", "br", "col", "hr", "img", "input", "link", "meta", "param", // from HTML 4.01/XHTML 1.0 Strict
+  "command", "keygen", "source" // from HTML 5
 ].map(hash);
 
 const HTML_ATTRIBUTES = [ // NOTE: it does not include "data-*"
@@ -76,6 +83,10 @@ export default class WebHelpers {
 
   static isHTMLTag(tag) {
     return typeof tag === "string" && HTML_TAGS.indexOf(hash(tag)) > -1;
+  }
+
+  static isHTMLVoidTag(tag) {
+    return typeof tag === "string" && HTML_VOID_TAGS.indexOf(hash(tag)) > -1;
   }
 
   static isHTMLAttribute(attribute) {

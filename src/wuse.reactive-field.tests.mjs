@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.reactive-field.js"
+  file = "./wuse.reactive-field.mjs"
 
   suite = (tester, module) => {
     tester.testModuleFunction(module, "createReactiveField", ["existence", "type:object"], this.createReactiveField);

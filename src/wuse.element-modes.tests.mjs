@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.element-modes.js"
+  file = "./wuse.element-modes.mjs"
 
   suite = (tester, module) => {
     tester.testModuleProperty(module, "REGULAR", ["existence", "type:string"], this.REGULAR);

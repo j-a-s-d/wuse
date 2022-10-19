@@ -20,7 +20,7 @@ const testInstanceCompute3Times = (tester, name, instance, setupArgs, callArgs, 
 
 export default new class {
 
-  file = "./wuse.equality-analyzer.js"
+  file = "./wuse.equality-analyzer.mjs"
 
   suite = (tester, module) => {
     tester.testClassModule(module, "EqualityAnalyzer", ["existence", "type:function"], this.EqualityAnalyzer);

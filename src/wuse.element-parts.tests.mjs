@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.element-parts.js"
+  file = "./wuse.element-parts.mjs"
 
   suite = (tester, module) => {
     // NOTE: due to their high performance impact, some of

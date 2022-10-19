@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.text-replacements.js"
+  file = "./wuse.text-replacements.mjs"
 
   suite = (tester, module) => {
     tester.testClassModule(module, "TextReplacements", ["existence", "type:function"], this.TextReplacements);
