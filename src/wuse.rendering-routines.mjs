@@ -23,7 +23,7 @@ export default class RenderingRoutines {
       if (isAssignedArray(rule.nested)) {
         return `${rule.selector}{${rule.nested.map(r => this.renderRule(replacer, r)).join("\n")}}`;
       } else if (isNonEmptyString(rule.selector) && !rule.nested) {
-        var c = new window.String();
+        let c = new window.String();
         for (const property in rule.properties) {
           c += `${property}:${rule.properties[property]};`;
         }
@@ -40,18 +40,18 @@ export default class RenderingRoutines {
         return this.#onFetchTemplate(child.id);
       }
       if (child.tag === TEXTNODE_TAG) {
-        var c = child.content;
+        let c = child.content;
         child.replacements["contents"].forEach(r => c = replacer(c, r));
         return child.encode ? htmlEncode(c) : c;
       }
       var result = isNonEmptyString(child.id) ? `<${child.tag} id='${child.id}'` : `<${child.tag}`;
       if (!!child.classes.length) {
-        var c = child.classes.join(" ");
+        let c = child.classes.join(" ");
         child.replacements["classes"].forEach(r => c = replacer(c, r));
         result += ` class='${c}'`;
       }
       if (hasObjectKeys(child.style)) {
-        var c = " style='";
+        let c = " style='";
         for (const property in child.style) {
           c += `${property}: ${child.style[property]}; `;
         }
@@ -60,7 +60,7 @@ export default class RenderingRoutines {
         result += c;
       }
       if (hasObjectKeys(child.attributes)) {
-        var c = new window.String();
+        let c = new window.String();
         for (const property in child.attributes) {
           c += ` ${property}=${child.attributes[property]}`;
         }
@@ -68,7 +68,7 @@ export default class RenderingRoutines {
         result += c;
       }
       if (typeof child.content === "string") {
-        var c = child.content;
+        let c = child.content;
         child.replacements["contents"].forEach(r => c = replacer(c, r));
         result += `>${child.encode ? htmlEncode(c) : c}</${child.tag}>`;
       } else {

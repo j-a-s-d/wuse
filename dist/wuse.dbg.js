@@ -1095,32 +1095,32 @@
     find: ReplacementMarkers.enclose(match)
   }));
   __privateAdd(ReplacementsExtractors, _includeMatches, (hits, at, str) => isNonEmptyString3(str) && (str.match(__privateGet(_ReplacementsExtractors, _regExp)) || EMPTY_ARRAY2).forEach((match) => {
-    var _a3;
-    return __privateGet(_a3 = _ReplacementsExtractors, _addReplacement).call(_a3, hits, at, match);
+    var _a2;
+    return __privateGet(_a2 = _ReplacementsExtractors, _addReplacement).call(_a2, hits, at, match);
   }));
   __privateAdd(ReplacementsExtractors, _includeStringMatches, (result, key, value) => {
-    var _a3;
+    var _a2;
     result[key] = new window.Array();
-    __privateGet(_a3 = _ReplacementsExtractors, _includeMatches).call(_a3, result[key], key, value);
+    __privateGet(_a2 = _ReplacementsExtractors, _includeMatches).call(_a2, result[key], key, value);
   });
   __privateAdd(ReplacementsExtractors, _includeKeysMatches, (result, key, obj) => {
     result[key] = new window.Array();
     window.Object.keys(obj).forEach((k) => {
-      var _a3, _b2;
-      __privateGet(_a3 = _ReplacementsExtractors, _includeMatches).call(_a3, result[key], key, k);
+      var _a2, _b2;
+      __privateGet(_a2 = _ReplacementsExtractors, _includeMatches).call(_a2, result[key], key, k);
       __privateGet(_b2 = _ReplacementsExtractors, _includeMatches).call(_b2, result[key], key, obj[k]);
     });
   });
   __publicField(ReplacementsExtractors, "child", (child) => buildObject2((result) => {
-    var _a3, _b2, _c2, _d;
-    __privateGet(_a3 = _ReplacementsExtractors, _includeStringMatches).call(_a3, result, "contents", child.content);
+    var _a2, _b2, _c2, _d;
+    __privateGet(_a2 = _ReplacementsExtractors, _includeStringMatches).call(_a2, result, "contents", child.content);
     __privateGet(_b2 = _ReplacementsExtractors, _includeStringMatches).call(_b2, result, "classes", child.classes.join(" "));
     __privateGet(_c2 = _ReplacementsExtractors, _includeKeysMatches).call(_c2, result, "styles", child.style);
     __privateGet(_d = _ReplacementsExtractors, _includeKeysMatches).call(_d, result, "attributes", child.attributes);
     child.rules.forEach((r) => r.replacements = _ReplacementsExtractors.rule(r));
   }));
   __publicField(ReplacementsExtractors, "rule", (rule) => buildArray2((result) => {
-    var _a3;
+    var _a2;
     if (isAssignedArray3(rule.nested)) {
       return rule.nested.map((r) => _ReplacementsExtractors.rule(r));
     }
@@ -1128,7 +1128,7 @@
     for (const property in rule.properties) {
       c += `${property}:${rule.properties[property]};`;
     }
-    __privateGet(_a3 = _ReplacementsExtractors, _includeMatches).call(_a3, result, "rules", c);
+    __privateGet(_a2 = _ReplacementsExtractors, _includeMatches).call(_a2, result, "rules", c);
   }));
   var TextReplacements = class {
     static initialize(openMarker, closeMarker) {
@@ -1164,7 +1164,7 @@
     if (isAssignedArray4(rule.nested)) {
       return `${rule.selector}{${rule.nested.map((r) => _RenderingRoutines.renderRule(replacer, r)).join("\n")}}`;
     } else if (isNonEmptyString4(rule.selector) && !rule.nested) {
-      var c = new window.String();
+      let c = new window.String();
       for (const property in rule.properties) {
         c += `${property}:${rule.properties[property]};`;
       }
@@ -1176,23 +1176,23 @@
     return null;
   });
   __publicField(RenderingRoutines, "renderChild", (replacer, child) => {
-    var _a3;
+    var _a2;
     if (child.kind === TEMPLATES_KIND2) {
-      return __privateGet(_a3 = _RenderingRoutines, _onFetchTemplate).call(_a3, child.id);
+      return __privateGet(_a2 = _RenderingRoutines, _onFetchTemplate).call(_a2, child.id);
     }
     if (child.tag === TEXTNODE_TAG2) {
-      var c = child.content;
+      let c = child.content;
       child.replacements["contents"].forEach((r) => c = replacer(c, r));
       return child.encode ? htmlEncode(c) : c;
     }
     var result = isNonEmptyString4(child.id) ? `<${child.tag} id='${child.id}'` : `<${child.tag}`;
     if (!!child.classes.length) {
-      var c = child.classes.join(" ");
+      let c = child.classes.join(" ");
       child.replacements["classes"].forEach((r) => c = replacer(c, r));
       result += ` class='${c}'`;
     }
     if (hasObjectKeys2(child.style)) {
-      var c = " style='";
+      let c = " style='";
       for (const property in child.style) {
         c += `${property}: ${child.style[property]}; `;
       }
@@ -1201,7 +1201,7 @@
       result += c;
     }
     if (hasObjectKeys2(child.attributes)) {
-      var c = new window.String();
+      let c = new window.String();
       for (const property in child.attributes) {
         c += ` ${property}=${child.attributes[property]}`;
       }
@@ -1209,7 +1209,7 @@
       result += c;
     }
     if (typeof child.content === "string") {
-      var c = child.content;
+      let c = child.content;
       child.replacements["contents"].forEach((r) => c = replacer(c, r));
       result += `>${child.encode ? htmlEncode(c) : c}</${child.tag}>`;
     } else {
@@ -1645,13 +1645,13 @@
           super(...arguments);
           __publicField(this, "getIndexOf", (value) => super.getIndexOf("id", value));
           __publicField(this, "on_version_change", () => {
-            var _a3;
+            var _a2;
             if (this.last !== null) {
               this.last.version = this.version;
               this.last.replacements = extractReplacementsFromChild(this.last);
             }
             if (!__privateGet(this.owner, _slotted))
-              __privateSet(_a3 = this.owner, _slotted, __privateGet(_a3, _slotted) | this.some((child) => child.kind === SLOTS_KIND3));
+              __privateSet(_a2 = this.owner, _slotted, __privateGet(_a2, _slotted) | this.some((child) => child.kind === SLOTS_KIND3));
             if (window.Wuse.DEBUG && __privateGet(this.owner, _identified))
               debug(this.owner, `children list version change: ${this.version}`);
           });
@@ -2055,6 +2055,18 @@
       __privateGet(this, _rules).replace(__privateGet(this, _rules).getIndexOf(selector), newRule(selector, properties));
       return this;
     }
+    transferCSSRuleBySelector(selector, element) {
+      if (isNonEmptyString6(selector) && typeof element === "object" && typeof __privateGet(element, _rules) === "object") {
+        const rls = __privateGet(this, _rules);
+        const idx = rls.getIndexOf(selector);
+        if (idx > -1) {
+          __privateGet(element, _rules).append(rls[idx]);
+          rls.remove(idx);
+          return true;
+        }
+      }
+      return false;
+    }
     removeCSSRuleBySelector(selector) {
       __privateGet(this, _rules).remove(__privateGet(this, _rules).getIndexOf(selector));
       return this;
@@ -2098,15 +2110,15 @@
       return this;
     }
     transferChildElementById(id, element) {
-      var _a3;
+      var _a2;
       if (isNonEmptyString6(id) && typeof element === "object" && typeof __privateMethod(element, _filiateChild, filiateChild_fn) === "function") {
         const chn = __privateGet(this, _children);
         const idx = chn.getIndexOf(id);
         if (idx > -1) {
           const cel = chn[idx];
           const owa = cel.attributes[WUSEKEY_ATTRIBUTE];
-          cel.attributes[WUSEKEY_ATTRIBUTE] = "";
-          const tmp = __privateMethod(_a3 = element, _filiateChild, filiateChild_fn).call(_a3, cel);
+          cel.attributes[WUSEKEY_ATTRIBUTE] = new window.String();
+          const tmp = __privateMethod(_a2 = element, _filiateChild, filiateChild_fn).call(_a2, cel);
           if (tmp !== null) {
             __privateGet(element, _children).append(tmp);
             chn.remove(idx);
@@ -2589,7 +2601,7 @@
       }
     }
     stop(debug2) {
-      var _a3;
+      var _a2;
       if (_PerformanceMeasurement.DOMUpdate.check) {
         if (this.best.domTime > (this.last.domTime = (this._end.dom = performance.now()) - this._begin)) {
           this.best.round = this.last.round;
@@ -2598,7 +2610,7 @@
         this.averages.dom = (this.averages.dom * (this.rounds - 1) + this.last.domTime) / this.rounds;
         _PerformanceMeasurement.DOMUpdate.overall.compute(this.last.domTime);
       }
-      _PerformanceMeasurement.BrowserRender.check ? setTimeout(() => __privateMethod(this, _finish, finish_fn).bind(this)(debug2)) : debug2 && __privateGet(_a3 = _PerformanceMeasurement, _debugCallback).call(_a3, this, "stop");
+      _PerformanceMeasurement.BrowserRender.check ? setTimeout(() => __privateMethod(this, _finish, finish_fn).bind(this)(debug2)) : debug2 && __privateGet(_a2 = _PerformanceMeasurement, _debugCallback).call(_a2, this, "stop");
     }
     getDebugInfo() {
       return {
@@ -2609,14 +2621,14 @@
       };
     }
   }, _finish = new WeakSet(), finish_fn = function(debug2) {
-    var _a3;
+    var _a2;
     if (this.best.renderTime > (this.last.renderTime = (this._end.render = performance.now()) - this._begin)) {
       this.best.round = this.last.round;
       this.best.renderTime = this.last.renderTime;
     }
     this.averages.render = (this.averages.render * (this.rounds - 1) + this.last.renderTime) / this.rounds;
     _PerformanceMeasurement.BrowserRender.overall.compute(this.last.renderTime);
-    debug2 && __privateGet(_a3 = _PerformanceMeasurement, _debugCallback).call(_a3, this, "finish");
+    debug2 && __privateGet(_a2 = _PerformanceMeasurement, _debugCallback).call(_a2, this, "finish");
   }, _a));
   __publicField(PerformanceMeasurement, "DOMUpdate", (_b = class {
   }, __publicField(_b, "check", true), __publicField(_b, "overall", null), _b));
@@ -2658,60 +2670,66 @@
     return window.Object.keys(__privateGet(this, _items));
   };
 
-  // package.json
-  var version = "0.7.8";
-
-  // src/wuse.js
-  var _a2;
+  // src/wuse.core-class.mjs
   var { noop: noop7, isOf: isOf5 } = JavascriptHelpers;
   var { specializeClass, REGULAR: REGULAR2, OPEN, CLOSED } = ElementModes;
-  window.Wuse = window.Wuse || (_a2 = class {
-    static get VERSION() {
-      return version;
-    }
-    static get elementCount() {
-      return BaseElement.instancesCount;
-    }
-  }, __publicField(_a2, "DEBUG", false), __publicField(_a2, "FATALS", false), __publicField(_a2, "MEASURE", false), __publicField(_a2, "RENDERING", true), __publicField(_a2, "hashRoutine", StringHashing.defaultRoutine), __publicField(_a2, "elementsStorage", new SimpleStorage()), __publicField(_a2, "tmp", null), __publicField(_a2, "WebHelpers", null), __publicField(_a2, "JsHelpers", null), __publicField(_a2, "PerformanceMeasurement", null), __publicField(_a2, "NonShadowElement", null), __publicField(_a2, "OpenShadowElement", null), __publicField(_a2, "ClosedShadowElement", null), __publicField(_a2, "debug", noop7), __publicField(_a2, "blockUpdate", noop7), __publicField(_a2, "register", noop7), __publicField(_a2, "instantiate", noop7), __publicField(_a2, "create", noop7), __publicField(_a2, "isShadowElement", noop7), (() => {
-    InitializationRoutines.declareUnwritableMembers(_a2, {
-      fields: {
-        tmp: new window.Object(),
-        WebHelpers,
-        JsHelpers: JavascriptHelpers,
-        PerformanceMeasurement,
-        NonShadowElement: specializeClass(BaseElement, REGULAR2),
-        OpenShadowElement: specializeClass(BaseElement, OPEN),
-        ClosedShadowElement: specializeClass(BaseElement, CLOSED)
-      },
-      methods: {
-        debug: (msg) => window.console.log("[WUSE:DEBUG]", msg),
-        blockUpdate: (task, arg) => {
-          if (isOf5(task, Function)) {
-            if (window.Wuse.DEBUG)
-              window.Wuse.debug("blocking");
-            window.Wuse.RENDERING = false;
-            try {
-              task(arg);
-            } catch (e) {
-              throw e;
-            } finally {
-              window.Wuse.RENDERING = true;
-              if (window.Wuse.DEBUG)
-                window.Wuse.debug("unblocking");
-            }
-          }
-        },
-        isShadowElement: (instance) => {
-          const p = window.Object.getPrototypeOf(instance.constructor);
-          return p === window.Wuse.OpenShadowElement || p === window.Wuse.ClosedShadowElement;
-        },
-        register: (classes) => ElementClasses.registerClasses(isOf5(classes, window.Array) ? classes : new window.Array(classes)),
-        instantiate: (classes, target, events) => ElementClasses.instantiateClasses(isOf5(classes, window.Array) ? classes : new window.Array(classes), target, events),
-        create: (configuration, option) => isOf5(configuration, window.Object) ? ElementClasses.createInstance(configuration.element, configuration.target, configuration.instance) : void 0
+  function makeCoreClass(version2) {
+    var _a2;
+    return _a2 = class {
+      static get VERSION() {
+        return version2;
       }
-    });
-    InitializationRoutines.detectFeatures(_a2);
-    InitializationRoutines.initializeModules(_a2);
-  })(), _a2);
+      static get elementCount() {
+        return BaseElement.instancesCount;
+      }
+    }, __publicField(_a2, "DEBUG", false), __publicField(_a2, "FATALS", false), __publicField(_a2, "MEASURE", false), __publicField(_a2, "RENDERING", true), __publicField(_a2, "hashRoutine", StringHashing.defaultRoutine), __publicField(_a2, "elementsStorage", new SimpleStorage()), __publicField(_a2, "tmp", null), __publicField(_a2, "WebHelpers", null), __publicField(_a2, "JsHelpers", null), __publicField(_a2, "PerformanceMeasurement", null), __publicField(_a2, "NonShadowElement", null), __publicField(_a2, "OpenShadowElement", null), __publicField(_a2, "ClosedShadowElement", null), __publicField(_a2, "debug", noop7), __publicField(_a2, "blockUpdate", noop7), __publicField(_a2, "register", noop7), __publicField(_a2, "instantiate", noop7), __publicField(_a2, "create", noop7), __publicField(_a2, "isShadowElement", noop7), (() => {
+      InitializationRoutines.declareUnwritableMembers(_a2, {
+        fields: {
+          tmp: new window.Object(),
+          WebHelpers,
+          JsHelpers: JavascriptHelpers,
+          PerformanceMeasurement,
+          NonShadowElement: specializeClass(BaseElement, REGULAR2),
+          OpenShadowElement: specializeClass(BaseElement, OPEN),
+          ClosedShadowElement: specializeClass(BaseElement, CLOSED)
+        },
+        methods: {
+          debug: (msg) => window.console.log("[WUSE:DEBUG]", msg),
+          blockUpdate: (task, arg) => {
+            if (isOf5(task, Function)) {
+              if (window.Wuse.DEBUG)
+                window.Wuse.debug("blocking");
+              window.Wuse.RENDERING = false;
+              try {
+                task(arg);
+              } catch (e) {
+                throw e;
+              } finally {
+                window.Wuse.RENDERING = true;
+                if (window.Wuse.DEBUG)
+                  window.Wuse.debug("unblocking");
+              }
+            }
+          },
+          isShadowElement: (instance) => {
+            const p = window.Object.getPrototypeOf(instance.constructor);
+            return p === window.Wuse.OpenShadowElement || p === window.Wuse.ClosedShadowElement;
+          },
+          register: (classes) => ElementClasses.registerClasses(isOf5(classes, window.Array) ? classes : new window.Array(classes)),
+          instantiate: (classes, target, events) => ElementClasses.instantiateClasses(isOf5(classes, window.Array) ? classes : new window.Array(classes), target, events),
+          create: (configuration, option) => isOf5(configuration, window.Object) ? ElementClasses.createInstance(configuration.element, configuration.target, configuration.instance) : void 0
+        }
+      });
+      InitializationRoutines.detectFeatures(_a2);
+      InitializationRoutines.initializeModules(_a2);
+    })(), _a2;
+  }
+  ;
+
+  // package.json
+  var version = "0.7.9";
+
+  // src/wuse.js
+  window.Wuse = window.Wuse || makeCoreClass(version);
 })();
 Wuse.DEBUG=Wuse.MEASURE=!0;

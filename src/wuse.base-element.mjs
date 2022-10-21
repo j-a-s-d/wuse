@@ -459,7 +459,7 @@ export default class BaseElement extends window.HTMLElement {
 
   constructor(mode) {
     super();
-    this.#root = mode === REGULAR ? this : this.shadowRoot || this.attachShadow({ mode });
+    this.#root = mode === REGULAR ? this : this.shadowRoot || this.attachShadow({ mode: mode });
     const evs = this.#elementEvents;
     evs.detect();
     evs.immediateTrigger("on_create");
@@ -748,6 +748,19 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
+  transferCSSRuleBySelector(selector, element) {
+    if (isNonEmptyString(selector) && typeof element === "object" && typeof element.#rules === "object") {
+      const rls = this.#rules;
+      const idx = rls.getIndexOf(selector);
+      if (idx > -1) {
+        element.#rules.append(rls[idx]);
+        rls.remove(idx);
+        return true;
+      }
+    }
+    return false;
+  }
+
   removeCSSRuleBySelector(selector) {
     this.#rules.remove(this.#rules.getIndexOf(selector));
     return this;
@@ -809,7 +822,7 @@ export default class BaseElement extends window.HTMLElement {
       if (idx > -1) {
         const cel = chn[idx];
         const owa = cel.attributes[WUSEKEY_ATTRIBUTE];
-        cel.attributes[WUSEKEY_ATTRIBUTE] = "";
+        cel.attributes[WUSEKEY_ATTRIBUTE] = new window.String();
         const tmp = element.#filiateChild(cel);
         if (tmp !== null) {
           element.#children.append(tmp);

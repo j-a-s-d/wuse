@@ -12,7 +12,7 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 
 * no external dependencies (none in runtime and only esbuild if you want to build from source)
 * self-documenting api (descriptive "long" function names)
-* full unit testing (540+ tests cases)
+* full unit testing (580+ tests cases)
 * markdown documentation [TODO]
 
 ## FEATURES
@@ -39,6 +39,11 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.7.9] 2022-oct-21
+  - extracted `CoreClass` class to an external file
+  - added `CoreClass` class unit test
+  - added `transferCSSRuleBySelector` to the `BaseElement` class
+  - added `UIkit_Sortable_Group` demo
 * [0.7.8] 2022-oct-19
   - added `isHTMLVoidTag` to the `WebHelpers` class
   - added `transferChildElementById` to the `BaseElement` class
