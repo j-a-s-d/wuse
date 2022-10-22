@@ -32,9 +32,5 @@ class Plain_Progress_Bar extends Wuse.OpenShadowElement {
     this.#updateValues();
   }
 
-  on_reload() {
-    this.#updateValues();
-  }
-
 }
 

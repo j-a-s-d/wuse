@@ -8,10 +8,7 @@
 </head>
 <body>
   <marquee>This is the original marquee.</marquee>
-  <script>
-    Wuse.register(Marquee_Clone);
-    Wuse.instantiate(Marquee_Clone);
-  </script>
+  <script>Wuse.create({ element: { type: Marquee_Clone, register: true } });</script>
 </body>
 </html>
 

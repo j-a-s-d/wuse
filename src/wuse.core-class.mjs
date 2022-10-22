@@ -100,9 +100,6 @@ export default function makeCoreClass(version) { return class CoreClass {
         register: classes => WuseElementClasses.registerClasses(
           isOf(classes, window.Array) ? classes : new window.Array(classes)
         ),
-        instantiate: (classes, target, events) => WuseElementClasses.instantiateClasses(
-          isOf(classes, window.Array) ? classes : new window.Array(classes), target, events
-        ),
         create: (configuration, option) => isOf(configuration, window.Object) ?
           WuseElementClasses.createInstance(
             configuration.element, configuration.target, configuration.instance

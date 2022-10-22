@@ -55,7 +55,7 @@
             this.redraw();
           }
 
-          on_reload() {
+          on_load() {
             this.items.forEach(row => this["row" + row.number]
               .addColumn(...row.col1)
               .addColumn(...row.col2)

@@ -20,16 +20,16 @@ const INFO = `<i>Open the development tools console (usually F12) to see the eve
   After clicking <b>RENDER (UNMODIFIED)</b>, render() will be called in the buttons panel, and you will see:<br>
   <ul>
     <li><i>on_[element-id]_[event-type] (besides it's not part of the element event cycle, it's printed for your better understanding)</i></li>
-    <li>on_prerender</li>
-    <li>on_postrender</li>
+    <li>on_prerender (you can enable/disable it via encloseRenderingEvents, being disabled -default since 0.8.0- this event won't fire)</li>
+    <li>on_postrender (you can enable/disable it via encloseRenderingEvents, being disabled -default since 0.8.0- this event won't fire)</li>
   </ul>
   <hr>
   After clicking <b>RENDER (MODIFIED)</b>, render() will be called after a invalidating modification in the buttons panel, and you will see:<br>
   <ul>
     <li><i>on_[element-id]_[event-type] (besides it's not part of the element event cycle, it's printed for your better understanding)</i></li>
-    <li>on_prerender</li>
+    <li>on_prerender (you can enable/disable it via encloseRenderingEvents, being disabled -default since 0.8.0- this event won't fire)</li>
     <li>on_update</li>
-    <li>on_postrender</li>
+    <li>on_postrender (you can enable/disable it via encloseRenderingEvents, being disabled -default since 0.8.0- this event won't fire)</li>
     <li>on_refresh</li>
   </ul>
   <hr>
@@ -38,15 +38,15 @@ const INFO = `<i>Open the development tools console (usually F12) to see the eve
     <li><i>on_[element-id]_[event-type] (besides it's not part of the element event cycle, it's printed for your better understanding)</i></li>
     <li>on_unload</li>
     <li>on_inject</li>
-    <li>on_reload (if you disable it via fireSpecificRedrawEvents then this event won't fire, on_load will be fired instead)</li>
-    <li>on_repaint (if you disable it via fireSpecificRedrawEvents then this event won't fire, on_refresh will be fired instead)</li>
+    <li>on_reload (you can enable/disable it via fireSpecificRedrawEvents -1st parameter-, being disabled -default since 0.8.0- this event won't fire and on_load will be fired instead)</li>
+    <li>on_repaint (you can enable/disable it via fireSpecificRedrawEvents -2nd parameter-, being disabled -default since 0.8.0- this event won't fire and on_refresh will be fired instead)</li>
   </ul>
   <hr>
   After clicking <b>FORCE RECONSTRUCTION (CSS)</b>, render() will be called (in this demo that is done automatically via the reactive field change) after an invalidating modification (CSS element position change) on the parent element of the buttons panel causing it's reconstruction (in this demo the buttons panel is being persisted/recovered from the elements store), and you will see:<br>
   <ul>
     <li><i>on_[element-id]_[event-type] (besides it's not part of the element event cycle, it's printed for your better understanding)</i></li>
     <li>on_create</li>
-    <li>on_reconstruct (if you set the restoreOnReconstruct behaviour then this event won't fire)</li>
+    <li>on_reconstruct (if restoreOnReconstruct behaviour is enabled -default since 0.8.0- then this event won't fire)</li>
     <li>on_disconnect</li>
     <li>on_connect</li>
     <li>on_inject</li>
@@ -57,12 +57,12 @@ const INFO = `<i>Open the development tools console (usually F12) to see the eve
   <ul>
     <li><i>on_[element-id]_[event-type] (besides it's not part of the element event cycle, it's printed for your better understanding)</i></li>
     <li>on_create</li>
-    <li>on_reconstruct (if you set the restoreOnReconstruct behaviour then this event won't fire)</li>
+    <li>on_reconstruct (if restoreOnReconstruct behaviour is enabled -default since 0.8.0- then this event won't fire)</li>
     <li>on_connect</li>
     <li>on_inject</li>
     <li>on_load</li>
     <li>on_create</li>
-    <li>on_reconstruct (if you set the restoreOnReconstruct behaviour then this event won't fire)</li>
+    <li>on_reconstruct (if restoreOnReconstruct behaviour is enabled -default since 0.8.0- then this event won't fire)</li>
     <li>on_disconnect</li>
   </ul>
   <hr>
@@ -73,6 +73,8 @@ class Buttons_Panel extends Wuse.ClosedShadowElement {
   on_create() {
     this
       .setElementsStoreKey("buttons")
+      .restoreOnReconstruct(false) // set on purpose to fire on_reconstruct
+      .fireSpecificRedrawEvents(true, true) // set on purpose to fire on_reload and on_repaint
       .allowRawContent(true)
       .setMainElement("div[style=font-family: monospace; margin-bottom: 3em;]");
     print("on_create", "after element creation and root node definition (after `this` availability and where handled events had been detected for the first time and the shadow attachment performed -basically when isShadowElement(this) is true-, also mention that after on_create returns the attribute keys will be added -if applies-)");
@@ -106,7 +108,7 @@ class Buttons_Panel extends Wuse.ClosedShadowElement {
 
   on_reconstruct() {
     this.restoreFromElementsStore();
-    print("on_reconstruct", "after the element state has been loaded from a previous existence (if it has a store key, otherwise it's never called, and also note that if you set the restoreOnReconstruct behaviour then this event won't fire neither)");
+    print("on_reconstruct", "after the element state has been loaded from a previous existence (if it has a store key, otherwise it's never called, and also note that if the restoreOnReconstruct behaviour is enabled -default since 0.8.0- then this event won't fire neither)");
   }
 
   on_connect() {
@@ -122,7 +124,7 @@ class Buttons_Panel extends Wuse.ClosedShadowElement {
   }
 
   on_prerender() {
-    print("on_prerender", "before the render process start");
+    print("on_prerender", "before the render process start (if it was enabled via encloseRenderingEvents)");
   }
 
   on_update() {
@@ -130,7 +132,7 @@ class Buttons_Panel extends Wuse.ClosedShadowElement {
   }
 
   on_postrender() {
-    print("on_postrender", "after the render process finishes (dom updated or not)");
+    print("on_postrender", "after the render process finishes (dom updated or not, and if it was enabled via encloseRenderingEvents)");
   }
 
   on_refresh() {
@@ -142,11 +144,11 @@ class Buttons_Panel extends Wuse.ClosedShadowElement {
   }
 
   on_reload() {
-    print("on_reload", "after any time the elements are reinserted (except the initial time, also by now handled events had been redetected again)");
+    print("on_reload", "after any time the elements are reinserted (except the initial time, also by now handled events had been redetected again, if fireSpecificRedrawEvents -1st parameter- was set on)");
   }
 
   on_repaint() {
-    print("on_repaint", "after the browser paints the content after a redraw() call");
+    print("on_repaint", "after the browser paints the content after a redraw() call (if fireSpecificRedrawEvents -2nd parameter- was set on)");
   }
 
   on_disconnect() {

@@ -30,7 +30,7 @@ Wuse exposes a more natural way of working with the browser instead of hiding th
 Wuse gives you the power to control everything in your web development:
 
 	- allows all-in-one markup, styles and scripting definitions: you can define your custom element in a single es6 class file
-	- allows to retain control on the Element lifecycle: you can hook 14 different events
+	- allows to retain control on the Element lifecycle: you can hook up to 14 different events
 	- allows optional field reactivity with free control on the behaviour: you can structure the code the way you want
 
 `#NO-BUILDS`
@@ -39,6 +39,11 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.8.0] 2022-oct-22
+  - added `encloseRenderingEvents` to the `BaseElement` class (this implies no `on_prerender` and `on_postrender` events by default)
+  - now `restoreOnReconstruct` flag is set on by default (this means no `on_reconstruct` event by default)
+  - now `fireSpecificRedrawEvents` flags are not set by default (this means no `on_reload` and `on_repaint` events by default)
+  - removed `instantiate` from `CoreClass` in favor of `create` usage and the `BaseElement` own `create` routine
 * [0.7.9] 2022-oct-21
   - extracted `CoreClass` class to an external file
   - added `CoreClass` class unit test

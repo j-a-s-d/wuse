@@ -1588,9 +1588,10 @@
     attributeKeys: false,
     elementKeys: true,
     autokeyChildren: true,
-    automaticallyRestore: false,
-    redrawReload: true,
-    redrawRepaint: true
+    automaticallyRestore: true,
+    redrawReload: false,
+    redrawRepaint: false,
+    enclosingEvents: false
   });
   var makePerformanceWatches = () => ({
     attachment: new window.Wuse.PerformanceMeasurement.StopWatch(),
@@ -1883,6 +1884,10 @@
     }
     restoreOnReconstruct(value) {
       __privateGet(this, _options).automaticallyRestore = value;
+      return this;
+    }
+    encloseRenderingEvents(value) {
+      __privateGet(this, _options).enclosingEvents = value;
       return this;
     }
     fireSpecificRedrawEvents(reload, repaint) {
@@ -2354,7 +2359,7 @@
     if (!__privateGet(this, _styled))
       __privateMethod(this, _insertStyle, insertStyle_fn).call(this);
     const evs = __privateGet(this, _elementEvents);
-    evs.immediateTrigger("on_prerender");
+    __privateGet(this, _options).enclosingEvents && evs.immediateTrigger("on_prerender");
     __privateMethod(this, _prepareContents, prepareContents_fn).call(this);
     const cts = __privateGet(this, _contents);
     const result = cts.root.invalidated || cts.main.invalidated || cts.style.invalidated;
@@ -2371,7 +2376,7 @@
     }
     if (window.Wuse.DEBUG && __privateGet(this, _identified))
       debug(this, `unmodified: ${this.info.unmodifiedRounds} (main: ${__privateGet(this, _waste).main.rounds}, style: ${__privateGet(this, _waste).style.rounds}) | updated: ${this.info.updatedRounds}`);
-    evs.immediateTrigger("on_postrender");
+    __privateGet(this, _options).enclosingEvents && evs.immediateTrigger("on_postrender");
     return result;
   };
   _inject = new WeakSet();
@@ -2716,7 +2721,6 @@
             return p === window.Wuse.OpenShadowElement || p === window.Wuse.ClosedShadowElement;
           },
           register: (classes) => ElementClasses.registerClasses(isOf5(classes, window.Array) ? classes : new window.Array(classes)),
-          instantiate: (classes, target, events) => ElementClasses.instantiateClasses(isOf5(classes, window.Array) ? classes : new window.Array(classes), target, events),
           create: (configuration, option) => isOf5(configuration, window.Object) ? ElementClasses.createInstance(configuration.element, configuration.target, configuration.instance) : void 0
         }
       });
@@ -2727,7 +2731,7 @@
   ;
 
   // package.json
-  var version = "0.7.9";
+  var version = "0.8.0";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

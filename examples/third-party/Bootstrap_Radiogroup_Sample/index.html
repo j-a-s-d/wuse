@@ -13,7 +13,7 @@
   <p>This is a port of the <a href="https://getbootstrap.com/docs/5.2/components/list-group/#checkboxes-and-radios" target="_blank">Bootstrap 5.2 Radio Group example</a>.</p>
   <hr/>
   <script>
-    Wuse.instantiate(class Bootstrap_Radiogroup_Sample extends Wuse.NonShadowElement {
+    class Bootstrap_Radiogroup_Sample extends Wuse.NonShadowElement {
 
       static {
         Wuse.register([class Bootstrap_RadioItem extends Wuse.NonShadowElement {
@@ -32,13 +32,33 @@
       on_create() {
         this
           .setMainElement("ul.list-group")
-          .appendChildElements(`
-            bootstrap-radioitem[for=firstRadio|caption='First radio']
-            bootstrap-radioitem[for=secondRadio|caption='Second radio']
-            bootstrap-radioitem[for=thirdRadio|caption='Third radio']
-          `);
       }
-  
+
+      loadItems(items) {
+        (items || []).forEach(item =>
+          Wuse.JsHelpers.forEachOwnProperty(item, x =>
+            this.appendChildElement(`bootstrap-radioitem[for=${x}|caption='${item[x]}']`)
+          )
+        );
+      }
+
+      on_load() {
+        if (this.parameters) this.loadItems(this.parameters.items);
+        this.render();
+      }
+
+    }
+    Wuse.create({
+      element: { type: Bootstrap_Radiogroup_Sample },
+      instance: {
+        parameters: {
+          items: [
+            { firstRadio: "First radio" },
+            { secondRadio: "Second radio" },
+            { thirdRadio: "Third radio" }
+          ]
+        }
+      }
     });
   </script>
 </body>

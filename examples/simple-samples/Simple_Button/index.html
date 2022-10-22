@@ -13,12 +13,16 @@
     Simple_Button.create();
     document.getElementsByTagName("simple-button")[0].onclick = e => alert("EN");
 
-    Wuse.instantiate(Simple_Button, "body", {
-      on_element_instantiated: el => {
-        el.setAttribute("id", "btnES");
-        el.backgroundcolor = "red";
-        el.foregroundcolor = "yellow";
-        el.text = "Esto es un botón";
+    Wuse.create({
+      element: { type: Simple_Button },
+      target: { selector: "body" },
+      instance: {
+        on_element_instantiated: el => {
+          el.setAttribute("id", "btnES");
+          el.backgroundcolor = "red";
+          el.foregroundcolor = "yellow";
+          el.text = "Esto es un botón";
+        }
       }
     });
     document.getElementById("btnES").onclick = e => alert("ES");
@@ -36,7 +40,11 @@
       }
     });
 
-    Wuse.instantiate(Simple_Button, "", { on_bad_target: target => false });
+    Wuse.create({
+      element: { type: Simple_Button },            // NOTE: this shows the bad target
+      target: { selector: "" },                    // error and how to prevent the
+      instance: { on_bad_target: target => false } // actual creation of the element.
+    });
     
     Wuse.create({
       element: { type: Simple_Button },

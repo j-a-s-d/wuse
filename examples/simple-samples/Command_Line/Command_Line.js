@@ -49,9 +49,5 @@ class Command_Line extends Wuse.ClosedShadowElement {
     this.#setEventHandlers();
   }
 
-  on_reload() {
-    this.#setEventHandlers();
-  }
-
 }
 

@@ -14,12 +14,14 @@
   <h3>This is a plain progress bar with 50% again in the default left-to-right direction.</h3>
   <div id="pb3holder"></div>
   <script>
-    Wuse.register(Plain_Progress_Bar);
-
-    Wuse.instantiate(Plain_Progress_Bar, "#pb1holder", {
-      on_element_instantiated: el => {
-        el.percentage = 33;
-        el.setElementsStoreKey("pb1");
+    Wuse.create({
+      element: { type: Plain_Progress_Bar, register: true },
+      target: { selector: "#pb1holder" },
+      instance: {
+        on_element_instantiated: el => {
+          el.percentage = 33;
+          el.setElementsStoreKey("pb1");
+        }
       }
     });
 

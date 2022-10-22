@@ -49,9 +49,10 @@ const makeUserOptions = () => ({
   attributeKeys: false, // when on, sets the received node attributes as element keys
   elementKeys: true, // when on, add the main element and it's children as element keys using their ids
   autokeyChildren: true, // when on, automatically add store key to children elements
-  automaticallyRestore: false, // when on, it ignores any on_reconstruct event handler set and simply does call to the restoreFromElementsStore method directly
-  redrawReload: true, // when on, the redraw method fires on_reload events, when off it fires on_load like onConnected
-  redrawRepaint: true // when on, the redraw method fires on_repaint events, when off it fires on_refresh like render
+  automaticallyRestore: true, // when on, it ignores any on_reconstruct event handler set and simply does call to the restoreFromElementsStore method directly
+  redrawReload: false, // when on, the redraw method fires on_reload events, when off it fires on_load like onConnected
+  redrawRepaint: false, // when on, the redraw method fires on_repaint events, when off it fires on_refresh like render
+  enclosingEvents: false // when on, the render process is preceded by on_prerender and succeeded by on_postrender events
 });
 
 const makePerformanceWatches = () => ({
@@ -333,7 +334,7 @@ export default class BaseElement extends window.HTMLElement {
   #render() {
     if (!this.#styled) this.#insertStyle();
     const evs = this.#elementEvents;
-    evs.immediateTrigger("on_prerender");
+    this.#options.enclosingEvents && evs.immediateTrigger("on_prerender");
     this.#prepareContents();
     const cts = this.#contents;
     const result = cts.root.invalidated || cts.main.invalidated || cts.style.invalidated;
@@ -351,7 +352,7 @@ export default class BaseElement extends window.HTMLElement {
     if (window.Wuse.DEBUG && this.#identified) debug(this,
       `unmodified: ${this.info.unmodifiedRounds} (main: ${this.#waste.main.rounds}, style: ${this.#waste.style.rounds}) | updated: ${this.info.updatedRounds}`
     );
-    evs.immediateTrigger("on_postrender");
+    this.#options.enclosingEvents && evs.immediateTrigger("on_postrender");
     return result;
   }
 
@@ -546,6 +547,11 @@ export default class BaseElement extends window.HTMLElement {
 
   restoreOnReconstruct(value) {
     this.#options.automaticallyRestore = value;
+    return this;
+  }
+
+  encloseRenderingEvents(value) {
+    this.#options.enclosingEvents = value;
     return this;
   }
 
