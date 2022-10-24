@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.8.1] 2022-oct-24
+  - added `removeMainAttribute` to the `BaseElement` class
+  - added `Development_Console` demo
 * [0.8.0] 2022-oct-22
   - added `encloseRenderingEvents` to the `BaseElement` class (this implies no `on_prerender` and `on_postrender` events by default)
   - now `restoreOnReconstruct` flag is set on by default (this means no `on_reconstruct` event by default)

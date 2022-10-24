@@ -153,6 +153,11 @@ export default class BaseElement extends window.HTMLElement {
 
   // ELEMENT STATE
   #filiatedKeys = {
+    forget: child => {
+      const wusekey = child.attributes[WUSEKEY_ATTRIBUTE];
+      child.attributes[WUSEKEY_ATTRIBUTE] = "";
+      return wusekey;
+    },
     tryToName: child => {
       const wusekey = child.attributes[WUSEKEY_ATTRIBUTE];
       if (!wusekey) child.attributes[WUSEKEY_ATTRIBUTE] = this.#stateManager.nameFiliatedKey(child.hash);
@@ -333,26 +338,28 @@ export default class BaseElement extends window.HTMLElement {
 
   #render() {
     if (!this.#styled) this.#insertStyle();
+    const opt = this.#options;
     const evs = this.#elementEvents;
-    this.#options.enclosingEvents && evs.immediateTrigger("on_prerender");
+    opt.enclosingEvents && evs.immediateTrigger("on_prerender");
     this.#prepareContents();
+    const nfo = this.info;
     const cts = this.#contents;
     const result = cts.root.invalidated || cts.main.invalidated || cts.style.invalidated;
     if (result) {
       this.#bind(false);
       this.#commitContents(false, false, false);
       this.#bind(true);
-      this.info.updatedRounds++;
+      nfo.updatedRounds++;
       evs.immediateTrigger("on_update");
       this.#stateManager.writeState();
       evs.committedTrigger("on_refresh");
     } else {
-      this.info.unmodifiedRounds++;
+      nfo.unmodifiedRounds++;
     }
     if (window.Wuse.DEBUG && this.#identified) debug(this,
-      `unmodified: ${this.info.unmodifiedRounds} (main: ${this.#waste.main.rounds}, style: ${this.#waste.style.rounds}) | updated: ${this.info.updatedRounds}`
+      `unmodified: ${nfo.unmodifiedRounds} (main: ${this.#waste.main.rounds}, style: ${this.#waste.style.rounds}) | updated: ${nfo.updatedRounds}`
     );
-    this.#options.enclosingEvents && evs.immediateTrigger("on_postrender");
+    opt.enclosingEvents && evs.immediateTrigger("on_postrender");
     return result;
   }
 
@@ -471,12 +478,13 @@ export default class BaseElement extends window.HTMLElement {
     if (this.dataset.wusekey) this.setElementsStoreKey(this.dataset.wusekey);
     const stm = this.#stateManager;
     if (stm.initializeState() > 1) {
-      this.#options.automaticallyRestore ?
+      stm.state.data.options.automaticallyRestore ?
         this.restoreFromElementsStore() :
         evs.immediateTrigger("on_reconstruct", stm.state);
     } else {
       evs.immediateTrigger("on_construct", stm.state);
     }
+    stm.writeState();
     this.#initialized = true;
   }
 
@@ -599,6 +607,16 @@ export default class BaseElement extends window.HTMLElement {
   setElementsStoreKey(key) {
     if (this.#stateManager.key = key) {
       this.setAttribute(WUSEKEY_ATTRIBUTE, key);
+      if (this.#options.autokeyChildren && !!this.#children.length) {
+        this.#children.forEach(child => {
+          if (child.custom) {
+            this.#filiatedKeys.forget(child);
+            this.#filiatedKeys.tryToName(child);
+            cacheInvalidator(child);
+          }
+        });
+        this.redraw();
+      }
       this.#stateManager.writeState();
     }
     return this;
@@ -627,6 +645,12 @@ export default class BaseElement extends window.HTMLElement {
   setMainAttribute(key, value) {
     this.#options.mainDefinition.attributes[key] = value;
     if (this.#inserted) this.#main.element.setAttribute(key, value);
+    return this;
+  }
+
+  removeMainAttribute(key) {
+    delete this.#options.mainDefinition.attributes[key];
+    if (this.#inserted) this.#main.element.removeAttribute(key);
     return this;
   }
 
@@ -827,8 +851,7 @@ export default class BaseElement extends window.HTMLElement {
       const idx = chn.getIndexOf(id);
       if (idx > -1) {
         const cel = chn[idx];
-        const owa = cel.attributes[WUSEKEY_ATTRIBUTE];
-        cel.attributes[WUSEKEY_ATTRIBUTE] = new window.String();
+        const owa = this.#filiatedKeys.forget(cel);
         const tmp = element.#filiateChild(cel);
         if (tmp !== null) {
           element.#children.append(tmp);

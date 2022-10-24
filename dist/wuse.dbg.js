@@ -1705,6 +1705,11 @@
       __privateAdd(this, _binded, false);
       __privateAdd(this, _rendering, true);
       __privateAdd(this, _filiatedKeys, {
+        forget: (child) => {
+          const wusekey = child.attributes[WUSEKEY_ATTRIBUTE];
+          child.attributes[WUSEKEY_ATTRIBUTE] = "";
+          return wusekey;
+        },
         tryToName: (child) => {
           const wusekey = child.attributes[WUSEKEY_ATTRIBUTE];
           if (!wusekey)
@@ -1824,10 +1829,11 @@
         this.setElementsStoreKey(this.dataset.wusekey);
       const stm = __privateGet(this, _stateManager);
       if (stm.initializeState() > 1) {
-        __privateGet(this, _options).automaticallyRestore ? this.restoreFromElementsStore() : evs.immediateTrigger("on_reconstruct", stm.state);
+        stm.state.data.options.automaticallyRestore ? this.restoreFromElementsStore() : evs.immediateTrigger("on_reconstruct", stm.state);
       } else {
         evs.immediateTrigger("on_construct", stm.state);
       }
+      stm.writeState();
       __privateSet(this, _initialized, true);
     }
     get parameters() {
@@ -1924,6 +1930,16 @@
     setElementsStoreKey(key) {
       if (__privateGet(this, _stateManager).key = key) {
         this.setAttribute(WUSEKEY_ATTRIBUTE, key);
+        if (__privateGet(this, _options).autokeyChildren && !!__privateGet(this, _children).length) {
+          __privateGet(this, _children).forEach((child) => {
+            if (child.custom) {
+              __privateGet(this, _filiatedKeys).forget(child);
+              __privateGet(this, _filiatedKeys).tryToName(child);
+              cacheInvalidator(child);
+            }
+          });
+          this.redraw();
+        }
         __privateGet(this, _stateManager).writeState();
       }
       return this;
@@ -1944,6 +1960,12 @@
       __privateGet(this, _options).mainDefinition.attributes[key] = value;
       if (__privateGet(this, _inserted))
         __privateGet(this, _main).element.setAttribute(key, value);
+      return this;
+    }
+    removeMainAttribute(key) {
+      delete __privateGet(this, _options).mainDefinition.attributes[key];
+      if (__privateGet(this, _inserted))
+        __privateGet(this, _main).element.removeAttribute(key);
       return this;
     }
     addMainClass(klass) {
@@ -2121,8 +2143,7 @@
         const idx = chn.getIndexOf(id);
         if (idx > -1) {
           const cel = chn[idx];
-          const owa = cel.attributes[WUSEKEY_ATTRIBUTE];
-          cel.attributes[WUSEKEY_ATTRIBUTE] = new window.String();
+          const owa = __privateGet(this, _filiatedKeys).forget(cel);
           const tmp = __privateMethod(_a2 = element, _filiateChild, filiateChild_fn).call(_a2, cel);
           if (tmp !== null) {
             __privateGet(element, _children).append(tmp);
@@ -2358,25 +2379,27 @@
   render_fn = function() {
     if (!__privateGet(this, _styled))
       __privateMethod(this, _insertStyle, insertStyle_fn).call(this);
+    const opt = __privateGet(this, _options);
     const evs = __privateGet(this, _elementEvents);
-    __privateGet(this, _options).enclosingEvents && evs.immediateTrigger("on_prerender");
+    opt.enclosingEvents && evs.immediateTrigger("on_prerender");
     __privateMethod(this, _prepareContents, prepareContents_fn).call(this);
+    const nfo = this.info;
     const cts = __privateGet(this, _contents);
     const result = cts.root.invalidated || cts.main.invalidated || cts.style.invalidated;
     if (result) {
       __privateMethod(this, _bind, bind_fn).call(this, false);
       __privateMethod(this, _commitContents, commitContents_fn).call(this, false, false, false);
       __privateMethod(this, _bind, bind_fn).call(this, true);
-      this.info.updatedRounds++;
+      nfo.updatedRounds++;
       evs.immediateTrigger("on_update");
       __privateGet(this, _stateManager).writeState();
       evs.committedTrigger("on_refresh");
     } else {
-      this.info.unmodifiedRounds++;
+      nfo.unmodifiedRounds++;
     }
     if (window.Wuse.DEBUG && __privateGet(this, _identified))
-      debug(this, `unmodified: ${this.info.unmodifiedRounds} (main: ${__privateGet(this, _waste).main.rounds}, style: ${__privateGet(this, _waste).style.rounds}) | updated: ${this.info.updatedRounds}`);
-    __privateGet(this, _options).enclosingEvents && evs.immediateTrigger("on_postrender");
+      debug(this, `unmodified: ${nfo.unmodifiedRounds} (main: ${__privateGet(this, _waste).main.rounds}, style: ${__privateGet(this, _waste).style.rounds}) | updated: ${nfo.updatedRounds}`);
+    opt.enclosingEvents && evs.immediateTrigger("on_postrender");
     return result;
   };
   _inject = new WeakSet();
@@ -2731,7 +2754,7 @@
   ;
 
   // package.json
-  var version = "0.8.0";
+  var version = "0.8.1";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);
