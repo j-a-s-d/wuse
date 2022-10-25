@@ -82,10 +82,10 @@ export default class BaseElement extends window.HTMLElement {
         this.last.version = this.version;
         this.last.replacements = extractReplacementsFromRule(this.last);
       }
-      if (window.Wuse.DEBUG && this.owner.#identified) debug(this.owner, `rules list version change: ${this.version}`);
+      window.Wuse.DEBUG && this.owner.#identified && debug(this.owner, `rules list version change: ${this.version}`);
     }
     on_forbidden_change = () => {
-      if (window.Wuse.DEBUG && this.owner.#identified) debug(this.owner, `rules list is locked and can not be changed`);
+      window.Wuse.DEBUG && this.owner.#identified && debug(this.owner, `rules list is locked and can not be changed`);
       RuntimeErrors.onLockedDefinition(this.owner.#options.mainDefinition.id);
     }
   })(this); // CSS RULES
@@ -97,10 +97,10 @@ export default class BaseElement extends window.HTMLElement {
         this.last.replacements = extractReplacementsFromChild(this.last);
       }
       if (!this.owner.#slotted) this.owner.#slotted |= this.some(child => child.kind === SLOTS_KIND);
-      if (window.Wuse.DEBUG && this.owner.#identified) debug(this.owner, `children list version change: ${this.version}`);
+      window.Wuse.DEBUG && this.owner.#identified && debug(this.owner, `children list version change: ${this.version}`);
     }
     on_forbidden_change = () => {
-      if (window.Wuse.DEBUG && this.owner.#identified) debug(this.owner, `children list is locked and can not be changed`);
+      window.Wuse.DEBUG && this.owner.#identified && debug(this.owner, `children list is locked and can not be changed`);
       RuntimeErrors.onLockedDefinition(this.owner.#options.mainDefinition.id);
     }
     on_recall_part = part => this.owner.#filiatedKeys.tryToRemember(part);
@@ -119,15 +119,16 @@ export default class BaseElement extends window.HTMLElement {
     ))
     getIndexOf = value => super.getIndexOf("name", value)
     on_version_change = () => {
-      if (window.Wuse.DEBUG && this.owner.#identified) debug(this.owner, `fields list version change: ${this.version}`);
+      window.Wuse.DEBUG && this.owner.#identified && debug(this.owner, `fields list version change: ${this.version}`);
     }
     on_forbidden_change = () => {
-      if (window.Wuse.DEBUG && this.owner.#identified) debug(this.owner, `fields list is locked and can not be changed`);
+      window.Wuse.DEBUG && this.owner.#identified && debug(this.owner, `fields list is locked and can not be changed`);
       RuntimeErrors.onLockedDefinition(this.owner.#options.mainDefinition.id);
     }
     on_snapshot_part = part => part.value = this.owner[part.name];
     on_recall_part = part => this.owner[part.name] = part.value;
   })(this); // INSTANCE FIELDS
+  #reactives = new window.Set();
 
   // USER CUSTOMIZATION
   #options = makeUserOptions();
@@ -169,6 +170,7 @@ export default class BaseElement extends window.HTMLElement {
   };
   #stateReader = data => {
     if (data) {
+      this.parameters = data.parameters;
       this.#options = data.options;
       this.#slotted = data.slotted;
       this.#identified = data.identified;
@@ -176,20 +178,21 @@ export default class BaseElement extends window.HTMLElement {
       this.#children.restore(this, data.children);
       this.#rules.restore(this, data.rules);
       this.#fields.restore(this, data.fields);
-      this.parameters = data.parameters;
+      (this.#reactives = data.reactives).forEach(name => this.makeReactiveField(name, this[name]));
     }
   };
   #stateWriter = () => {
     return {
+      parameters: this.#parameters,
       options: this.#options,
+      slotted: this.#slotted,
+      identified: this.#identified,
       html: this.#html,
       children: this.#children.persist(),
       rules: this.#rules.persist(),
       fields: this.#fields.persist(),
-      slotted: this.#slotted,
-      identified: this.#identified,
-      parameters: this.#parameters
-    };
+      reactives: this.#reactives
+    }
   };
   #stateManager = new (class extends WuseStateManager {
     on_invalid_state() {
@@ -333,7 +336,7 @@ export default class BaseElement extends window.HTMLElement {
     cts.root.process(forceRoot);
     cts.style.process(forceStyle);
     cts.main.process(forceMain);
-    if (window.Wuse.DEBUG && this.#identified) debug(this, `updated (root: ${cts.root.invalidated}, main: ${cts.main.invalidated}, style: ${cts.style.invalidated})`);
+    window.Wuse.DEBUG && this.#identified && debug(this, `updated (root: ${cts.root.invalidated}, main: ${cts.main.invalidated}, style: ${cts.style.invalidated})`);
   }
 
   #render() {
@@ -356,7 +359,7 @@ export default class BaseElement extends window.HTMLElement {
     } else {
       nfo.unmodifiedRounds++;
     }
-    if (window.Wuse.DEBUG && this.#identified) debug(this,
+    window.Wuse.DEBUG && this.#identified && debug(this,
       `unmodified: ${nfo.unmodifiedRounds} (main: ${this.#waste.main.rounds}, style: ${this.#waste.style.rounds}) | updated: ${nfo.updatedRounds}`
     );
     opt.enclosingEvents && evs.immediateTrigger("on_postrender");
@@ -412,7 +415,7 @@ export default class BaseElement extends window.HTMLElement {
       if (hittedRules = !!rulesHits.length) rulesHits.forEach(cacheInvalidator);
       const childrenHits = scanChildrenForReplacements(this.#children, name);
       if (hittedChildren = !!childrenHits.length) childrenHits.forEach(cacheInvalidator);
-      if (window.Wuse.DEBUG && this.#identified) debug(this,
+      window.Wuse.DEBUG && this.#identified && debug(this,
         `reactive render (label: ${label}, field: ${name}, children: ${childrenHits.length}, rules: ${rulesHits.length})`
       );
       if (hittedChildren || hittedRules) {
@@ -530,20 +533,20 @@ export default class BaseElement extends window.HTMLElement {
   // NODE EVENTS
 
   connectedCallback() {
-    if (window.Wuse.MEASURE) this.#measurement.attachment.start();
+    window.Wuse.MEASURE && this.#measurement.attachment.start();
     const evs = this.#elementEvents;
     evs.detect();
     evs.immediateTrigger("on_connect");
     this.#inject(evs, "on_load");
-    if (window.Wuse.MEASURE) this.#measurement.attachment.stop(window.Wuse.DEBUG);
+    window.Wuse.MEASURE && this.#measurement.attachment.stop(window.Wuse.DEBUG);
   }
 
   disconnectedCallback() {
-    if (window.Wuse.MEASURE) this.#measurement.dettachment.start();
+    window.Wuse.MEASURE && this.#measurement.dettachment.start();
     this.#bind(false);
     this.#elementEvents.immediateTrigger("on_disconnect");
     this.#stateManager.writeState();
-    if (window.Wuse.MEASURE) this.#measurement.dettachment.stop(window.Wuse.DEBUG);
+    window.Wuse.MEASURE && this.#measurement.dettachment.stop(window.Wuse.DEBUG);
   }
 
   // ELEMENT OPTIONS
@@ -929,9 +932,12 @@ export default class BaseElement extends window.HTMLElement {
 
   makeReactiveField(name, value, handler, initial = true) {
     if (this.#validateField(name)) {
-      if (this.#fields.establish(name, value)) createReactiveField(
-        this, name, value, handler, (name, label) => this.#fieldRender(name, label || "$auto"), name => this.dropField(name)
-      );
+      if (this.#fields.establish(name, value)) {
+        createReactiveField(
+          this, name, value, handler, (name, label) => this.#fieldRender(name, label || "$auto"), name => this.dropField(name)
+        );
+        this.#reactives.add(name);
+      }
       if (initial) this.#fieldRender(name, "$init");
     }
     return this;
@@ -941,16 +947,22 @@ export default class BaseElement extends window.HTMLElement {
     return this.makeReactiveField(name, mirror[name] || value, actions => { mirror[name] = this[name]; handler(actions) }, initial);
   }
 
+  isReactiveField(name) {
+    return this.#reactives.has(name);
+  }
+
   hasField(name) {
     return this.#fields.getIndexOf(name) > -1;
   }
 
   dropField(name) {
-    if (this.#fields.prepare()) {
-      const idx = this.#fields.getIndexOf(name);
+    const fds = this.#fields;
+    if (fds.prepare()) {
+      const idx = fds.getIndexOf(name);
       if (idx > -1) {
+        fds.splice(idx, 1);
         if (this.hasOwnProperty(name)) delete this[name];
-        this.#fields.splice(idx, 1);
+        if (this.#reactives.has(name)) this.#reactives.delete(name);
         this.#stateManager.writeState();
         return true;
       }
@@ -959,16 +971,20 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   dropAllFields() {
-    if (this.#fields.locked) {
-      this.#fields.on_forbidden_change();
-    } else {
-      const names = [];
-      this.#fields.forEach(field => this.hasOwnProperty(field.name) && names.push(field.name));
-      this.#fields.clear();
-      names.forEach(name => delete this[name]);
+    const knames = [];
+    const rnames = [];
+    this.#fields.forEach(field => {
+      const name = field.name;
+      this.hasOwnProperty(name) && knames.push(name);
+      this.#reactives.has(name) && rnames.push(name);
+    });
+    if (this.#fields.clear()) {
+      knames.forEach(name => delete this[name]);
+      rnames.forEach(name => this.#reactives.delete(name));
       this.#stateManager.writeState();
+      return true;
     }
-    return this;
+    return false;
   }
 
   snapshotInstanceFields() {

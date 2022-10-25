@@ -1,0 +1,61 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wuse | Tachyons Basic Banner Sample example</title>
+  <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"/>
+  <script src="../../../dist/wuse.min.js"></script>
+</head>
+<body>
+  <p>This is a port of the <a href="https://tachyons.io/components/banners/basic/index.html" target="_blank">Tachyons 4.12.0 Basic Banner example</a>.</p>
+  <hr/>
+  <script>
+    class Tachyons_BasicBanner_Buttons extends Wuse.NonShadowElement {
+
+      static { Wuse.register(this); }
+
+      on_create() {
+        this
+          .setAttributesAsKeys(true)
+          .appendChildElement("a[href=#].f6.br-pill.bg-dark-green.no-underline.washed-green.ba.b--dark-green.grow.pv2.ph3.dib.mr3=~{primary}~")
+          .appendChildElement("a[href=#].f6.br-pill.dark-green.no-underline.ba.grow.pv2.ph3.dib=~{secondary}~")
+          .makeReactiveField("primary", "")
+          .makeReactiveField("secondary", "")
+      }
+
+    }
+
+    class Tachyons_BasicBanner_Sample extends Wuse.NonShadowElement {
+
+      static { Wuse.register(this); }
+
+      on_create() {
+        this
+          .setMainElement("article.mw7.center.ph3.ph5-ns.tc.br2.pv5.bg-washed-green.dark-green.mb5")
+          .appendChildElement("h1.fw6.f3.f2-ns.lh-title.mt0.mb3=~{tagline}~")
+          .appendChildElement("h2.fw2.f4.lh-copy.mt0.mb3=~{description}~")
+          .appendChildElement("p.fw1.f5.mt0.mb3=~{note}~")
+          .appendChildElement("tachyons-basicbanner-buttons[primary='~{primary}~'|secondary='~{secondary}~']")
+          .makeReactiveField("tagline", "")
+          .makeReactiveField("description", "")
+          .makeReactiveField("note", "")
+          .makeReactiveField("primary", "")
+          .makeReactiveField("secondary", "")
+      }
+
+    }
+
+    Tachyons_BasicBanner_Sample.create({
+      tagline: "This is a tagline. For x.",
+      description: `This will change things. And we want you to be involved. This text needs to
+    be longer for testing sake.`,
+      note: "Sign up for beta access or learn more about x.",
+      primary: "Sign Up",
+      secondary: "Learn More"
+    });
+  </script>
+</body>
+</html>
+

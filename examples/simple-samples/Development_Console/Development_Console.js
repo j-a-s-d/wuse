@@ -12,21 +12,7 @@ const hookConsoleMethod = (method, hook) => window.console[method] = (a0, a1, a2
   hook(args);
 };
 
-class BaseReactiveFieldsReconstructor extends Wuse.ClosedShadowElement {
-
-  on_create() {
-    this.restoreOnReconstruct(false);
-  }
-
-  on_reconstruct() {
-    if (this.restoreFromElementsStore()) this.getReactiveFieldNames().forEach(name => this.makeReactiveField(name, this[name]));
-  }
-
-  getReactiveFieldNames() {}
-
-}
-
-class Text_Panel extends BaseReactiveFieldsReconstructor {
+class Text_Panel extends Wuse.ClosedShadowElement {
 
   static { this.register(); }
 
@@ -60,10 +46,6 @@ class Text_Panel extends BaseReactiveFieldsReconstructor {
       .makeReactiveField("lines", "")
       .makeReactiveField("maxHeight", 400)
       .makeReactiveField("fontHeight", 16)
-  }
-
-  getReactiveFieldNames() {
-    return ["lines", "maxHeight", "fontHeight"];
   }
 
   on_load() {
@@ -100,7 +82,7 @@ class Text_Panel extends BaseReactiveFieldsReconstructor {
 
 }
 
-class Text_Box extends BaseReactiveFieldsReconstructor {
+class Text_Box extends Wuse.ClosedShadowElement {
 
   static { this.register(); }
 
@@ -121,10 +103,6 @@ class Text_Box extends BaseReactiveFieldsReconstructor {
       .appendChildElement("input#txtEdit[type=text]")
       .makeReactiveField("fontHeight", 16)
       .makeField("history", [])
-  }
-
-  getReactiveFieldNames() {
-    return ["fontHeight"];
   }
 
   setFocus = () => {

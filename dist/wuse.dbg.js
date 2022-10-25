@@ -1502,7 +1502,9 @@
       if (this.prepare()) {
         this.length = 0;
         __privateMethod(this, _roll2, roll_fn2).call(this, null);
+        return true;
       }
+      return false;
     }
     persist() {
       return buildArray3((result) => partsLooper(this, (key) => partProcessor(result, this[key], this.on_snapshot_part), (key) => result[key] = this[key]));
@@ -1558,7 +1560,7 @@
   _analyzer = new WeakMap();
 
   // src/wuse.base-element.mjs
-  var _html, _rules, _children, _fields, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binding, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _revise, revise_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
+  var _html, _rules, _children, _fields, _reactives, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binding, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _revise, revise_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
   var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3, buildArray: buildArray4 } = JavascriptHelpers;
   var { removeChildren, isHTMLAttribute } = WebHelpers;
   var { WUSEKEY_ATTRIBUTE, DEFAULT_STYLE_TYPE, DEFAULT_STYLE_MEDIA, DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE, SLOTS_KIND: SLOTS_KIND3 } = StringConstants;
@@ -1631,12 +1633,10 @@
               this.last.version = this.version;
               this.last.replacements = extractReplacementsFromRule(this.last);
             }
-            if (window.Wuse.DEBUG && __privateGet(this.owner, _identified))
-              debug(this.owner, `rules list version change: ${this.version}`);
+            window.Wuse.DEBUG && __privateGet(this.owner, _identified) && debug(this.owner, `rules list version change: ${this.version}`);
           });
           __publicField(this, "on_forbidden_change", () => {
-            if (window.Wuse.DEBUG && __privateGet(this.owner, _identified))
-              debug(this.owner, `rules list is locked and can not be changed`);
+            window.Wuse.DEBUG && __privateGet(this.owner, _identified) && debug(this.owner, `rules list is locked and can not be changed`);
             RuntimeErrors3.onLockedDefinition(__privateGet(this.owner, _options).mainDefinition.id);
           });
         }
@@ -1653,12 +1653,10 @@
             }
             if (!__privateGet(this.owner, _slotted))
               __privateSet(_a2 = this.owner, _slotted, __privateGet(_a2, _slotted) | this.some((child) => child.kind === SLOTS_KIND3));
-            if (window.Wuse.DEBUG && __privateGet(this.owner, _identified))
-              debug(this.owner, `children list version change: ${this.version}`);
+            window.Wuse.DEBUG && __privateGet(this.owner, _identified) && debug(this.owner, `children list version change: ${this.version}`);
           });
           __publicField(this, "on_forbidden_change", () => {
-            if (window.Wuse.DEBUG && __privateGet(this.owner, _identified))
-              debug(this.owner, `children list is locked and can not be changed`);
+            window.Wuse.DEBUG && __privateGet(this.owner, _identified) && debug(this.owner, `children list is locked and can not be changed`);
             RuntimeErrors3.onLockedDefinition(__privateGet(this.owner, _options).mainDefinition.id);
           });
           __publicField(this, "on_recall_part", (part) => __privateGet(this.owner, _filiatedKeys).tryToRemember(part));
@@ -1678,18 +1676,17 @@
           __publicField(this, "snapshot", () => buildArray4((instance) => this.persist().forEach((item) => instance.push({ name: item.name, value: item.value }))));
           __publicField(this, "getIndexOf", (value) => super.getIndexOf("name", value));
           __publicField(this, "on_version_change", () => {
-            if (window.Wuse.DEBUG && __privateGet(this.owner, _identified))
-              debug(this.owner, `fields list version change: ${this.version}`);
+            window.Wuse.DEBUG && __privateGet(this.owner, _identified) && debug(this.owner, `fields list version change: ${this.version}`);
           });
           __publicField(this, "on_forbidden_change", () => {
-            if (window.Wuse.DEBUG && __privateGet(this.owner, _identified))
-              debug(this.owner, `fields list is locked and can not be changed`);
+            window.Wuse.DEBUG && __privateGet(this.owner, _identified) && debug(this.owner, `fields list is locked and can not be changed`);
             RuntimeErrors3.onLockedDefinition(__privateGet(this.owner, _options).mainDefinition.id);
           });
           __publicField(this, "on_snapshot_part", (part) => part.value = this.owner[part.name]);
           __publicField(this, "on_recall_part", (part) => this.owner[part.name] = part.value);
         }
       }(this));
+      __privateAdd(this, _reactives, new window.Set());
       __privateAdd(this, _options, makeUserOptions());
       __privateAdd(this, _parameters, void 0);
       __privateAdd(this, _elementEvents, new ElementEvents(this));
@@ -1723,6 +1720,7 @@
       });
       __privateAdd(this, _stateReader, (data) => {
         if (data) {
+          this.parameters = data.parameters;
           __privateSet(this, _options, data.options);
           __privateSet(this, _slotted, data.slotted);
           __privateSet(this, _identified, data.identified);
@@ -1730,19 +1728,20 @@
           __privateGet(this, _children).restore(this, data.children);
           __privateGet(this, _rules).restore(this, data.rules);
           __privateGet(this, _fields).restore(this, data.fields);
-          this.parameters = data.parameters;
+          __privateSet(this, _reactives, data.reactives).forEach((name) => this.makeReactiveField(name, this[name]));
         }
       });
       __privateAdd(this, _stateWriter, () => {
         return {
+          parameters: __privateGet(this, _parameters),
           options: __privateGet(this, _options),
+          slotted: __privateGet(this, _slotted),
+          identified: __privateGet(this, _identified),
           html: __privateGet(this, _html),
           children: __privateGet(this, _children).persist(),
           rules: __privateGet(this, _rules).persist(),
           fields: __privateGet(this, _fields).persist(),
-          slotted: __privateGet(this, _slotted),
-          identified: __privateGet(this, _identified),
-          parameters: __privateGet(this, _parameters)
+          reactives: __privateGet(this, _reactives)
         };
       });
       __privateAdd(this, _stateManager, new class extends StateManager {
@@ -1866,23 +1865,19 @@
       return __privateGet(this, _root).querySelector(x);
     }
     connectedCallback() {
-      if (window.Wuse.MEASURE)
-        __privateGet(this, _measurement).attachment.start();
+      window.Wuse.MEASURE && __privateGet(this, _measurement).attachment.start();
       const evs = __privateGet(this, _elementEvents);
       evs.detect();
       evs.immediateTrigger("on_connect");
       __privateMethod(this, _inject, inject_fn).call(this, evs, "on_load");
-      if (window.Wuse.MEASURE)
-        __privateGet(this, _measurement).attachment.stop(window.Wuse.DEBUG);
+      window.Wuse.MEASURE && __privateGet(this, _measurement).attachment.stop(window.Wuse.DEBUG);
     }
     disconnectedCallback() {
-      if (window.Wuse.MEASURE)
-        __privateGet(this, _measurement).dettachment.start();
+      window.Wuse.MEASURE && __privateGet(this, _measurement).dettachment.start();
       __privateMethod(this, _bind, bind_fn).call(this, false);
       __privateGet(this, _elementEvents).immediateTrigger("on_disconnect");
       __privateGet(this, _stateManager).writeState();
-      if (window.Wuse.MEASURE)
-        __privateGet(this, _measurement).dettachment.stop(window.Wuse.DEBUG);
+      window.Wuse.MEASURE && __privateGet(this, _measurement).dettachment.stop(window.Wuse.DEBUG);
     }
     deriveChildrenStoreKey(value) {
       __privateGet(this, _options).autokeyChildren = value;
@@ -2211,8 +2206,10 @@
     }
     makeReactiveField(name, value, handler, initial = true) {
       if (__privateMethod(this, _validateField, validateField_fn).call(this, name)) {
-        if (__privateGet(this, _fields).establish(name, value))
+        if (__privateGet(this, _fields).establish(name, value)) {
           createReactiveField(this, name, value, handler, (name2, label) => __privateMethod(this, _fieldRender, fieldRender_fn).call(this, name2, label || "$auto"), (name2) => this.dropField(name2));
+          __privateGet(this, _reactives).add(name);
+        }
         if (initial)
           __privateMethod(this, _fieldRender, fieldRender_fn).call(this, name, "$init");
       }
@@ -2224,16 +2221,22 @@
         handler(actions);
       }, initial);
     }
+    isReactiveField(name) {
+      return __privateGet(this, _reactives).has(name);
+    }
     hasField(name) {
       return __privateGet(this, _fields).getIndexOf(name) > -1;
     }
     dropField(name) {
-      if (__privateGet(this, _fields).prepare()) {
-        const idx = __privateGet(this, _fields).getIndexOf(name);
+      const fds = __privateGet(this, _fields);
+      if (fds.prepare()) {
+        const idx = fds.getIndexOf(name);
         if (idx > -1) {
+          fds.splice(idx, 1);
           if (this.hasOwnProperty(name))
             delete this[name];
-          __privateGet(this, _fields).splice(idx, 1);
+          if (__privateGet(this, _reactives).has(name))
+            __privateGet(this, _reactives).delete(name);
           __privateGet(this, _stateManager).writeState();
           return true;
         }
@@ -2241,16 +2244,20 @@
       return false;
     }
     dropAllFields() {
-      if (__privateGet(this, _fields).locked) {
-        __privateGet(this, _fields).on_forbidden_change();
-      } else {
-        const names = [];
-        __privateGet(this, _fields).forEach((field) => this.hasOwnProperty(field.name) && names.push(field.name));
-        __privateGet(this, _fields).clear();
-        names.forEach((name) => delete this[name]);
+      const knames = [];
+      const rnames = [];
+      __privateGet(this, _fields).forEach((field) => {
+        const name = field.name;
+        this.hasOwnProperty(name) && knames.push(name);
+        __privateGet(this, _reactives).has(name) && rnames.push(name);
+      });
+      if (__privateGet(this, _fields).clear()) {
+        knames.forEach((name) => delete this[name]);
+        rnames.forEach((name) => __privateGet(this, _reactives).delete(name));
         __privateGet(this, _stateManager).writeState();
+        return true;
       }
-      return this;
+      return false;
     }
     snapshotInstanceFields() {
       return __privateGet(this, _fields).snapshot();
@@ -2288,6 +2295,7 @@
   _rules = new WeakMap();
   _children = new WeakMap();
   _fields = new WeakMap();
+  _reactives = new WeakMap();
   _options = new WeakMap();
   _parameters = new WeakMap();
   _elementEvents = new WeakMap();
@@ -2372,8 +2380,7 @@
     cts.root.process(forceRoot);
     cts.style.process(forceStyle);
     cts.main.process(forceMain);
-    if (window.Wuse.DEBUG && __privateGet(this, _identified))
-      debug(this, `updated (root: ${cts.root.invalidated}, main: ${cts.main.invalidated}, style: ${cts.style.invalidated})`);
+    window.Wuse.DEBUG && __privateGet(this, _identified) && debug(this, `updated (root: ${cts.root.invalidated}, main: ${cts.main.invalidated}, style: ${cts.style.invalidated})`);
   };
   _render = new WeakSet();
   render_fn = function() {
@@ -2397,8 +2404,7 @@
     } else {
       nfo.unmodifiedRounds++;
     }
-    if (window.Wuse.DEBUG && __privateGet(this, _identified))
-      debug(this, `unmodified: ${nfo.unmodifiedRounds} (main: ${__privateGet(this, _waste).main.rounds}, style: ${__privateGet(this, _waste).style.rounds}) | updated: ${nfo.updatedRounds}`);
+    window.Wuse.DEBUG && __privateGet(this, _identified) && debug(this, `unmodified: ${nfo.unmodifiedRounds} (main: ${__privateGet(this, _waste).main.rounds}, style: ${__privateGet(this, _waste).style.rounds}) | updated: ${nfo.updatedRounds}`);
     opt.enclosingEvents && evs.immediateTrigger("on_postrender");
     return result;
   };
@@ -2452,8 +2458,7 @@
       const childrenHits = scanChildrenForReplacements(__privateGet(this, _children), name);
       if (hittedChildren = !!childrenHits.length)
         childrenHits.forEach(cacheInvalidator);
-      if (window.Wuse.DEBUG && __privateGet(this, _identified))
-        debug(this, `reactive render (label: ${label}, field: ${name}, children: ${childrenHits.length}, rules: ${rulesHits.length})`);
+      window.Wuse.DEBUG && __privateGet(this, _identified) && debug(this, `reactive render (label: ${label}, field: ${name}, children: ${childrenHits.length}, rules: ${rulesHits.length})`);
       if (hittedChildren || hittedRules) {
         if (childrenHits.some((x) => !!x.kind.length)) {
           __privateGet(this, _children).forEach(slotsInvalidator);
@@ -2754,7 +2759,7 @@
   ;
 
   // package.json
-  var version = "0.8.1";
+  var version = "0.8.2";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

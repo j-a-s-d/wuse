@@ -37,7 +37,7 @@ export default new class {
     tester.testResult(r, `<u>${name}</u> got remove called with a valid index: <i>${r}</i>`);
     r = instance.remove(10) === undefined && instance.length === 4;
     tester.testResult(r, `<u>${name}</u> got remove called with an invalid index: <i>${r}</i>`);
-    r = instance.clear() === undefined && instance.length === 0;
+    r = instance.clear() === true && instance.length === 0;
     tester.testResult(r, `<u>${name}</u> clear called: <i>${r}</i>`);
     r = instance.prepare();
     tester.testResult(r === true, `<u>${name}</u> prepare called when locked: <i>${r}</i>`);

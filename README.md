@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.8.2] 2022-oct-25
+  - added `isReactiveField` to the `BaseElement` class
+  - added `Tachyons_BasicBanner_Sample` demo
 * [0.8.1] 2022-oct-24
   - added `removeMainAttribute` to the `BaseElement` class
   - added `Development_Console` demo

@@ -82,7 +82,9 @@ export default class PartsHolder extends window.Array {
     if (this.prepare()) {
       this.length = 0;
       this.#roll(null);
+      return true;
     }
+    return false;
   }
 
   persist() {
