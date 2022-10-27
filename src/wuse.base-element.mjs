@@ -530,6 +530,10 @@ export default class BaseElement extends window.HTMLElement {
     return this.#root.querySelector(x);
   }
 
+  selectChildElements(x) {
+    return this.#root.querySelectorAll(x);
+  }
+
   // NODE EVENTS
 
   connectedCallback() {

@@ -1510,8 +1510,10 @@
       return buildArray3((result) => partsLooper(this, (key) => partProcessor(result, this[key], this.on_snapshot_part), (key) => result[key] = this[key]));
     }
     restore(owner, instance) {
-      this.owner = owner;
-      partsLooper(instance, (key) => partProcessor(this, instance[key], this.on_recall_part), (key) => this[key] = instance[key]);
+      if (this.clear()) {
+        this.owner = owner;
+        partsLooper(instance, (key) => partProcessor(this, instance[key], this.on_recall_part), (key) => this[key] = instance[key]);
+      }
     }
     getIndexOf(field, value) {
       for (let idx = 0; idx < this.length; idx++) {
@@ -1863,6 +1865,9 @@
     }
     selectChildElement(x) {
       return __privateGet(this, _root).querySelector(x);
+    }
+    selectChildElements(x) {
+      return __privateGet(this, _root).querySelectorAll(x);
     }
     connectedCallback() {
       window.Wuse.MEASURE && __privateGet(this, _measurement).attachment.start();
@@ -2759,7 +2764,7 @@
   ;
 
   // package.json
-  var version = "0.8.2";
+  var version = "0.8.3";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

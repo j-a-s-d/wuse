@@ -31,11 +31,11 @@ export default new class {
     r = instance.persist();
     tester.testResult(r && typeof r === "object" && r.length === 2, `<u>${name}</u> got persist called: <i>${r}</i>`);
     r.push({ number: 0 });
-    r = instance.restore(o, r) === undefined && instance.length === 5;
+    r = instance.restore(o, r) === undefined && instance.length === 3;
     tester.testResult(r, `<u>${name}</u> got restore called: <i>${r}</i>`);
-    r = instance.remove(0) === undefined && instance.length === 4;
+    r = instance.remove(0) === undefined && instance.length === 2;
     tester.testResult(r, `<u>${name}</u> got remove called with a valid index: <i>${r}</i>`);
-    r = instance.remove(10) === undefined && instance.length === 4;
+    r = instance.remove(10) === undefined && instance.length === 2;
     tester.testResult(r, `<u>${name}</u> got remove called with an invalid index: <i>${r}</i>`);
     r = instance.clear() === true && instance.length === 0;
     tester.testResult(r, `<u>${name}</u> clear called: <i>${r}</i>`);

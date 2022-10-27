@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.8.3] 2022-oct-27
+  - added `selectChildElements` to the `BaseElement` class
+  - added `Progressive_List` demo
 * [0.8.2] 2022-oct-25
   - added `isReactiveField` to the `BaseElement` class
   - added `Tachyons_BasicBanner_Sample` demo

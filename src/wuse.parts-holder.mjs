@@ -95,11 +95,13 @@ export default class PartsHolder extends window.Array {
   }
 
   restore(owner, instance) {
-    this.owner = owner;
-    partsLooper(instance,
-      key => partProcessor(this, instance[key], this.on_recall_part),
-      key => this[key] = instance[key]
-    );
+    if (this.clear()) {
+      this.owner = owner;
+      partsLooper(instance,
+        key => partProcessor(this, instance[key], this.on_recall_part),
+        key => this[key] = instance[key]
+      );
+    }
   }
 
   getIndexOf(field, value) {
