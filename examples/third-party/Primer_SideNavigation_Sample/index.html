@@ -1,0 +1,34 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wuse | Primer SideNavigation Sample example</title>
+  <script src="../../../dist/wuse.min.js"></script>
+  <link href="https://unpkg.com/@primer/css@^20.2.4/dist/primer.css" rel="stylesheet" />
+</head>
+<body>
+  <p>This is a port of the <a href="https://primer.style/css/components/navigation" target="_blank">Primer 20.2.4 Side Navigation example</a>.</p>
+  <hr/>
+  <script>
+  (class Primer_SideNavigation_Sample extends Wuse.NonShadowElement {
+
+    static { this.register(); }
+
+    on_create() {
+      this
+        .setMainElement("nav.SideNav.border[style=max-width:360px]")
+        .appendChildElements(`
+          a.SideNav-item[href=#]=Account
+          a.SideNav-item[href=#|aria-current='page']=Profile
+          a.SideNav-item[href=#]=Emails
+          a.SideNav-item[href=#]=Notifications
+        `)
+    }
+
+  }).create();
+  </script>
+</body>
+</html>
+

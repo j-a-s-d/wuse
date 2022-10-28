@@ -107,11 +107,6 @@
 
   // src/wuse.javascript-helpers.mjs
   var _EMPTY_STRING, _EMPTY_ARRAY;
-  var instanceBuilder = (instance, initializer) => {
-    if (typeof initializer === "function")
-      initializer(instance);
-    return instance;
-  };
   var JavascriptHelpers = class {
     static get EMPTY_STRING() {
       return __privateGet(this, _EMPTY_STRING);
@@ -128,10 +123,16 @@
       return typeof str === "string" ? str.split(by) : new window.Array();
     }
     static buildArray(initializer) {
-      return instanceBuilder(new window.Array(), initializer);
+      const instance = new window.Array();
+      if (typeof initializer === "function")
+        initializer(instance);
+      return instance;
     }
     static buildObject(initializer) {
-      return instanceBuilder(new window.Object(), initializer);
+      const instance = new window.Object();
+      if (typeof initializer === "function")
+        initializer(instance);
+      return instance;
     }
     static ensureFunction(fun, def = () => {
     }) {
@@ -606,6 +607,20 @@
         };
         window.addEventListener("DOMContentLoaded", loader);
       }
+    }
+    static buildDOMElement(tag, initializer) {
+      if (typeof tag !== "string" || HTML_TAGS.indexOf(hash(tag)) === -1)
+        return null;
+      const instance = window.document.createElement(tag);
+      if (typeof initializer === "function")
+        initializer(instance);
+      return instance;
+    }
+    static buildDOMFragment(initializer) {
+      const instance = window.document.createDocumentFragment();
+      if (typeof initializer === "function")
+        initializer(instance);
+      return instance;
     }
     static getUniqueId(prefix = "WUSE") {
       const pfx = "_" + (prefix ? prefix : "") + "_";
@@ -2039,6 +2054,9 @@
       __privateGet(this, _rules).locked = false;
       return this;
     }
+    getCSSRulesCount() {
+      return __privateGet(this, _rules).length;
+    }
     appendCSSRule(selector, properties, nesting) {
       if (nesting)
         return this.appendCSSNestedRule(selector, properties, nesting);
@@ -2109,6 +2127,9 @@
     unlockChildElements() {
       __privateGet(this, _children).locked = false;
       return this;
+    }
+    getChildElementsCount() {
+      return __privateGet(this, _children).length;
     }
     appendChildElement(shorthandNotation, rules) {
       const tmp = __privateMethod(this, _filiateChild, filiateChild_fn).call(this, parseElement(shorthandNotation, rules));
@@ -2203,6 +2224,9 @@
       __privateGet(this, _fields).locked = false;
       return this;
     }
+    getInstanceFieldsCount() {
+      return __privateGet(this, _fields).length;
+    }
     makeField(name, value) {
       return __privateMethod(this, _createField, createField_fn).call(this, name, value, true);
     }
@@ -2291,8 +2315,11 @@
       return window.Wuse.register(this);
     }
     static create(parameters, at = "body") {
-      const target = at instanceof window.HTMLElement ? { node: at } : typeof at === "string" ? { selector: at } : at;
-      return window.Wuse.create({ element: { type: this }, target, instance: { parameters } });
+      return window.Wuse.create({
+        element: { type: this },
+        target: at instanceof window.HTMLElement ? { node: at } : typeof at === "string" ? { selector: at } : at,
+        instance: { parameters }
+      });
     }
   };
   var BaseElement = _BaseElement;
@@ -2764,7 +2791,7 @@
   ;
 
   // package.json
-  var version = "0.8.3";
+  var version = "0.8.4";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

@@ -738,6 +738,10 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
+  getCSSRulesCount() {
+    return this.#rules.length;
+  }
+
   appendCSSRule(selector, properties, nesting) {
     if (nesting) return this.appendCSSNestedRule(selector, properties, nesting);
     const sliced = this.#rules.slice(-1);
@@ -818,6 +822,10 @@ export default class BaseElement extends window.HTMLElement {
   unlockChildElements() {
     this.#children.locked = false;
     return this;
+  }
+
+  getChildElementsCount() {
+    return this.#children.length;
   }
 
   appendChildElement(shorthandNotation, rules) {
@@ -926,6 +934,10 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
+  getInstanceFieldsCount() {
+    return this.#fields.length;
+  }
+
   makeField(name, value) {
     return this.#createField(name, value, true);
   }
@@ -1025,8 +1037,11 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   static create(parameters, at = "body") {
-    const target = at instanceof window.HTMLElement ? { node: at } : (typeof at === "string" ? { selector: at } : at);
-    return window.Wuse.create({ element: { type: this }, target, instance: { parameters } });
+    return window.Wuse.create({
+      element: { type: this },
+      target: at instanceof window.HTMLElement ? { node: at } : (typeof at === "string" ? { selector: at } : at),
+      instance: { parameters }
+    });
   }
 
 }

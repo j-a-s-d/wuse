@@ -6,6 +6,8 @@ export default new class {
 
   suite = (tester, module) => {
     tester.testModuleFunction(module, "onDOMContentLoaded", ["existence", "type:undefined"], this.onDOMContentLoaded);
+    tester.testModuleFunction(module, "buildDOMElement", ["existence", "type:object"], this.buildDOMElement);
+    tester.testModuleFunction(module, "buildDOMFragment", ["existence", "type:object"], this.buildDOMFragment);
     tester.testModuleFunction(module, "getUniqueId", ["existence", "type:string", "property:length"], this.getUniqueId);
     tester.testModuleFunction(module, "removeChildren", ["existence", "type:undefined"], this.removeChildren);
     tester.testModuleFunction(module, "isHTMLTag", ["existence", "type:boolean"], this.isHTMLTag);
@@ -18,6 +20,19 @@ export default new class {
   onDOMContentLoaded = (tester, module, fn) => {
     tester.testInvokationWithArgsResult(module, fn, ["test"], "invalid argument", result => typeof result === "undefined");
     tester.testInvokationWithArgsResult(module, fn, [()=>{}], "valid argument", result => typeof result === "undefined");
+  }
+
+  buildDOMElement = (tester, module, fn) => {
+    tester.testInvokationResult(module, fn, "without args", result => result === null);
+    tester.testInvokationWithArgsResult(module, fn, [null], "with invalid tag", result => result === null);
+    tester.testInvokationWithArgsResult(module, fn, ["div", null], "with valid tag but invalid builder", result => result && result.constructor.name === "HTMLDivElement");
+    tester.testInvokationWithArgsResult(module, fn, ["div", instance => instance.setAttribute("test", "123")], "with valid arguments", result => result && result.constructor.name === "HTMLDivElement" && result.getAttribute("test") === "123");
+  }
+
+  buildDOMFragment = (tester, module, fn) => {
+    tester.testInvokationResult(module, fn, "without args", result => result && result.constructor.name === "DocumentFragment");
+    tester.testInvokationWithArgsResult(module, fn, [null], "with invalid builder", result => result && result.constructor.name === "DocumentFragment");
+    tester.testInvokationWithArgsResult(module, fn, [instance => instance.append(window.document.createElement("A"))], "with valid argument", result => result && result.constructor.name === "DocumentFragment" && result.firstElementChild.tagName === 'A');
   }
 
   getUniqueId = (tester, module, fn) => {

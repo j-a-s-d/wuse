@@ -70,6 +70,19 @@ export default class WebHelpers {
     }
   }
 
+  static buildDOMElement(tag, initializer) {
+    if (typeof tag !== "string" || HTML_TAGS.indexOf(hash(tag)) === -1) return null;
+    const instance = window.document.createElement(tag);
+    if (typeof initializer === "function") initializer(instance);
+    return instance;
+  }
+
+  static buildDOMFragment(initializer) {
+    const instance = window.document.createDocumentFragment();
+    if (typeof initializer === "function") initializer(instance);
+    return instance;
+  }
+
   static getUniqueId(prefix = "WUSE") {
     const pfx = "_" + (prefix ? prefix : "") + "_";
     var result;
