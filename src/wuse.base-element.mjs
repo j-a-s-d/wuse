@@ -812,6 +812,17 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
+  adoptCSSStyleSheet(sheet) {
+    if (sheet instanceof CSSStyleSheet) {
+      const target = this.#shadowed ? this.#root : document;
+      // NOTE: this method is much more compatible than using push, see
+      // https://developer.mozilla.org/en-US/docs/Web/API/Document/adoptedStyleSheets
+      target.adoptedStyleSheets = [...target.adoptedStyleSheets, sheet];
+      return true;
+    }
+    return false;
+  }
+
   // CHILD ELEMENTS
 
   lockChildElements() {

@@ -2120,6 +2120,14 @@
       __privateGet(this, _rules).clear();
       return this;
     }
+    adoptCSSStyleSheet(sheet) {
+      if (sheet instanceof CSSStyleSheet) {
+        const target = __privateGet(this, _shadowed) ? __privateGet(this, _root) : document;
+        target.adoptedStyleSheets = [...target.adoptedStyleSheets, sheet];
+        return true;
+      }
+      return false;
+    }
     lockChildElements() {
       __privateGet(this, _children).locked = true;
       return this;
@@ -2791,7 +2799,7 @@
   ;
 
   // package.json
-  var version = "0.8.4";
+  var version = "0.8.5";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

@@ -1,0 +1,48 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wuse | Picnic StackToggle Sample example</title>
+  <script src="../../../dist/wuse.min.js"></script>
+  <script src="Picnic_StackToggle_Sample.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic"/>
+</head>
+<body>
+  <p>This is a port of the <a href="https://picnicss.com/documentation" target="_blank">Picnic 7.1.0 Stack Toggle example</a>.</p>
+  <div id="container" style="margin: 4em"/>
+  <script>
+    class Picnic_StackToggle_Item extends Wuse.NonShadowElement {
+
+      static { this.register(); }
+
+      on_create() {
+        this
+          .setAttributesAsKeys(true)
+          .setMainElement("label.stack")
+          .appendChildElement("input[name='stack'|type='radio']")
+          .appendChildElement("span.button.toggle=~{caption}~")
+          .makeReactiveField("caption", "")
+      }
+
+    }
+
+    class Picnic_StackToggle_Sample extends Wuse.NonShadowElement {
+
+      static { this.register(); }
+
+      on_load() {
+        if (this.parameters) {
+          (this.parameters.items || []).forEach(item => this.appendChildElement(`picnic-stacktoggle-item[caption='${item}']`));
+          this.render();
+        }
+      }
+
+    }
+
+    Picnic_StackToggle_Sample.create({ items: ["Home", "Plugins", "Documentation", "Test"] }, "#container");
+  </script>
+</body>
+</html>
+

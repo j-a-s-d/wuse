@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.8.5] 2022-oct-31
+  - added `adoptCSSStyleSheet` to the `BaseElement` class
+  - added `Picnic_StackToggle_Sample` demo
 * [0.8.4] 2022-oct-28
   - added `getChildElementsCount`, `getCSSRulesCount` and `getInstanceFieldsCount` to the `BaseElement` class
   - added `buildDOMElement` and `buildDOMFragment` to the `WebHelpers` class
