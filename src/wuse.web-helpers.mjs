@@ -70,6 +70,16 @@ export default class WebHelpers {
     }
   }
 
+  static changeDOMElementTag(el, tag) {
+    if (!el || typeof tag !== "string" || !tag.length) return null;
+    const nu = window.document.createElement(tag);
+    for (const ae of el.attributes) nu.setAttribute(ae.name, ae.value);
+    if (!!el.childNodes.length) el.childNodes.forEach(ce => nu.appendChild(ce));
+    if (el.parentNode) el.parentNode.replaceChild(nu, el);
+    window.Object.getOwnPropertyNames(el).forEach(pk => nu[pk] = el[pk]);
+    return nu;
+  }
+
   static buildDOMElement(tag, initializer) {
     if (typeof tag !== "string" || HTML_TAGS.indexOf(hash(tag)) === -1) return null;
     const instance = window.document.createElement(tag);

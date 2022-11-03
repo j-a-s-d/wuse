@@ -1,0 +1,89 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Wuse | Turret FormInputs Sample example</title>
+  <script src="../../../dist/wuse.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/turretcss/dist/turretcss.min.css" crossorigin="anonymous">
+</head>
+<body>
+  <p>This is a port of the <a href="https://turretcss.com/form/input" target="_blank">Turret 5.2.1 Form Inputs example</a>.</p>
+  <hr/>
+  <script>
+    class Turret_FormInput extends Wuse.NonShadowElement {
+
+      static { this.register(); }
+
+      on_create() {
+        this
+          .setAttributesAsKeys(true)
+          .setMainAttribute("style", "padding-bottom: 1em")
+          .appendChildElement("label[for='~{forid}~']=~{caption}~")
+          .appendChildElement("input[id='~{forid}~'|type='~{input:type}~']")
+          .makeReactiveField("caption", "")
+          .makeReactiveField("forid", "")
+          .makeReactiveField("input:type", "")
+          .makeReactiveField("input:min", undefined)
+          .makeReactiveField("input:max", undefined)
+          .makeReactiveField("input:value", undefined)
+          .makeReactiveField("input:placeholder", undefined)
+          .makeReactiveField("textarea:cols", undefined)
+          .makeReactiveField("textarea:rows", undefined)
+          .makeReactiveField("new:tag", undefined)
+          .makeReactiveField("disabled", undefined)
+          .fireSpecificRedrawEvents(true, false)
+      }
+
+      #define = (child, field, attribute) => this[field] && child.setAttribute(attribute, this[field]);
+
+      on_load() {
+        const el = this.selectChildElement("#" + this.forid);
+        this.#define(el, "textarea:cols", "cols");
+        this.#define(el, "textarea:rows", "rows");
+        this.#define(el, "input:min", "min");
+        this.#define(el, "input:max", "max");
+        this.#define(el, "input:value", "value");
+        this.#define(el, "input:placeholder", "placeholder");
+        this.#define(el, "disabled", "disabled");
+        if (this["new:tag"] !== undefined) Wuse.WebHelpers.changeDOMElementTag(el, this["new:tag"]);
+      }
+
+    }
+    class Turret_FormInputs_Sample extends Wuse.NonShadowElement {
+
+      static { this.register(); }
+
+      on_create() {
+        this
+          .setMainAttribute("style", "margin: 4em")
+          .appendChildElements(`
+            turret-forminput[input:type='text'|forid='input-text'|input:placeholder='Text'|caption='Text Input']
+            turret-forminput[input:type='text'|forid='input-disabled'|input:placeholder='Disabled'|caption='Disabled Input'|disabled='']
+            turret-forminput[input:type='email'|forid='input-email'|input:placeholder='Email'|caption='Email Input']
+            turret-forminput[input:type='search'|forid='input-search'|input:placeholder='Search'|caption='Search Input']
+            turret-forminput[input:type='tel'|forid='input-tel'|input:placeholder='Telephone'|caption='Telephone Input']
+            turret-forminput[input:type='url'|forid='input-url'|input:placeholder='https://'|caption='URL Input']
+            turret-forminput[input:type='password'|forid='input-password'|input:value='Password'|caption='Password Input']
+            turret-forminput[input:type='file'|forid='input-file'|caption='File Input']
+            turret-forminput[new:tag='textarea'|input:type='textarea'|forid='input-textarea'|input:placeholder='Textarea text'|caption='Textarea Input'|textarea:cols='30'|textarea:rows='5']
+            turret-forminput[input:type='number'|forid='input-number'|input:placeholder='Enter a number form 0 to 10'|caption='Number Input'|input:min='0'|input:max='10']
+            turret-forminput[input:type='date'|forid='input-date'|caption='Date Input']
+            turret-forminput[input:type='month'|forid='input-month'|caption='Month Input']
+            turret-forminput[input:type='week'|forid='input-week'|caption='Week Input']
+            turret-forminput[input:type='datetime'|forid='input-datetime'|caption='Datetime Input'|input:placeholder='Enter a datetime string']
+            turret-forminput[input:type='datetime-local'|forid='input-datetime-local'|caption='Datetime-local']
+            turret-forminput[input:type='color'|forid='input-color'|caption='Color Input'|input:value='#3455DB']
+            turret-forminput[input:type='checkbox'|forid='input-checkbox'|caption='Checkbox Input'|input:value='Checkbox Input']
+            turret-forminput[input:type='radio'|forid='input-radio'|caption='Radio Input'|input:value='Radio Input']
+          `)
+      }
+
+    }
+    Wuse.create({ element: { type: Turret_FormInputs_Sample } });
+  </script>
+</body>
+</html>
+

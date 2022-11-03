@@ -6,6 +6,7 @@ export default new class {
 
   suite = (tester, module) => {
     tester.testModuleFunction(module, "onDOMContentLoaded", ["existence", "type:undefined"], this.onDOMContentLoaded);
+    tester.testModuleFunction(module, "changeDOMElementTag", ["existence", "type:object"], this.changeDOMElementTag);
     tester.testModuleFunction(module, "buildDOMElement", ["existence", "type:object"], this.buildDOMElement);
     tester.testModuleFunction(module, "buildDOMFragment", ["existence", "type:object"], this.buildDOMFragment);
     tester.testModuleFunction(module, "getUniqueId", ["existence", "type:string", "property:length"], this.getUniqueId);
@@ -18,8 +19,26 @@ export default new class {
   }
 
   onDOMContentLoaded = (tester, module, fn) => {
+    tester.testInvokationWithArgsResult(module, fn, [], "absent argument", result => typeof result === "undefined");
     tester.testInvokationWithArgsResult(module, fn, ["test"], "invalid argument", result => typeof result === "undefined");
     tester.testInvokationWithArgsResult(module, fn, [()=>{}], "valid argument", result => typeof result === "undefined");
+  }
+
+  changeDOMElementTag = (tester, module, fn) => {
+    tester.testInvokationResult(module, fn, "without args", result => result === null);
+    tester.testInvokationWithArgsResult(module, fn, [null], "with null element", result => result === null);
+    let el = document.createElement("pre");
+    tester.testInvokationWithArgsResult(module, fn, [el, null], "with null tag", result => result === null);
+    tester.testInvokationWithArgsResult(module, fn, [el, "textarea"], "with valid arguments (check tag)", result => result.tagName === 'TEXTAREA');
+    el = document.createElement("input");
+    el.setAttribute("type", "text");
+    tester.testInvokationWithArgsResult(module, fn, [el, "span"], "with valid arguments (check attribute)", result => result.getAttribute("type") === "text");
+    el = document.createElement("p");
+    el.abc = 123;
+    tester.testInvokationWithArgsResult(module, fn, [el, "div"], "with valid arguments (check field)", result => result.abc === 123);
+    const el2 = document.createElement("a");
+    el.appendChild(el2);
+    tester.testInvokationWithArgsResult(module, fn, [el2, "b"], "with valid arguments (check parent)", result => result.tagName === 'B' && el.firstChild === result);
   }
 
   buildDOMElement = (tester, module, fn) => {

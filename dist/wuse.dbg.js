@@ -174,6 +174,21 @@
     static isIntegerNumber(x) {
       return (typeof x === "number" || typeof x === "string" && !!x.length) && window.Number.isInteger(window.Number(x));
     }
+    static defineReadOnlyMembers(instance, items) {
+      if (instance && typeof items === "object" && items !== null) {
+        const defProp = window.Object.defineProperty;
+        const names = window.Object.getOwnPropertyNames(items);
+        for (let x in names) {
+          const name = names[x];
+          defProp(instance, name, {
+            value: items[name],
+            writable: false,
+            configurable: false,
+            enumerable: false
+          });
+        }
+      }
+    }
   };
   _EMPTY_STRING = new WeakMap();
   _EMPTY_ARRAY = new WeakMap();
@@ -607,6 +622,19 @@
         };
         window.addEventListener("DOMContentLoaded", loader);
       }
+    }
+    static changeDOMElementTag(el, tag) {
+      if (!el || typeof tag !== "string" || !tag.length)
+        return null;
+      const nu = window.document.createElement(tag);
+      for (const ae of el.attributes)
+        nu.setAttribute(ae.name, ae.value);
+      if (!!el.childNodes.length)
+        el.childNodes.forEach((ce) => nu.appendChild(ce));
+      if (el.parentNode)
+        el.parentNode.replaceChild(nu, el);
+      window.Object.getOwnPropertyNames(el).forEach((pk) => nu[pk] = el[pk]);
+      return nu;
     }
     static buildDOMElement(tag, initializer) {
       if (typeof tag !== "string" || HTML_TAGS.indexOf(hash(tag)) === -1)
@@ -1578,7 +1606,7 @@
 
   // src/wuse.base-element.mjs
   var _html, _rules, _children, _fields, _reactives, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binding, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _revise, revise_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
-  var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3, buildArray: buildArray4 } = JavascriptHelpers;
+  var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3, buildArray: buildArray4, defineReadOnlyMembers } = JavascriptHelpers;
   var { removeChildren, isHTMLAttribute } = WebHelpers;
   var { WUSEKEY_ATTRIBUTE, DEFAULT_STYLE_TYPE, DEFAULT_STYLE_MEDIA, DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE, SLOTS_KIND: SLOTS_KIND3 } = StringConstants;
   var { createReactiveField } = ReactiveField;
@@ -1827,10 +1855,24 @@
       });
       __privateAdd(this, _waste, makeWasteAnalyzers());
       __privateAdd(this, _measurement, makePerformanceWatches());
-      __publicField(this, "info", {
-        instanceNumber: ++_BaseElement.instancesCount,
-        unmodifiedRounds: 0,
-        updatedRounds: 0
+      defineReadOnlyMembers(this, {
+        info: {
+          instanceNumber: ++_BaseElement.instancesCount,
+          unmodifiedRounds: 0,
+          updatedRounds: 0
+        },
+        render: () => window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _revise, revise_fn).call(this, true),
+        redraw: () => window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _revise, revise_fn).call(this, false),
+        suspendRender: () => {
+          __privateSet(this, _rendering, false);
+          return this;
+        },
+        resumeRender: (autorender = true) => {
+          __privateSet(this, _rendering, true);
+          autorender && window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _revise, revise_fn).call(this, true);
+          return this;
+        },
+        isRenderSuspended: () => !__privateGet(this, _rendering)
       });
       __privateSet(this, _root, mode === REGULAR ? this : this.shadowRoot || this.attachShadow({ mode }));
       const evs = __privateGet(this, _elementEvents);
@@ -1839,7 +1881,10 @@
       if (__privateGet(this, _options).attributeKeys) {
         const ats = this.getAttributeNames();
         if (!!ats.length)
-          ats.forEach((attr) => this[attr] = this.getAttribute(attr));
+          for (let x in ats) {
+            const attr = ats[x];
+            this[attr] = this.getAttribute(attr);
+          }
       }
       if (this.dataset.wusekey)
         this.setElementsStoreKey(this.dataset.wusekey);
@@ -1858,25 +1903,6 @@
     set parameters(value) {
       if (isAssignedObject7(__privateSet(this, _parameters, value)))
         forEachOwnProperty3(value, (name) => this[name] = value[name]);
-    }
-    render() {
-      window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _revise, revise_fn).call(this, true);
-    }
-    redraw() {
-      window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _revise, revise_fn).call(this, false);
-    }
-    suspendRender() {
-      __privateSet(this, _rendering, false);
-      return this;
-    }
-    resumeRender(autorender = true) {
-      __privateSet(this, _rendering, true);
-      if (autorender)
-        this.render();
-      return this;
-    }
-    isRenderSuspended() {
-      return !__privateGet(this, _rendering);
     }
     selectChildElement(x) {
       return __privateGet(this, _root).querySelector(x);
@@ -2161,8 +2187,10 @@
     }
     replaceChildElementById(id, shorthandNotation, rules) {
       const tmp = parseElement(shorthandNotation, rules);
-      if (tmp !== null)
-        __privateGet(this, _children).replace(__privateGet(this, _children).getIndexOf(id), tmp);
+      const chn = __privateGet(this, _children);
+      const idx = chn.getIndexOf(id);
+      if (idx > -1 && tmp !== null)
+        chn.replace(idx, tmp);
       return this;
     }
     transferChildElementById(id, element) {
@@ -2537,25 +2565,20 @@
   __publicField(BaseElement, "instancesCount", 0);
 
   // src/wuse.initialization-routines.mjs
-  var defineReadOnlyMembers = (instance, items) => window.Object.getOwnPropertyNames(items).forEach((name) => window.Object.defineProperty(instance, name, {
-    value: items[name],
-    writable: false,
-    configurable: false,
-    enumerable: false
-  }));
+  var { defineReadOnlyMembers: defineReadOnlyMembers2, isOf: isOf5, buildArray: buildArray5 } = JavascriptHelpers;
   var InitializationRoutines = class {
     static detectFeatures(instance) {
       const detectFeature = (flag, msg) => !flag && RuntimeErrors.UNSUPPORTED_FEATURE.emit(msg);
       try {
-        detectFeature(instance.JsHelpers.isOf(window.document, window.HTMLDocument), "HTML Document");
-        detectFeature(instance.JsHelpers.isOf(window.customElements, window.CustomElementRegistry), "Custom Elements");
-        instance.WebHelpers.onDOMContentLoaded(() => detectFeature(instance.JsHelpers.isOf(window.document.body.attachShadow, window.Function), "Shadow DOM"));
+        detectFeature(isOf5(window.document, window.HTMLDocument), "HTML Document");
+        detectFeature(isOf5(window.customElements, window.CustomElementRegistry), "Custom Elements");
+        instance.WebHelpers.onDOMContentLoaded(() => detectFeature(isOf5(window.document.body.attachShadow, window.Function), "Shadow DOM"));
       } catch (e) {
         RuntimeErrors.UNKNOWN_ERROR.emit();
       }
     }
     static initializeModules(instance) {
-      instance.PerformanceMeasurement.initialize((stopWatch, event) => instance.debug(JSON.stringify(instance.JsHelpers.buildArray((data) => {
+      instance.PerformanceMeasurement.initialize((stopWatch, event) => instance.debug(JSON.stringify(buildArray5((data) => {
         data.push({ instances: instance.elementCount });
         data.push(stopWatch.getDebugInfo());
         switch (event) {
@@ -2596,8 +2619,8 @@
       });
     }
     static declareUnwritableMembers(instance, items) {
-      defineReadOnlyMembers(instance, items.fields);
-      defineReadOnlyMembers(instance, items.methods);
+      defineReadOnlyMembers2(instance, items.fields);
+      defineReadOnlyMembers2(instance, items.methods);
     }
   };
 
@@ -2744,7 +2767,7 @@
   };
 
   // src/wuse.core-class.mjs
-  var { noop: noop7, isOf: isOf5 } = JavascriptHelpers;
+  var { noop: noop7, isOf: isOf6 } = JavascriptHelpers;
   var { specializeClass, REGULAR: REGULAR2, OPEN, CLOSED } = ElementModes;
   function makeCoreClass(version2) {
     var _a2;
@@ -2769,7 +2792,7 @@
         methods: {
           debug: (msg) => window.console.log("[WUSE:DEBUG]", msg),
           blockUpdate: (task, arg) => {
-            if (isOf5(task, Function)) {
+            if (isOf6(task, Function)) {
               if (window.Wuse.DEBUG)
                 window.Wuse.debug("blocking");
               window.Wuse.RENDERING = false;
@@ -2788,8 +2811,8 @@
             const p = window.Object.getPrototypeOf(instance.constructor);
             return p === window.Wuse.OpenShadowElement || p === window.Wuse.ClosedShadowElement;
           },
-          register: (classes) => ElementClasses.registerClasses(isOf5(classes, window.Array) ? classes : new window.Array(classes)),
-          create: (configuration, option) => isOf5(configuration, window.Object) ? ElementClasses.createInstance(configuration.element, configuration.target, configuration.instance) : void 0
+          register: (classes) => ElementClasses.registerClasses(isOf6(classes, window.Array) ? classes : new window.Array(classes)),
+          create: (configuration, option) => isOf6(configuration, window.Object) ? ElementClasses.createInstance(configuration.element, configuration.target, configuration.instance) : void 0
         }
       });
       InitializationRoutines.detectFeatures(_a2);
@@ -2799,7 +2822,7 @@
   ;
 
   // package.json
-  var version = "0.8.5";
+  var version = "0.8.6";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

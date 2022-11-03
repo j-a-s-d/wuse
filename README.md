@@ -12,7 +12,7 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 
 * no external dependencies (none in runtime and only esbuild if you want to build from source)
 * self-documenting api (descriptive "long" function names)
-* full unit testing (590+ tests cases)
+* full unit testing (610+ tests cases)
 * markdown documentation [TODO]
 
 ## FEATURES
@@ -39,6 +39,10 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.8.6] 2022-nov-03
+  - added `defineReadOnlyMembers` to the `JavascriptHelpers` class
+  - added `changeDOMElementTag` to the `WebHelpers` class
+  - added `Turret_FormInputs_Sample` demo
 * [0.8.5] 2022-oct-31
   - added `adoptCSSStyleSheet` to the `BaseElement` class
   - added `Picnic_StackToggle_Sample` demo
@@ -141,56 +145,56 @@ Wuse does not require any build step to be performed.
   - improved state management
   - adjusted instantiation process events nomenclature renaming them to `on_element_instantiated` and `on_bad_target`
   - added `WUSEKEY_ATTRIBUTE` and `WUSENODE_ATTRIBUTE` to the `StringConstants` class
-* [0.5.9] 2022-ago-31
+* [0.5.9] 2022-aug-31
   - added `hasField`, `hasCSSRuleBySelector` and `removeCSSRuleBySelector` to the `BaseElement` class
-* [0.5.8] 2022-ago-30
+* [0.5.8] 2022-aug-30
   - added `isHTMLTag` to the `WebHelpers` class
   - added `UNKNOWN_TAG` warning to the `RuntimeErrors` class
   - added `getMainAttribute` to the `BaseElement` class
   - extracted `ElementEvents` class to an external file
   - added `ElementEvents` class unit test
   - added `Plain_Progress_Bar` example
-* [0.5.7] 2022-ago-26
+* [0.5.7] 2022-aug-26
   - added `removeChildElementById` to the `BaseElement` class
   - added `remove` to the `PartsHolder` class
-* [0.5.6] 2022-ago-23
+* [0.5.6] 2022-aug-23
   - added `ALREADY_REGISTERED` error to the `RuntimeErrors` class
   - added `Command_Line` example
   - now version constant is been taken from the `package.json` file
-* [0.5.5] 2022-ago-22
+* [0.5.5] 2022-aug-22
   - extracted `StringHashing` class to an external file
   - added `StringHashing` class unit test
-* [0.5.4] 2022-ago-20
+* [0.5.4] 2022-aug-20
   - added `lockChildElements`, `unlockChildElements`, `lockCSSRules`, `unlockCSSRules`, `lockFields` and `unlockFields` to the `BaseElement` class
   - added `locked` and `on_forbidden_change` to the `PartsHolder` class
   - added `LOCKED_DEFINITION` error to the `RuntimeErrors` class
-* [0.5.3] 2022-ago-19
+* [0.5.3] 2022-aug-19
   - added `suspendRender`, `resumeRender` and `isRenderSuspended` to the `BaseElement` class
-* [0.5.2] 2022-ago-16
+* [0.5.2] 2022-aug-16
   - extracted `InitializationRoutines` class to an external file
   - added `Templates_And_Slots` example
-* [0.5.1] 2022-ago-13
+* [0.5.1] 2022-aug-13
   - extracted `ElementModes` class to an external file
   - added `ElementModes` class unit test
   - added `Performing_100K_Updates` example
-* [0.5.0] 2022-ago-12
+* [0.5.0] 2022-aug-12
   - added `removeFromElementsStore` to the `BaseElement` class
   - removed `keepDataStored` to the `restoreFromElementsStore` method of the `BaseElement` class
   - added `makeState` to the `ElementParts` class
   - added `INVALID_STATE` error to the `RuntimeErrors` class
   - added `Element_Events` example
-* [0.4.5] 2022-ago-10
+* [0.4.5] 2022-aug-10
   - added `force` argument to the `process` method of the `ContentManager` class
   - refactored `Wuse` class
-* [0.4.4] 2022-ago-08
+* [0.4.4] 2022-aug-08
   - added `EMPTY_STRING` to the `JavascriptHelpers` class
   - improved `BaseElement` class
-* [0.4.3] 2022-ago-05
+* [0.4.3] 2022-aug-05
   - extracted `BaseElement` class to an external file
-* [0.4.2] 2022-ago-04
+* [0.4.2] 2022-aug-04
   - added `ElementParts` class unit test
   - added `PartsHolder` class unit test
-* [0.4.1] 2022-ago-02
+* [0.4.1] 2022-aug-02
   - added `cloneObject` and `forEachOwnProperty` to the `JavascriptHelpers` class
   - extracted `ElementParts` class to an external file
   - extracted `PartsHolder` class to an external file

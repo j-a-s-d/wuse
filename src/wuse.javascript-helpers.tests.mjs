@@ -22,6 +22,7 @@ export default new class {
     tester.testModuleFunction(module, "isAssignedArray", ["existence", "type:boolean"], this.isAssignedArray);
     tester.testModuleFunction(module, "isNonEmptyArray", ["existence", "type:boolean"], this.isNonEmptyArray);
     tester.testModuleFunction(module, "isIntegerNumber", ["existence", "type:boolean"], this.isIntegerNumber);
+    tester.testModuleFunction(module, "defineReadOnlyMembers", ["existence", "type:undefined"], this.defineReadOnlyMembers);
   }
 
   EMPTY_STRING = (tester, module, name) => {
@@ -50,14 +51,14 @@ export default new class {
     tester.testResult(r, `<u>${name}</u> tryed to change denied: <i>${r}</i>`);
   }
 
-  noop = (tester, module, fn) => {
-    var r = module[fn]() === undefined;
-    tester.testResult(r, `<u>${fn}</u> called: <i>${r}</i>`);
+  noop = (tester, module, name) => {
+    var r = module[name]() === undefined;
+    tester.testResult(r, `<u>${name}</u> called: <i>${r}</i>`);
   }
 
-  isOf = (tester, module, fn) => {
+  isOf = (tester, module, name) => {
     const testValueAndType = (value, type, expected) => tester.testInvokationWithArgsResult(
-      module, fn, [value, window[type]], `${type} (${value})`, result => result === expected
+      module, name, [value, window[type]], `${type} (${value})`, result => result === expected
     );
     testValueAndType(undefined, "String", false);
     testValueAndType(null, "String", false);
@@ -78,12 +79,12 @@ export default new class {
     window.TestClass = class {}
     testValueAndType(new TestClass(), "TestClass", true);
     testValueAndType(class {}, "Function", true);
-    tester.testInvokationResult(module, fn, "without args", result => result === false);
+    tester.testInvokationResult(module, name, "without args", result => result === false);
   }
 
-  areOf = (tester, module, fn) => {
+  areOf = (tester, module, name) => {
     const testValueAndType = (value, type, expected) => tester.testInvokationWithArgsResult(
-      module, fn, [value, window[type]], `${type} (${value})`, result => result === expected
+      module, name, [value, window[type]], `${type} (${value})`, result => result === expected
     );
     testValueAndType(undefined, "Any", false);
     testValueAndType(null, "Any", false);
@@ -97,10 +98,10 @@ export default new class {
     testValueAndType(["foo", "bar"], "String", true);
   }
 
-  hasObjectKeys = (tester, module, fn) => {
-    tester.testInvokationResult(module, fn, "without args", result => result === false);
-    tester.testInvokationWithArgsResult(module, fn, [{}], `with empty object`, result => result === false);
-    tester.testInvokationWithArgsResult(module, fn, [{a:123}], `with object with keys`, result => result === true);
+  hasObjectKeys = (tester, module, name) => {
+    tester.testInvokationResult(module, name, "without args", result => result === false);
+    tester.testInvokationWithArgsResult(module, name, [{}], `with empty object`, result => result === false);
+    tester.testInvokationWithArgsResult(module, name, [{a:123}], `with object with keys`, result => result === true);
   }
 
   cloneObject = (tester, module, name) => {
@@ -110,6 +111,7 @@ export default new class {
   }
 
   forEachOwnProperty = (tester, module, name) => {
+    tester.testInvokationResult(module, name, "without args", result => result === undefined);
     var r = true;
     module[name]({}, _ => r = false);
     tester.testResult(r, `<u>${name}</u> got called with an empty object: <i>${r}</i>`);
@@ -118,71 +120,84 @@ export default new class {
     tester.testResult(r, `<u>${name}</u> got called with an object with keys: <i>${r}</i>`);
   }
 
-  isNonEmptyString = (tester, module, fn) => {
-    tester.testInvokationResult(module, fn, "without args", result => result === false);
-    tester.testInvokationWithArgsResult(module, fn, [""], `with empty string`, result => result === false);
-    tester.testInvokationWithArgsResult(module, fn, ["blah"], `with string with content`, result => result === true);
+  isNonEmptyString = (tester, module, name) => {
+    tester.testInvokationResult(module, name, "without args", result => result === false);
+    tester.testInvokationWithArgsResult(module, name, [""], `with empty string`, result => result === false);
+    tester.testInvokationWithArgsResult(module, name, ["blah"], `with string with content`, result => result === true);
   }
 
-  forcedStringSplit = (tester, module, fn) => {
-    tester.testInvokationResult(module, fn, "without args", result => result && result.constructor.name === "Array" && result.length === 0);
-    tester.testInvokationWithArgsResult(module, fn, [""], `with an empty string`, result => result && result.constructor.name === "Array" && result.length === 1);
-    tester.testInvokationWithArgsResult(module, fn, ["", ""], `with two empty strings`, result => result && result.constructor.name === "Array" && result.length === 0);
-    tester.testInvokationWithArgsResult(module, fn, ["1,2,3", ","], `with string with content and delimiter`, result => result && result.constructor.name === "Array" && result.length === 3);
+  forcedStringSplit = (tester, module, name) => {
+    tester.testInvokationResult(module, name, "without args", result => result && result.constructor.name === "Array" && result.length === 0);
+    tester.testInvokationWithArgsResult(module, name, [""], `with an empty string`, result => result && result.constructor.name === "Array" && result.length === 1);
+    tester.testInvokationWithArgsResult(module, name, ["", ""], `with two empty strings`, result => result && result.constructor.name === "Array" && result.length === 0);
+    tester.testInvokationWithArgsResult(module, name, ["1,2,3", ","], `with string with content and delimiter`, result => result && result.constructor.name === "Array" && result.length === 3);
   }
 
-  buildArray = (tester, module, fn) => {
-    tester.testInvokationResult(module, fn, "without args", result => result && result.constructor.name === "Array" && result.length === 0);
-    tester.testInvokationWithArgsResult(module, fn, [null], "with invalid builder", result => result && result.constructor.name === "Array" && result.length === 0);
-    tester.testInvokationWithArgsResult(module, fn, [instance => instance.push(123)], "with valid builder", result => result && result.constructor.name === "Array" && result.length === 1 && result[0] === 123);
+  buildArray = (tester, module, name) => {
+    tester.testInvokationResult(module, name, "without args", result => result && result.constructor.name === "Array" && result.length === 0);
+    tester.testInvokationWithArgsResult(module, name, [null], "with invalid builder", result => result && result.constructor.name === "Array" && result.length === 0);
+    tester.testInvokationWithArgsResult(module, name, [instance => instance.push(123)], "with valid builder", result => result && result.constructor.name === "Array" && result.length === 1 && result[0] === 123);
   }
 
-  buildObject = (tester, module, fn) => {
-    tester.testInvokationResult(module, fn, "without args", result => result && result.constructor.name === "Object");
-    tester.testInvokationWithArgsResult(module, fn, [null], "with invalid builder", result => result && result.constructor.name === "Object");
-    tester.testInvokationWithArgsResult(module, fn, [instance => instance.key = 123], "with valid builder", result => result && result.constructor.name === "Object" && result.key === 123);
+  buildObject = (tester, module, name) => {
+    tester.testInvokationResult(module, name, "without args", result => result && result.constructor.name === "Object");
+    tester.testInvokationWithArgsResult(module, name, [null], "with invalid builder", result => result && result.constructor.name === "Object");
+    tester.testInvokationWithArgsResult(module, name, [instance => instance.key = 123], "with valid builder", result => result && result.constructor.name === "Object" && result.key === 123);
   }
 
-  ensureFunction = (tester, module, fn) => {
-    tester.testInvokationResult(module, fn, "without args", result => result && result.constructor.name === "Function");
-    tester.testInvokationWithArgsResult(module, fn, [null], "with invalid argument", result => result && result.constructor.name === "Function");
-    tester.testInvokationWithArgsResult(module, fn, [instance => 123], "with valid argument", result => result && result.constructor.name === "Function" && result() === 123);
+  ensureFunction = (tester, module, name) => {
+    tester.testInvokationResult(module, name, "without args", result => result && result.constructor.name === "Function");
+    tester.testInvokationWithArgsResult(module, name, [null], "with invalid argument", result => result && result.constructor.name === "Function");
+    tester.testInvokationWithArgsResult(module, name, [instance => 123], "with valid argument", result => result && result.constructor.name === "Function" && result() === 123);
   }
 
-  isAssignedObject = (tester, module, fn) => {
-    tester.testInvokationResult(module, fn, "without args", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [null], "with invalid argument", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [{}], "with valid argument", result => result);
+  isAssignedObject = (tester, module, name) => {
+    tester.testInvokationResult(module, name, "without args", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [null], "with invalid argument", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [{}], "with valid argument", result => result);
   }
 
-  isAssignedArray = (tester, module, fn) => {
-    tester.testInvokationResult(module, fn, "without args", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [null], "with invalid argument", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [[]], "with valid argument", result => result);
+  isAssignedArray = (tester, module, name) => {
+    tester.testInvokationResult(module, name, "without args", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [null], "with invalid argument", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [[]], "with valid argument", result => result);
   }
 
-  isNonEmptyArray = (tester, module, fn) => {
-    tester.testInvokationResult(module, fn, "without args", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [null], "with invalid argument (null)", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [[]], "with invalid argument (empty array)", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [[1,2,3]], "with valid argument (non-empty array)", result => result);
+  isNonEmptyArray = (tester, module, name) => {
+    tester.testInvokationResult(module, name, "without args", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [null], "with invalid argument (null)", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [[]], "with invalid argument (empty array)", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [[1,2,3]], "with valid argument (non-empty array)", result => result);
   }
 
-  isIntegerNumber = (tester, module, fn) => {
-    tester.testInvokationResult(module, fn, "without args", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [null], "with null argument", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [{}], "with object argument", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [[]], "with array argument", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [true], "with true bool argument", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [false], "with false bool argument", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [NaN], "with literal not-a-number argument", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [1.2], "with literal float number argument", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [1], "with literal int number argument", result => result);
-    tester.testInvokationWithArgsResult(module, fn, [0x7], "with literal hex int number argument", result => result);
-    tester.testInvokationWithArgsResult(module, fn, ["0x123"], "with hex int number string argument", result => result);
-    tester.testInvokationWithArgsResult(module, fn, ["456"], "with int number string argument", result => result);
-    tester.testInvokationWithArgsResult(module, fn, ["text"], "with non-number string argument", result => !result);
-    tester.testInvokationWithArgsResult(module, fn, [""], "with non-number empty string argument", result => !result);
+  isIntegerNumber = (tester, module, name) => {
+    tester.testInvokationResult(module, name, "without args", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [null], "with null argument", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [{}], "with object argument", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [[]], "with array argument", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [true], "with true bool argument", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [false], "with false bool argument", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [NaN], "with literal not-a-number argument", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [1.2], "with literal float number argument", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [1], "with literal int number argument", result => result);
+    tester.testInvokationWithArgsResult(module, name, [0x7], "with literal hex int number argument", result => result);
+    tester.testInvokationWithArgsResult(module, name, ["0x123"], "with hex int number string argument", result => result);
+    tester.testInvokationWithArgsResult(module, name, ["456"], "with int number string argument", result => result);
+    tester.testInvokationWithArgsResult(module, name, ["text"], "with non-number string argument", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [""], "with non-number empty string argument", result => !result);
+  }
+
+  defineReadOnlyMembers = (tester, module, name) => {
+    tester.testInvokationWithArgsResult(module, name, [null, null], "with null arguments", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [{}, {}], "with empty objects arguments", result => !result);
+    tester.testInvokationWithArgsResult(module, name, [123, "blah"], "with non-objects arguments", result => !result);
+    const noop = () => {};
+    var obj = {};
+    tester.testInvokationWithArgsResult(module, name, [obj, { a: 123 }], "adding a field", result => !result && obj && obj.a === 123);
+    obj = {};
+    tester.testInvokationWithArgsResult(module, name, [obj, { b: noop }], "adding a method", result => !result && obj && obj.b === noop);
+    obj = {};
+    tester.testInvokationWithArgsResult(module, name, [obj, { a: 123, b: noop }], "adding a field and a method", result => !result && obj && obj.a === 123 && obj.b === noop);
   }
 
 }

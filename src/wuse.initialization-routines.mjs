@@ -4,28 +4,24 @@ import RuntimeErrors from './wuse.runtime-errors.mjs';
 import TemplateImporter from './wuse.template-importer.mjs';
 import ElementClasses from './wuse.element-classes.mjs';
 import BaseElement from './wuse.base-element.mjs';
-
-const defineReadOnlyMembers = (instance, items) => window.Object.getOwnPropertyNames(items).forEach(
-  name => window.Object.defineProperty(instance, name, {
-    value: items[name], writable: false, configurable: false, enumerable: false
-  })
-);
+import JsHelpers from './wuse.javascript-helpers.mjs';
+const { defineReadOnlyMembers, isOf, buildArray } = JsHelpers;
 
 export default class InitializationRoutines {
 
   static detectFeatures(instance) {
     const detectFeature = (flag, msg) => !flag && RuntimeErrors.UNSUPPORTED_FEATURE.emit(msg);
     try {
-      detectFeature(instance.JsHelpers.isOf(window.document, window.HTMLDocument), "HTML Document");
-      detectFeature(instance.JsHelpers.isOf(window.customElements, window.CustomElementRegistry), "Custom Elements");
-      instance.WebHelpers.onDOMContentLoaded(() => detectFeature(instance.JsHelpers.isOf(window.document.body.attachShadow, window.Function), "Shadow DOM"));
+      detectFeature(isOf(window.document, window.HTMLDocument), "HTML Document");
+      detectFeature(isOf(window.customElements, window.CustomElementRegistry), "Custom Elements");
+      instance.WebHelpers.onDOMContentLoaded(() => detectFeature(isOf(window.document.body.attachShadow, window.Function), "Shadow DOM"));
     } catch (e) {
       RuntimeErrors.UNKNOWN_ERROR.emit();
     }
   }
 
   static initializeModules(instance) {
-    instance.PerformanceMeasurement.initialize((stopWatch, event) => instance.debug(JSON.stringify(instance.JsHelpers.buildArray(data => {
+    instance.PerformanceMeasurement.initialize((stopWatch, event) => instance.debug(JSON.stringify(buildArray(data => {
       data.push({ instances: instance.elementCount });
       data.push(stopWatch.getDebugInfo());
       switch (event) {

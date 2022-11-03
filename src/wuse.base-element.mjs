@@ -1,7 +1,7 @@
 // Wuse (Web Using Shadow Elements) by j-a-s-d
 
 import JsHelpers from './wuse.javascript-helpers.mjs';
-const { EMPTY_STRING, noop, ensureFunction, isOf, isAssignedObject, isAssignedArray, isNonEmptyArray, isNonEmptyString, forcedStringSplit, forEachOwnProperty, buildArray } = JsHelpers;
+const { EMPTY_STRING, noop, ensureFunction, isOf, isAssignedObject, isAssignedArray, isNonEmptyArray, isNonEmptyString, forcedStringSplit, forEachOwnProperty, buildArray, defineReadOnlyMembers } = JsHelpers;
 import WebHelpers from './wuse.web-helpers.mjs';
 const { removeChildren, isHTMLAttribute } = WebHelpers;
 import StringConstants from './wuse.string-constants.mjs';
@@ -458,25 +458,39 @@ export default class BaseElement extends window.HTMLElement {
 
   // PUBLIC
 
-  // FIELDS
-
-  info = {
-    instanceNumber: ++BaseElement.instancesCount,
-    unmodifiedRounds: 0,
-    updatedRounds: 0
-  }
-
   // CONSTRUCTORS
 
   constructor(mode) {
     super();
+    defineReadOnlyMembers(this, {
+      info: {
+        instanceNumber: ++BaseElement.instancesCount,
+        unmodifiedRounds: 0,
+        updatedRounds: 0
+      },
+      render: () => window.Wuse.RENDERING && this.#rendering && this.#binded && this.#revise(true),
+      redraw: () => window.Wuse.RENDERING && this.#rendering && this.#binded && this.#revise(false),
+      suspendRender: () => {
+        this.#rendering = false;
+        return this;
+      },
+      resumeRender: (autorender = true) => {
+        this.#rendering = true;
+        autorender && window.Wuse.RENDERING && this.#rendering && this.#binded && this.#revise(true);
+        return this;
+      },
+      isRenderSuspended: () => !this.#rendering
+    });
     this.#root = mode === REGULAR ? this : this.shadowRoot || this.attachShadow({ mode: mode });
     const evs = this.#elementEvents;
     evs.detect();
     evs.immediateTrigger("on_create");
     if (this.#options.attributeKeys) {
       const ats = this.getAttributeNames();
-      if (!!ats.length) ats.forEach(attr => this[attr] = this.getAttribute(attr));
+      if (!!ats.length) for (let x in ats) {
+        const attr = ats[x];
+        this[attr] = this.getAttribute(attr);
+      }
     }
     if (this.dataset.wusekey) this.setElementsStoreKey(this.dataset.wusekey);
     const stm = this.#stateManager;
@@ -501,30 +515,7 @@ export default class BaseElement extends window.HTMLElement {
     if (isAssignedObject(this.#parameters = value)) forEachOwnProperty(value, name => this[name] = value[name]);
   }
 
-  // METHODS
-
-  render() {
-    window.Wuse.RENDERING && this.#rendering && this.#binded && this.#revise(true);
-  }
-
-  redraw() {
-    window.Wuse.RENDERING && this.#rendering && this.#binded && this.#revise(false);
-  }
-
-  suspendRender() {
-    this.#rendering = false;
-    return this;
-  }
-
-  resumeRender(autorender = true) {
-    this.#rendering = true;
-    if (autorender) this.render();
-    return this;
-  }
-
-  isRenderSuspended() {
-    return !this.#rendering;
-  }
+  // SELECTION METHODS
 
   selectChildElement(x) {
     return this.#root.querySelector(x);
@@ -867,7 +858,9 @@ export default class BaseElement extends window.HTMLElement {
 
   replaceChildElementById(id, shorthandNotation, rules) {
     const tmp = parseElement(shorthandNotation, rules);
-    if (tmp !== null) this.#children.replace(this.#children.getIndexOf(id), tmp);
+    const chn = this.#children;
+    const idx = chn.getIndexOf(id);
+    if (idx > -1 && tmp !== null) chn.replace(idx, tmp);
     return this;
   }
 

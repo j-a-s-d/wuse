@@ -88,4 +88,17 @@ export default class JavascriptHelpers {
     return (typeof x === "number" || (typeof x === "string" && !!x.length)) && window.Number.isInteger(window.Number(x));
   }
 
+  static defineReadOnlyMembers(instance, items) {
+    if (instance && typeof items === "object" && items !== null) {
+      const defProp = window.Object.defineProperty;
+      const names = window.Object.getOwnPropertyNames(items);
+      for (let x in names) {
+        const name = names[x];
+        defProp(instance, name, {
+          value: items[name], writable: false, configurable: false, enumerable: false
+        });
+      }
+    }
+  }
+
 }
