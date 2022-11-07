@@ -95,7 +95,7 @@ export default class WebHelpers {
 
   static getUniqueId(prefix = "WUSE") {
     const pfx = "_" + (prefix ? prefix : "") + "_";
-    var result;
+    let result;
     while (window.document.getElementById(result = pfx + ("" + window.Math.random()).substring(2)) !== null);
     return result;
   }

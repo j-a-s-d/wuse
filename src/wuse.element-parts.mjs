@@ -193,30 +193,32 @@ const doValidations = child => {
   return child;
 }
 
-const createMainNode = mainDefinition => {
-  if (!isAssignedObject(mainDefinition)) {
+const createMainNode = definition => {
+  if (!isAssignedObject(definition)) {
     return null;
   }
-  let result = window.document.createElement(mainDefinition.tag);
-  if (!!mainDefinition.id.length) {
-    result.setAttribute("id", mainDefinition.id);
+  let result = window.document.createElement(definition.tag);
+  if (!!definition.id.length) {
+    result.setAttribute("id", definition.id);
   }
-  if (!!mainDefinition.classes.length) {
-    result.setAttribute("class", mainDefinition.classes.join(" "));
+  if (!!definition.classes.length) {
+    result.setAttribute("class", definition.classes.join(" "));
   }
-  if (hasObjectKeys(mainDefinition.style)) {
-    var style = new window.String();
-    for (const property in mainDefinition.style) {
-      style += `${property}: ${mainDefinition.style[property]}; `;
+  const ds = definition.style;
+  if (hasObjectKeys(ds)) {
+    let style = new window.String();
+    for (const property in ds) {
+      style += `${property}: ${ds[property]}; `;
     }
     if (!!style.length) {
       const v = style.trim();
       result.setAttribute("style", v.endsWith(";") ? v.slice(0, -1) : v);
     }
   }
-  if (hasObjectKeys(mainDefinition.attributes)) {
-    for (const property in mainDefinition.attributes) {
-      result.setAttribute(property, mainDefinition.attributes[property]);
+  const da = definition.attributes;
+  if (hasObjectKeys(da)) {
+    for (const property in da) {
+      result.setAttribute(property, da[property]);
     }
   }
   result.setAttribute(WUSENODE_ATTRIBUTE, "main");
@@ -268,7 +270,7 @@ const rulesJoiner = (lr, rule) => {
 const nestedRulesJoiner = (lr, rule) => {
   if (isAssignedArray(lr.nested) && lr.selector === rule.selector) {
     rule.nested.forEach(n => {
-      var found = false;
+      let found = false;
       for (const x in lr.nested) {
         if ((found = lr.nested[x].selector === n.selector)) {
           for (const p in n.properties) {

@@ -652,7 +652,7 @@
     }
     static getUniqueId(prefix = "WUSE") {
       const pfx = "_" + (prefix ? prefix : "") + "_";
-      var result;
+      let result;
       while (window.document.getElementById(result = pfx + ("" + window.Math.random()).substring(2)) !== null)
         ;
       return result;
@@ -982,30 +982,32 @@
     }
     return child;
   };
-  var createMainNode = (mainDefinition) => {
-    if (!isAssignedObject3(mainDefinition)) {
+  var createMainNode = (definition) => {
+    if (!isAssignedObject3(definition)) {
       return null;
     }
-    let result = window.document.createElement(mainDefinition.tag);
-    if (!!mainDefinition.id.length) {
-      result.setAttribute("id", mainDefinition.id);
+    let result = window.document.createElement(definition.tag);
+    if (!!definition.id.length) {
+      result.setAttribute("id", definition.id);
     }
-    if (!!mainDefinition.classes.length) {
-      result.setAttribute("class", mainDefinition.classes.join(" "));
+    if (!!definition.classes.length) {
+      result.setAttribute("class", definition.classes.join(" "));
     }
-    if (hasObjectKeys(mainDefinition.style)) {
-      var style = new window.String();
-      for (const property in mainDefinition.style) {
-        style += `${property}: ${mainDefinition.style[property]}; `;
+    const ds = definition.style;
+    if (hasObjectKeys(ds)) {
+      let style = new window.String();
+      for (const property in ds) {
+        style += `${property}: ${ds[property]}; `;
       }
       if (!!style.length) {
         const v = style.trim();
         result.setAttribute("style", v.endsWith(";") ? v.slice(0, -1) : v);
       }
     }
-    if (hasObjectKeys(mainDefinition.attributes)) {
-      for (const property in mainDefinition.attributes) {
-        result.setAttribute(property, mainDefinition.attributes[property]);
+    const da = definition.attributes;
+    if (hasObjectKeys(da)) {
+      for (const property in da) {
+        result.setAttribute(property, da[property]);
       }
     }
     result.setAttribute(WUSENODE_ATTRIBUTE, "main");
@@ -1054,7 +1056,7 @@
   var nestedRulesJoiner = (lr, rule) => {
     if (isAssignedArray2(lr.nested) && lr.selector === rule.selector) {
       rule.nested.forEach((n) => {
-        var found = false;
+        let found = false;
         for (const x in lr.nested) {
           if (found = lr.nested[x].selector === n.selector) {
             for (const p in n.properties) {
@@ -1605,7 +1607,7 @@
   _analyzer = new WeakMap();
 
   // src/wuse.base-element.mjs
-  var _html, _rules, _children, _fields, _reactives, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binding, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _revise, revise_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
+  var _html, _rules, _children, _fields, _reactives, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binder, _unbinder, _makeBindingPerformers, _makeBindingHandlers, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _revise, revise_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
   var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3, buildArray: buildArray4, defineReadOnlyMembers } = JavascriptHelpers;
   var { removeChildren, isHTMLAttribute } = WebHelpers;
   var { WUSEKEY_ATTRIBUTE, DEFAULT_STYLE_TYPE, DEFAULT_STYLE_MEDIA, DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE, SLOTS_KIND: SLOTS_KIND3 } = StringConstants;
@@ -1797,35 +1799,33 @@
           RuntimeErrors3.onInvalidKey();
         }
       }(newState, __privateGet(this, _stateReader), __privateGet(this, _stateWriter), window.Wuse.elementsStorage));
-      __privateAdd(this, _binding, {
-        binder: (id) => {
-          const el = getElementByIdFromRoot(this, id);
-          if (el)
-            this[id] = el;
-        },
-        unbinder: (id) => delete this[id],
-        makePerformers: (event, doer) => ({
-          event,
-          key: () => {
-            if (__privateGet(this, _identified))
-              doer(__privateGet(this, _options).mainDefinition.id);
-            return (child) => doer(child.id);
-          }
-        }),
-        makeHandlers: (performers) => ({
-          key: __privateGet(this, _options).elementKeys && performers.key(),
-          event: (id, event, capture) => {
-            const handler = this[`on_${id}_${event}`];
-            if (handler) {
-              const el = getElementByIdFromRoot(this, id);
-              if (el)
-                el[performers.event](event, handler, capture);
-            }
-          },
-          slots: () => this.on_slot_change && __privateGet(this, _root).querySelectorAll("slot").forEach((slot) => slot[performers.event]("slotchange", this.on_slot_change))
-        }),
-        getHandlers: (value) => __privateGet(this, _binding).makeHandlers(value ? __privateGet(this, _binding).makePerformers("addEventListener", __privateGet(this, _binding).binder) : __privateGet(this, _binding).makePerformers("removeEventListener", __privateGet(this, _binding).unbinder))
+      __privateAdd(this, _binder, (id) => {
+        const el = getElementByIdFromRoot(this, id);
+        if (el)
+          this[id] = el;
       });
+      __privateAdd(this, _unbinder, (id) => delete this[id]);
+      __privateAdd(this, _makeBindingPerformers, (event, doer) => ({
+        event,
+        key: () => {
+          if (__privateGet(this, _identified))
+            doer(__privateGet(this, _options).mainDefinition.id);
+          return (child) => doer(child.id);
+        },
+        handler: (id, evkind, capture) => {
+          const hnd = this[`on_${id}_${evkind}`];
+          if (typeof hnd === "function") {
+            const el = getElementByIdFromRoot(this, id);
+            if (el)
+              el[event](evkind, hnd, capture);
+          }
+        }
+      }));
+      __privateAdd(this, _makeBindingHandlers, (performers) => ({
+        key: __privateGet(this, _options).elementKeys && performers.key(),
+        events: (item) => !!item.events.length && item.events.forEach((event) => event && performers.handler(item.id, event.kind, event.capture)),
+        slots: () => this.on_slot_change && __privateGet(this, _root).querySelectorAll("slot").forEach((slot) => slot[performers.event]("slotchange", this.on_slot_change))
+      }));
       __privateAdd(this, _contents, {
         root: new ContentManager((content) => this.innerHTML = content, (content) => true),
         style: new ContentManager((content) => __privateGet(this, _style) && __privateGet(this, _style).promote(content), (content) => !__privateGet(this, _waste).style.compute(content)),
@@ -2039,9 +2039,8 @@
     setMainElement(shorthandNotation) {
       const tmp = parseElement(shorthandNotation);
       if (tmp !== null) {
-        if (isNonEmptyString6(tmp.content) || isNonEmptyArray3(tmp.events)) {
+        if (isNonEmptyString6(tmp.content))
           return RuntimeErrors3.onInvalidDefinition(shorthandNotation);
-        }
         const def = __privateGet(this, _options).mainDefinition;
         if (__privateSet(this, _identified, isNonEmptyString6(tmp.id)))
           def.id = tmp.id;
@@ -2053,6 +2052,8 @@
           def.style = tmp.style;
         if (isAssignedObject7(tmp.attributes))
           def.attributes = tmp.attributes;
+        if (isNonEmptyArray3(tmp.events))
+          def.events = tmp.events;
       }
       return this;
     }
@@ -2382,7 +2383,10 @@
   _stateReader = new WeakMap();
   _stateWriter = new WeakMap();
   _stateManager = new WeakMap();
-  _binding = new WeakMap();
+  _binder = new WeakMap();
+  _unbinder = new WeakMap();
+  _makeBindingPerformers = new WeakMap();
+  _makeBindingHandlers = new WeakMap();
   _contents = new WeakMap();
   _waste = new WeakMap();
   _measurement = new WeakMap();
@@ -2406,15 +2410,16 @@
   _bind = new WeakSet();
   bind_fn = function(value) {
     if (__privateGet(this, _binded) && !value || !__privateGet(this, _binded) && value) {
-      const bindingHandlers = __privateGet(this, _binding).getHandlers(value);
+      const bindingHandlers = __privateGet(this, _makeBindingHandlers).call(this, value ? __privateGet(this, _makeBindingPerformers).call(this, "addEventListener", __privateGet(this, _binder)) : __privateGet(this, _makeBindingPerformers).call(this, "removeEventListener", __privateGet(this, _unbinder)));
+      if (__privateGet(this, _identified))
+        bindingHandlers.events(__privateGet(this, _options).mainDefinition);
       if (!!__privateGet(this, _children).length)
         __privateGet(this, _children).forEach((child) => {
           if (!child.included && value)
             return;
           if (bindingHandlers.key)
             bindingHandlers.key(child);
-          if (!!child.events.length)
-            child.events.forEach((event) => event && bindingHandlers.event(child.id, event.kind, event.capture));
+          bindingHandlers.events(child);
         });
       if (__privateGet(this, _slotted) && __privateGet(this, _shadowed))
         bindingHandlers.slots();
@@ -2822,7 +2827,7 @@
   ;
 
   // package.json
-  var version = "0.8.6";
+  var version = "0.8.7";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

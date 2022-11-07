@@ -204,36 +204,32 @@ export default class BaseElement extends window.HTMLElement {
   })(newState, this.#stateReader, this.#stateWriter, window.Wuse.elementsStorage);
 
   // ELEMENTS BINDING
-  #binding = {
-    binder: id => {
-      const el = getElementByIdFromRoot(this, id);
-      if (el) this[id] = el;
-    },
-    unbinder: id => delete this[id],
-    makePerformers: (event, doer) => ({
-      event, key: () => {
-        if (this.#identified) doer(this.#options.mainDefinition.id);
-        return child => doer(child.id);
+  #binder = id => {
+    const el = getElementByIdFromRoot(this, id);
+    if (el) this[id] = el;
+  };
+  #unbinder = id => delete this[id];
+  #makeBindingPerformers = (event, doer) => ({
+    event, key: () => {
+      if (this.#identified) doer(this.#options.mainDefinition.id);
+      return child => doer(child.id);
+    }, handler: (id, evkind, capture) => {
+      const hnd = this[`on_${id}_${evkind}`];
+      if (typeof hnd === "function") {
+        const el = getElementByIdFromRoot(this, id);
+        if (el) el[event](evkind, hnd, capture);
       }
-    }),
-    makeHandlers: performers => ({
-      key: this.#options.elementKeys && performers.key(),
-      event: (id, event, capture) => {
-        const handler = this[`on_${id}_${event}`];
-        if (handler) {
-          const el = getElementByIdFromRoot(this, id);
-          if (el) el[performers.event](event, handler, capture);
-        }
-      },
-      slots: () => this.on_slot_change && this.#root.querySelectorAll("slot").forEach(
-        slot => slot[performers.event]("slotchange", this.on_slot_change)
-      )
-    }),
-    getHandlers: value => this.#binding.makeHandlers(value ?
-      this.#binding.makePerformers("addEventListener", this.#binding.binder) :
-      this.#binding.makePerformers("removeEventListener", this.#binding.unbinder)
+    }
+  });
+  #makeBindingHandlers = performers => ({
+    key: this.#options.elementKeys && performers.key(),
+    events: item => !!item.events.length && item.events.forEach(
+      event => event && performers.handler(item.id, event.kind, event.capture)
+    ),
+    slots: () => this.on_slot_change && this.#root.querySelectorAll("slot").forEach(
+      slot => slot[performers.event]("slotchange", this.on_slot_change)
     )
-  }
+  });
 
   // RENDERING STATE
   #contents = {
@@ -301,13 +297,15 @@ export default class BaseElement extends window.HTMLElement {
 
   #bind(value) {
     if ((this.#binded && !value) || (!this.#binded && value)) {
-      const bindingHandlers = this.#binding.getHandlers(value);
+      const bindingHandlers = this.#makeBindingHandlers(value ?
+        this.#makeBindingPerformers("addEventListener", this.#binder) :
+        this.#makeBindingPerformers("removeEventListener", this.#unbinder)
+      );
+      if (this.#identified) bindingHandlers.events(this.#options.mainDefinition);
       if (!!this.#children.length) this.#children.forEach(child => {
         if (!child.included && value) return;
         if (bindingHandlers.key) bindingHandlers.key(child);
-        if (!!child.events.length) child.events.forEach(
-          event => event && bindingHandlers.event(child.id, event.kind, event.capture)
-        );
+        bindingHandlers.events(child);
       });
       if (this.#slotted && this.#shadowed) bindingHandlers.slots();
       this.#binded = value;
@@ -682,15 +680,14 @@ export default class BaseElement extends window.HTMLElement {
   setMainElement(shorthandNotation) {
     const tmp = parseElement(shorthandNotation);
     if (tmp !== null) {
-      if (isNonEmptyString(tmp.content) || isNonEmptyArray(tmp.events)) {
-        return RuntimeErrors.onInvalidDefinition(shorthandNotation);
-      }
+      if (isNonEmptyString(tmp.content)) return RuntimeErrors.onInvalidDefinition(shorthandNotation);
       const def = this.#options.mainDefinition;
       if (this.#identified = isNonEmptyString(tmp.id)) def.id = tmp.id;
       if (isNonEmptyString(tmp.tag)) def.tag = tmp.tag;
       if (isNonEmptyArray(tmp.classes)) def.classes = tmp.classes;
       if (isAssignedObject(tmp.style)) def.style = tmp.style;
       if (isAssignedObject(tmp.attributes)) def.attributes = tmp.attributes;
+      if (isNonEmptyArray(tmp.events)) def.events = tmp.events;
     }
     return this;
   }

@@ -1,0 +1,80 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wuse | Wing Grid960 Sample example</title>
+  <script src="../../../dist/wuse.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/wingcss"/>
+</head>
+<body>
+  <p>This is a port of the <a href="https://kbrsh.github.io/wing" target="_blank">Wing Grid 960 example</a>.</p>
+  <hr/>
+  <div id="container" style="margin: 4em"></div>
+  <script>
+    class Wing_Grid960_MainRow extends Wuse.NonShadowElement {
+
+      static { this.register(); }
+
+      on_create() {
+        this
+          .setMainElement("div.row")
+          .appendCSSRule(".row > :first-child", "margin-left: 0")
+          .appendCSSRule(".grid-demo-col", `
+            background: #e4e4e4;
+            padding-top: 1em;
+            padding-bottom: 1em;
+          `)
+      }
+
+      #addColumn = caption => this.appendChildElement(`div.col.center.grid-demo-col=${caption}`)
+
+      #columns = [];
+
+      get columns() { return this.#columns; }
+
+      set columns(items) {
+        this.#columns = items || [];
+      }
+
+      update() {
+        this.removeAllChildElements();
+        this.#columns.forEach(this.#addColumn);
+        this.render();
+      }
+
+    }
+    class Wing_Grid960_Sample extends Wuse.NonShadowElement {
+
+      static { this.register(); }
+
+      on_create() {
+        this
+          .appendCSSRule("button", "margin-right: 0.5em")
+          .appendChildElement("button#btnAddColumn!click=Add Column")
+          .appendChildElement("button#btnRemoveColumn!click=Remove Column")
+          .appendChildElement("wing-grid960-mainrow#row")
+      }
+
+      on_load() {
+        if (this.parameters) {
+          this.row.columns = this.parameters.columns;
+          this.row.update();
+        }
+      }
+
+      on_btnAddColumn_click = () => {
+        this.row.columns.push("" + (this.row.columns.length + 1));
+        this.row.update();
+      }
+
+      on_btnRemoveColumn_click = () => {
+        this.row.columns.pop();
+        this.row.update();
+      }
+
+    }
+    Wing_Grid960_Sample.create({ columns: ["1", "2", "3", "4"] }, "#container");
+  </script>
+</body>
+</html>
+
