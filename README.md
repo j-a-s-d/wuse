@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.8.8] 2022-nov-08
+  - added `setMainEventHandler` and `dropMainEventHandler` to the `BaseElement` class
+  - added `Materialize_FloatingButton_Sample` demo
 * [0.8.7] 2022-nov-07
   - added main element events support
   - added `Wing_Grid960_Sample` demo

@@ -677,6 +677,37 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
+  setMainEventHandler(kind, handler, capture = false) {
+    if (this.#identified && isNonEmptyString(kind) && isOf(handler, window.Function)) {
+      const def = this.#options.mainDefinition;
+      const present = def.events.some(ev => ev.kind === kind);
+      if (!present) def.events.push({ kind, capture });
+      const name = `on_${def.id}_${kind}`;
+      if (this.#inserted) {
+        const el = this.#main.element;
+        if (present) el.removeEventListener(kind, this[name], capture);
+        el.addEventListener(kind, handler, capture);
+      }
+      this[name] = handler;
+      return true;
+    }
+    return false;
+  }
+
+  dropMainEventHandler(kind, capture = false) {
+    if (this.#identified && isNonEmptyString(kind)) {
+      const def = this.#options.mainDefinition;
+      def.events = buildArray(instance => def.events.forEach(ev => {
+        if (ev.kind !== kind || (ev.kind === kind && ev.capture !== capture)) instance.push(ev);
+      }));
+      const name = `on_${def.id}_${kind}`;
+      if (this.#inserted) this.#main.element.removeEventListener(kind, this[name], capture);
+      delete this[name];
+      return true;
+    }
+    return false;
+  }
+
   setMainElement(shorthandNotation) {
     const tmp = parseElement(shorthandNotation);
     if (tmp !== null) {

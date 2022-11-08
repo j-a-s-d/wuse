@@ -1,0 +1,83 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wuse | Materialize FloatingButton Sample example</title>
+  <script src="../../../dist/wuse.min.js"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+</head>
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <p>This is a port of the <a href="https://materializecss.com/floating-action-button.html" target="_blank">Materialize 1.0.0 Floating Action Button example</a>.</p>
+  <hr/>
+  <div id="container" style="margin: 4em"></div>
+  <script>
+    class Materialize_FloatingButton extends Wuse.NonShadowElement {
+
+      on_create() {
+        this
+          .setAttributesAsKeys(true)
+          .appendChildElement("a.btn-floating.btn-large.~{extra}~=<i class='material-icons'>~{face}~</i>")
+          .makeReactiveField("face", "")
+          .makeReactiveField("extra", "white")
+      }
+
+    }
+
+    class Materialize_FloatingAction extends Wuse.NonShadowElement {
+
+      on_create() {
+        this
+          .setAttributesAsKeys(true)
+          .setMainElement("li")
+          .appendChildElement("a.btn-floating.~{extra}~=<i class='material-icons'>~{face}~</i>")
+          .makeReactiveField("face", "")
+          .makeReactiveField("extra", "white")
+      }
+
+    }
+
+    class Materialize_FloatingList extends Wuse.NonShadowElement {
+
+      on_create() {
+        this
+          .setMainElement("ul")
+          .appendChildElement("materialize-floatingaction[extra='red'|face='insert_chart']")
+          .appendChildElement("materialize-floatingaction[extra='yellow darken-1'|face='format_quote']")
+          .appendChildElement("materialize-floatingaction[extra='green'|face='publish']")
+          .appendChildElement("materialize-floatingaction[extra='blue'|face='attach_file']")
+      }
+
+    }
+
+    class Materialize_FloatingButton_Sample extends Wuse.NonShadowElement {
+
+      on_create() {
+        this
+          .setMainElement(".fixed-action-btn")
+          .appendChildElement("materialize-floatingbutton[extra='red'|face='mode_edit']")
+          .appendChildElement("materialize-floatinglist")
+      }
+
+    }
+
+    Wuse.register([
+      Materialize_FloatingButton,
+      Materialize_FloatingAction,
+      Materialize_FloatingList,
+      Materialize_FloatingButton_Sample
+    ]);
+
+    Wuse.create({
+      element: { type: Materialize_FloatingButton_Sample },
+      target: { selector: "#container" }
+    });
+
+    Wuse.WebHelpers.onDOMContentLoaded(
+      () => M.FloatingActionButton.init(document.querySelectorAll('.fixed-action-btn'), { direction: 'left' })
+    );
+  </script>
+</body>
+</html>
+

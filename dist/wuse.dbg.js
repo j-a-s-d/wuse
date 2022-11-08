@@ -2036,6 +2036,39 @@
         __privateGet(this, _main).element.classList.toggle(klass);
       return this;
     }
+    setMainEventHandler(kind, handler, capture = false) {
+      if (__privateGet(this, _identified) && isNonEmptyString6(kind) && isOf4(handler, window.Function)) {
+        const def = __privateGet(this, _options).mainDefinition;
+        const present = def.events.some((ev) => ev.kind === kind);
+        if (!present)
+          def.events.push({ kind, capture });
+        const name = `on_${def.id}_${kind}`;
+        if (__privateGet(this, _inserted)) {
+          const el = __privateGet(this, _main).element;
+          if (present)
+            el.removeEventListener(kind, this[name], capture);
+          el.addEventListener(kind, handler, capture);
+        }
+        this[name] = handler;
+        return true;
+      }
+      return false;
+    }
+    dropMainEventHandler(kind, capture = false) {
+      if (__privateGet(this, _identified) && isNonEmptyString6(kind)) {
+        const def = __privateGet(this, _options).mainDefinition;
+        def.events = buildArray4((instance) => def.events.forEach((ev) => {
+          if (ev.kind !== kind || ev.kind === kind && ev.capture !== capture)
+            instance.push(ev);
+        }));
+        const name = `on_${def.id}_${kind}`;
+        if (__privateGet(this, _inserted))
+          __privateGet(this, _main).element.removeEventListener(kind, this[name], capture);
+        delete this[name];
+        return true;
+      }
+      return false;
+    }
     setMainElement(shorthandNotation) {
       const tmp = parseElement(shorthandNotation);
       if (tmp !== null) {
@@ -2827,7 +2860,7 @@
   ;
 
   // package.json
-  var version = "0.8.7";
+  var version = "0.8.8";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);
