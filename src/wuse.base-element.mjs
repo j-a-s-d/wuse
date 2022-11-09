@@ -67,6 +67,67 @@ const makeWasteAnalyzers = () => ({
   style: new EqualityAnalyzer(window.Wuse.hashRoutine)
 });
 
+class RulesHolder extends PartsHolder {
+  getIndexOf = value => super.getIndexOf("selector", value);
+  on_version_change = () => {
+    if (this.last !== null) {
+      this.last.version = this.version;
+      this.last.replacements = extractReplacementsFromRule(this.last);
+    }
+    window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `rules list version change: ${this.version}`);
+  }
+  on_forbidden_change = () => {
+    window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `rules list is locked and can not be changed`);
+    RuntimeErrors.onLockedDefinition(this.owner.getMainAttribute("id"));
+  }
+}
+
+class FieldsHolder extends PartsHolder {
+  establish = (name, value) => {
+    if (this.prepare()) {
+      const idx = super.getIndexOf("name", name);
+      idx > -1 ? this[idx].value = value : this.append({ name, value });
+      return true;
+    }
+    return false;
+  }
+  snapshot = () => buildArray(instance => this.persist().forEach(
+    item => instance.push({ name: item.name, value: item.value })
+  ));
+  getIndexOf = value => super.getIndexOf("name", value);
+  on_version_change = () => {
+    window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `fields list version change: ${this.version}`);
+  }
+  on_forbidden_change = () => {
+    window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `fields list is locked and can not be changed`);
+    RuntimeErrors.onLockedDefinition(this.owner.getMainAttribute("id"));
+  }
+  on_snapshot_part = part => part.value = this.owner[part.name];
+  on_recall_part = part => this.owner[part.name] = part.value;
+}
+
+class ChildrenHolder extends PartsHolder {
+  #updater = holder => {};
+  constructor(owner, recaller, updater) {
+    super(owner);
+    this.on_recall_part = recaller;
+    this.#updater = updater;
+  }
+  getIndexOf = value => super.getIndexOf("id", value);
+  on_version_change = () => {
+    if (this.last !== null) {
+      this.last.version = this.version;
+      this.last.replacements = extractReplacementsFromChild(this.last);
+    }
+    this.#updater(this);
+    window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `children list version change: ${this.version}`);
+  }
+  on_forbidden_change = () => {
+    window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `children list is locked and can not be changed`);
+    RuntimeErrors.onLockedDefinition(this.owner.getMainAttribute("id"));
+  }
+}
+
 export default class BaseElement extends window.HTMLElement {
 
   // INSTANCE
@@ -75,59 +136,11 @@ export default class BaseElement extends window.HTMLElement {
 
   // CONTENT HOLDERS
   #html = new window.String(); // RAW HTML
-  #rules = new (class extends PartsHolder {
-    getIndexOf = value => super.getIndexOf("selector", value)
-    on_version_change = () => {
-      if (this.last !== null) {
-        this.last.version = this.version;
-        this.last.replacements = extractReplacementsFromRule(this.last);
-      }
-      window.Wuse.DEBUG && this.owner.#identified && debug(this.owner, `rules list version change: ${this.version}`);
-    }
-    on_forbidden_change = () => {
-      window.Wuse.DEBUG && this.owner.#identified && debug(this.owner, `rules list is locked and can not be changed`);
-      RuntimeErrors.onLockedDefinition(this.owner.#options.mainDefinition.id);
-    }
-  })(this); // CSS RULES
-  #children = new (class extends PartsHolder {
-    getIndexOf = value => super.getIndexOf("id", value)
-    on_version_change = () => {
-      if (this.last !== null) {
-        this.last.version = this.version;
-        this.last.replacements = extractReplacementsFromChild(this.last);
-      }
-      if (!this.owner.#slotted) this.owner.#slotted |= this.some(child => child.kind === SLOTS_KIND);
-      window.Wuse.DEBUG && this.owner.#identified && debug(this.owner, `children list version change: ${this.version}`);
-    }
-    on_forbidden_change = () => {
-      window.Wuse.DEBUG && this.owner.#identified && debug(this.owner, `children list is locked and can not be changed`);
-      RuntimeErrors.onLockedDefinition(this.owner.#options.mainDefinition.id);
-    }
-    on_recall_part = part => this.owner.#filiatedKeys.tryToRemember(part);
-  })(this); // HTML ELEMENTS
-  #fields = new (class extends PartsHolder {
-    establish = (name, value) => {
-      if (this.prepare()) {
-        const idx = super.getIndexOf("name", name);
-        idx > -1 ? this[idx].value = value : this.append({ name, value });
-        return true;
-      }
-      return false;
-    }
-    snapshot = () => buildArray(instance => this.persist().forEach(
-      item => instance.push({ name: item.name, value: item.value })
-    ))
-    getIndexOf = value => super.getIndexOf("name", value)
-    on_version_change = () => {
-      window.Wuse.DEBUG && this.owner.#identified && debug(this.owner, `fields list version change: ${this.version}`);
-    }
-    on_forbidden_change = () => {
-      window.Wuse.DEBUG && this.owner.#identified && debug(this.owner, `fields list is locked and can not be changed`);
-      RuntimeErrors.onLockedDefinition(this.owner.#options.mainDefinition.id);
-    }
-    on_snapshot_part = part => part.value = this.owner[part.name];
-    on_recall_part = part => this.owner[part.name] = part.value;
-  })(this); // INSTANCE FIELDS
+  #rules = new RulesHolder(this); // CSS RULES
+  #children = new ChildrenHolder(this, part => this.#filiatedKeys.tryToRemember(part), holder => {
+    if (!this.#slotted) this.#slotted |= holder.some(child => child.kind === SLOTS_KIND)
+  }); // HTML ELEMENTS
+  #fields = new FieldsHolder(this); // INSTANCE FIELDS
   #reactives = new window.Set();
 
   // USER CUSTOMIZATION
@@ -194,14 +207,9 @@ export default class BaseElement extends window.HTMLElement {
       reactives: this.#reactives
     }
   };
-  #stateManager = new (class extends WuseStateManager {
-    on_invalid_state() {
-      RuntimeErrors.onInvalidState();
-    }
-    on_invalid_key() {
-      RuntimeErrors.onInvalidKey();
-    }
-  })(newState, this.#stateReader, this.#stateWriter, window.Wuse.elementsStorage);
+  #stateManager = new WuseStateManager(
+    newState, this.#stateReader, this.#stateWriter, window.Wuse.elementsStorage, RuntimeErrors.onInvalidState, RuntimeErrors.onInvalidKey
+  );
 
   // ELEMENTS BINDING
   #binder = id => {
@@ -503,7 +511,7 @@ export default class BaseElement extends window.HTMLElement {
     this.#initialized = true;
   }
 
-  // PROPERTIES
+  // PARAMETERS
 
   get parameters() {
     return this.#parameters;
@@ -521,6 +529,16 @@ export default class BaseElement extends window.HTMLElement {
 
   selectChildElements(x) {
     return this.#root.querySelectorAll(x);
+  }
+
+  // NODE METHODS
+
+  removeFromParent() {
+    if (isAssignedObject(this.parentElement)) {
+      this.parentElement.removeChild(this);
+      return true;
+    }
+    return false;
   }
 
   // NODE EVENTS
@@ -631,6 +649,10 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   // MAIN NODE
+
+  isMainIdentified() {
+    return this.#identified;
+  }
 
   getMainAttribute(key) {
     return key === "id" && this.#identified ?

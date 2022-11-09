@@ -1,0 +1,58 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wuse | MDL ContactChip Sample example</title>
+  <script src="../../../dist/wuse.min.js"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+</head>
+<body>
+  <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+  <p>This is a port of the <a href="https://getmdl.io/components/index.html#chips-section" target="_blank">Material Design Lite 1.3.0 Contact Chip example</a>.</p>
+  <hr/>
+  <div id="container" style="margin: 4em"></div>
+  <script>
+    class MDL_ContactChip extends Wuse.NonShadowElement {
+
+      on_create() {
+        const bid = Wuse.WebHelpers.getUniqueId();
+        this
+          .makeReactiveField("caption", "")
+          .makeReactiveField("letter", "?")
+          .makeReactiveField("bgcolor", "black")
+          .makeReactiveField("fgcolor", "white")
+          .setAttributesAsKeys(true)
+          .setMainElement("span.mdl-chip.mdl-chip--contact")
+          .appendChildElement("span.mdl-chip__contact.mdl-color--~{bgcolor}~.mdl-color-text--~{fgcolor}~=~{letter}~")
+          .appendChildElement("span.mdl-chip__text=~{caption}~")
+          .appendChildElement(`button#${bid}.mdl-chip__action[type=button]!click=<i class='material-icons'>cancel</i>`)
+          [`on_${bid}_click`] = () => this.removeFromParent()
+      }
+
+    }
+
+    class MDL_ContactChip_Sample extends Wuse.NonShadowElement {
+
+      on_create() {
+        this
+          .appendChildElement("mdl-contactchip")
+          .appendChildElement("mdl-contactchip[bgcolor='teal'|fgcolor='white'|caption='Test chip'|letter='T']")
+          .appendChildElement("mdl-contactchip[bgcolor='yellow'|fgcolor='black'|caption='Additional chip'|letter='A']")
+      }
+
+    }
+
+    Wuse.register([
+      MDL_ContactChip,
+      MDL_ContactChip_Sample
+    ]);
+
+    Wuse.create({
+      element: { type: MDL_ContactChip_Sample },
+      target: { selector: "#container" }
+    });
+  </script>
+</body>
+</html>
+

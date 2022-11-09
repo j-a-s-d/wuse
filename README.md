@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.8.9] 2022-nov-09
+  - added `isMainIdentified` and `removeFromParent` to the `BaseElement` class
+  - added `MDL_ContactChip_Sample` demo
 * [0.8.8] 2022-nov-08
   - added `setMainEventHandler` and `dropMainEventHandler` to the `BaseElement` class
   - added `Materialize_FloatingButton_Sample` demo

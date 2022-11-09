@@ -5,6 +5,8 @@ const { ensureFunction, isNonEmptyString, isAssignedObject } = JsHelpers;
 
 export default class StateManager {
 
+  #on_invalid_state = null;
+  #on_invalid_key = null;
   #key = new window.String();
   #keyed = false;
   #maker = null;
@@ -29,11 +31,13 @@ export default class StateManager {
     }
   }
 
-  constructor(maker, reader, writer, store = {}) {
+  constructor(maker, reader, writer, store = {}, onInvalidState = () => {}, onInvalidKey = () => {}) {
     this.#maker = ensureFunction(maker);
     this.#reader = ensureFunction(reader);
     this.#writer = ensureFunction(writer);
     this.#store = store;
+    this.#on_invalid_state = ensureFunction(onInvalidState);
+    this.#on_invalid_key = ensureFunction(onInvalidKey);
   }
 
   getStore() {
@@ -62,7 +66,7 @@ export default class StateManager {
 
   validateKey() {
     if (!this.#keyed) {
-      this.on_invalid_key();
+      this.#on_invalid_key();
       return false;
     }
     return true;
@@ -90,7 +94,7 @@ export default class StateManager {
         this.#state.generation++;
         this.#persistState();
       } else {
-        this.on_invalid_state();
+        this.#on_invalid_state();
         return -1;
       }
     } else {
@@ -128,10 +132,6 @@ export default class StateManager {
     }
     return false;
   }
-
-  on_invalid_state() {}
-
-  on_invalid_key() {}
 
 }
 

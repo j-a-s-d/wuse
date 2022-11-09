@@ -1264,11 +1264,15 @@
   });
 
   // src/wuse.state-manager.mjs
-  var _key, _keyed, _maker, _reader, _writer, _state, _store, _filiated, _persistState, persistState_fn;
+  var _on_invalid_state, _on_invalid_key, _key, _keyed, _maker, _reader, _writer, _state, _store, _filiated, _persistState, persistState_fn;
   var { ensureFunction: ensureFunction5, isNonEmptyString: isNonEmptyString5, isAssignedObject: isAssignedObject5 } = JavascriptHelpers;
   var StateManager = class {
-    constructor(maker, reader, writer, store = {}) {
+    constructor(maker, reader, writer, store = {}, onInvalidState = () => {
+    }, onInvalidKey = () => {
+    }) {
       __privateAdd(this, _persistState);
+      __privateAdd(this, _on_invalid_state, null);
+      __privateAdd(this, _on_invalid_key, null);
       __privateAdd(this, _key, new window.String());
       __privateAdd(this, _keyed, false);
       __privateAdd(this, _maker, null);
@@ -1290,6 +1294,8 @@
       __privateSet(this, _reader, ensureFunction5(reader));
       __privateSet(this, _writer, ensureFunction5(writer));
       __privateSet(this, _store, store);
+      __privateSet(this, _on_invalid_state, ensureFunction5(onInvalidState));
+      __privateSet(this, _on_invalid_key, ensureFunction5(onInvalidKey));
     }
     getStore() {
       return __privateGet(this, _store);
@@ -1311,7 +1317,7 @@
     }
     validateKey() {
       if (!__privateGet(this, _keyed)) {
-        this.on_invalid_key();
+        __privateGet(this, _on_invalid_key).call(this);
         return false;
       }
       return true;
@@ -1334,7 +1340,7 @@
           __privateGet(this, _state).generation++;
           __privateMethod(this, _persistState, persistState_fn).call(this);
         } else {
-          this.on_invalid_state();
+          __privateGet(this, _on_invalid_state).call(this);
           return -1;
         }
       } else {
@@ -1369,11 +1375,9 @@
       }
       return false;
     }
-    on_invalid_state() {
-    }
-    on_invalid_key() {
-    }
   };
+  _on_invalid_state = new WeakMap();
+  _on_invalid_key = new WeakMap();
   _key = new WeakMap();
   _keyed = new WeakMap();
   _maker = new WeakMap();
@@ -1607,7 +1611,7 @@
   _analyzer = new WeakMap();
 
   // src/wuse.base-element.mjs
-  var _html, _rules, _children, _fields, _reactives, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binder, _unbinder, _makeBindingPerformers, _makeBindingHandlers, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _revise, revise_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
+  var _updater, _html, _rules, _children, _fields, _reactives, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binder, _unbinder, _makeBindingPerformers, _makeBindingHandlers, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _revise, revise_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
   var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3, buildArray: buildArray4, defineReadOnlyMembers } = JavascriptHelpers;
   var { removeChildren, isHTMLAttribute } = WebHelpers;
   var { WUSEKEY_ATTRIBUTE, DEFAULT_STYLE_TYPE, DEFAULT_STYLE_MEDIA, DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE, SLOTS_KIND: SLOTS_KIND3 } = StringConstants;
@@ -1652,6 +1656,70 @@
     main: new EqualityAnalyzer(window.Wuse.hashRoutine),
     style: new EqualityAnalyzer(window.Wuse.hashRoutine)
   });
+  var RulesHolder = class extends PartsHolder {
+    constructor() {
+      super(...arguments);
+      __publicField(this, "getIndexOf", (value) => super.getIndexOf("selector", value));
+      __publicField(this, "on_version_change", () => {
+        if (this.last !== null) {
+          this.last.version = this.version;
+          this.last.replacements = extractReplacementsFromRule(this.last);
+        }
+        window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `rules list version change: ${this.version}`);
+      });
+      __publicField(this, "on_forbidden_change", () => {
+        window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `rules list is locked and can not be changed`);
+        RuntimeErrors3.onLockedDefinition(this.owner.getMainAttribute("id"));
+      });
+    }
+  };
+  var FieldsHolder = class extends PartsHolder {
+    constructor() {
+      super(...arguments);
+      __publicField(this, "establish", (name, value) => {
+        if (this.prepare()) {
+          const idx = super.getIndexOf("name", name);
+          idx > -1 ? this[idx].value = value : this.append({ name, value });
+          return true;
+        }
+        return false;
+      });
+      __publicField(this, "snapshot", () => buildArray4((instance) => this.persist().forEach((item) => instance.push({ name: item.name, value: item.value }))));
+      __publicField(this, "getIndexOf", (value) => super.getIndexOf("name", value));
+      __publicField(this, "on_version_change", () => {
+        window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `fields list version change: ${this.version}`);
+      });
+      __publicField(this, "on_forbidden_change", () => {
+        window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `fields list is locked and can not be changed`);
+        RuntimeErrors3.onLockedDefinition(this.owner.getMainAttribute("id"));
+      });
+      __publicField(this, "on_snapshot_part", (part) => part.value = this.owner[part.name]);
+      __publicField(this, "on_recall_part", (part) => this.owner[part.name] = part.value);
+    }
+  };
+  var ChildrenHolder = class extends PartsHolder {
+    constructor(owner, recaller, updater) {
+      super(owner);
+      __privateAdd(this, _updater, (holder) => {
+      });
+      __publicField(this, "getIndexOf", (value) => super.getIndexOf("id", value));
+      __publicField(this, "on_version_change", () => {
+        if (this.last !== null) {
+          this.last.version = this.version;
+          this.last.replacements = extractReplacementsFromChild(this.last);
+        }
+        __privateGet(this, _updater).call(this, this);
+        window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `children list version change: ${this.version}`);
+      });
+      __publicField(this, "on_forbidden_change", () => {
+        window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `children list is locked and can not be changed`);
+        RuntimeErrors3.onLockedDefinition(this.owner.getMainAttribute("id"));
+      });
+      this.on_recall_part = recaller;
+      __privateSet(this, _updater, updater);
+    }
+  };
+  _updater = new WeakMap();
   var _BaseElement = class extends window.HTMLElement {
     constructor(mode) {
       super();
@@ -1671,68 +1739,12 @@
       __privateAdd(this, _validateField);
       __privateAdd(this, _filiateChild);
       __privateAdd(this, _html, new window.String());
-      __privateAdd(this, _rules, new class extends PartsHolder {
-        constructor() {
-          super(...arguments);
-          __publicField(this, "getIndexOf", (value) => super.getIndexOf("selector", value));
-          __publicField(this, "on_version_change", () => {
-            if (this.last !== null) {
-              this.last.version = this.version;
-              this.last.replacements = extractReplacementsFromRule(this.last);
-            }
-            window.Wuse.DEBUG && __privateGet(this.owner, _identified) && debug(this.owner, `rules list version change: ${this.version}`);
-          });
-          __publicField(this, "on_forbidden_change", () => {
-            window.Wuse.DEBUG && __privateGet(this.owner, _identified) && debug(this.owner, `rules list is locked and can not be changed`);
-            RuntimeErrors3.onLockedDefinition(__privateGet(this.owner, _options).mainDefinition.id);
-          });
-        }
-      }(this));
-      __privateAdd(this, _children, new class extends PartsHolder {
-        constructor() {
-          super(...arguments);
-          __publicField(this, "getIndexOf", (value) => super.getIndexOf("id", value));
-          __publicField(this, "on_version_change", () => {
-            var _a2;
-            if (this.last !== null) {
-              this.last.version = this.version;
-              this.last.replacements = extractReplacementsFromChild(this.last);
-            }
-            if (!__privateGet(this.owner, _slotted))
-              __privateSet(_a2 = this.owner, _slotted, __privateGet(_a2, _slotted) | this.some((child) => child.kind === SLOTS_KIND3));
-            window.Wuse.DEBUG && __privateGet(this.owner, _identified) && debug(this.owner, `children list version change: ${this.version}`);
-          });
-          __publicField(this, "on_forbidden_change", () => {
-            window.Wuse.DEBUG && __privateGet(this.owner, _identified) && debug(this.owner, `children list is locked and can not be changed`);
-            RuntimeErrors3.onLockedDefinition(__privateGet(this.owner, _options).mainDefinition.id);
-          });
-          __publicField(this, "on_recall_part", (part) => __privateGet(this.owner, _filiatedKeys).tryToRemember(part));
-        }
-      }(this));
-      __privateAdd(this, _fields, new class extends PartsHolder {
-        constructor() {
-          super(...arguments);
-          __publicField(this, "establish", (name, value) => {
-            if (this.prepare()) {
-              const idx = super.getIndexOf("name", name);
-              idx > -1 ? this[idx].value = value : this.append({ name, value });
-              return true;
-            }
-            return false;
-          });
-          __publicField(this, "snapshot", () => buildArray4((instance) => this.persist().forEach((item) => instance.push({ name: item.name, value: item.value }))));
-          __publicField(this, "getIndexOf", (value) => super.getIndexOf("name", value));
-          __publicField(this, "on_version_change", () => {
-            window.Wuse.DEBUG && __privateGet(this.owner, _identified) && debug(this.owner, `fields list version change: ${this.version}`);
-          });
-          __publicField(this, "on_forbidden_change", () => {
-            window.Wuse.DEBUG && __privateGet(this.owner, _identified) && debug(this.owner, `fields list is locked and can not be changed`);
-            RuntimeErrors3.onLockedDefinition(__privateGet(this.owner, _options).mainDefinition.id);
-          });
-          __publicField(this, "on_snapshot_part", (part) => part.value = this.owner[part.name]);
-          __publicField(this, "on_recall_part", (part) => this.owner[part.name] = part.value);
-        }
-      }(this));
+      __privateAdd(this, _rules, new RulesHolder(this));
+      __privateAdd(this, _children, new ChildrenHolder(this, (part) => __privateGet(this, _filiatedKeys).tryToRemember(part), (holder) => {
+        if (!__privateGet(this, _slotted))
+          __privateSet(this, _slotted, __privateGet(this, _slotted) | holder.some((child) => child.kind === SLOTS_KIND3));
+      }));
+      __privateAdd(this, _fields, new FieldsHolder(this));
       __privateAdd(this, _reactives, new window.Set());
       __privateAdd(this, _options, makeUserOptions());
       __privateAdd(this, _parameters, void 0);
@@ -1791,14 +1803,7 @@
           reactives: __privateGet(this, _reactives)
         };
       });
-      __privateAdd(this, _stateManager, new class extends StateManager {
-        on_invalid_state() {
-          RuntimeErrors3.onInvalidState();
-        }
-        on_invalid_key() {
-          RuntimeErrors3.onInvalidKey();
-        }
-      }(newState, __privateGet(this, _stateReader), __privateGet(this, _stateWriter), window.Wuse.elementsStorage));
+      __privateAdd(this, _stateManager, new StateManager(newState, __privateGet(this, _stateReader), __privateGet(this, _stateWriter), window.Wuse.elementsStorage, RuntimeErrors3.onInvalidState, RuntimeErrors3.onInvalidKey));
       __privateAdd(this, _binder, (id) => {
         const el = getElementByIdFromRoot(this, id);
         if (el)
@@ -1910,6 +1915,13 @@
     selectChildElements(x) {
       return __privateGet(this, _root).querySelectorAll(x);
     }
+    removeFromParent() {
+      if (isAssignedObject7(this.parentElement)) {
+        this.parentElement.removeChild(this);
+        return true;
+      }
+      return false;
+    }
     connectedCallback() {
       window.Wuse.MEASURE && __privateGet(this, _measurement).attachment.start();
       const evs = __privateGet(this, _elementEvents);
@@ -1993,6 +2005,9 @@
     }
     removeFromElementsStore() {
       return __privateGet(this, _stateManager).validateKey() && __privateGet(this, _stateManager).eraseState();
+    }
+    isMainIdentified() {
+      return __privateGet(this, _identified);
     }
     getMainAttribute(key) {
       return key === "id" && __privateGet(this, _identified) ? __privateGet(this, _options).mainDefinition.id : __privateGet(this, _options).mainDefinition.attributes[key];
@@ -2860,7 +2875,7 @@
   ;
 
   // package.json
-  var version = "0.8.8";
+  var version = "0.8.9";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

@@ -16,14 +16,7 @@ export default new class {
     var store2 = { hasItem: () => false, getItem: () => false, setItem: () => false };
     var invalid_state = false;
     var invalid_key = false;
-    instance = new class extends module {
-      on_invalid_state() {
-        invalid_state = true;
-      }
-      on_invalid_key() {
-        invalid_key = true;
-      }
-    }(() => { return { generation: -1, a: 123 }; }, null, null, store1);
+    instance = new module(() => { return { generation: -1, a: 123 }; }, null, null, store1, () => { invalid_state = true; }, () => { invalid_key = true; });
     r = instance !== undefined && instance.getStore() === store1;
     tester.testResult(r, `<u>${name}</u> got instantiated with a custom values: <i>${r}</i>`);
     instance.setStore(store2);
