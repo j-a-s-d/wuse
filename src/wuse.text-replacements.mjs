@@ -36,9 +36,9 @@ class ReplacementsScanners {
       REPLACEMENT_PLACES.forEach(
         key => process(child.replacements[key])
       );
-      child.rules.forEach(rule => rule.replacements.forEach(
+      /*child.rules.forEach(rule => rule.replacements.forEach(
         x => (x.field === name) && hits.push(child)
-      )); // NOTE: in this case is faster to ignore duplication
+      )); // NOTE: in this case is faster to ignore duplication*/
     };
     children.forEach(child => child.included && processAll(child));
   });
@@ -75,14 +75,14 @@ class ReplacementsExtractors {
     this.#includeStringMatches(result, "classes", child.classes.join(" "));
     this.#includeKeysMatches(result, "styles", child.style);
     this.#includeKeysMatches(result, "attributes", child.attributes);
-    child.rules.forEach(r => r.replacements = this.rule(r));
+    //child.rules.forEach(r => r.replacements = this.rule(r));
   });
 
   static rule = rule => buildArray(result => {
     if (isAssignedArray(rule.nested)) {
       return rule.nested.map(r => this.rule(r));
     }
-    var c = "";
+    let c = "";
     for (const property in rule.properties) {
       c += `${property}:${rule.properties[property]};`;
     }

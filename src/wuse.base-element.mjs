@@ -20,7 +20,9 @@ const { renderChild, renderRule, renderingIncluder, renderingExcluder, cacheInva
 import WuseStateManager from './wuse.state-manager.mjs';
 import NodeManager from './wuse.node-manager.mjs';
 import ContentManager from './wuse.content-manager.mjs';
-import PartsHolder from './wuse.parts-holder.mjs';
+import ChildrenHolder from './wuse.children-holder.mjs';
+import RulesHolder from './wuse.rules-holder.mjs';
+import FieldsHolder from './wuse.fields-holder.mjs';
 import EqualityAnalyzer from './wuse.equality-analyzer.mjs';
 
 let RuntimeErrors = {
@@ -35,8 +37,6 @@ let RuntimeErrors = {
 
 const debug = (wel, msg) => window.Wuse.debug(`#${wel.id} (${wel.info.instanceNumber}) | ${(typeof msg === "string" ? msg : JSON.stringify(msg))}`);
 
-const parseElement = (shorthandNotation, rules) => performValidations(newChild(shorthandNotation, rules));
-
 const getElementByIdFromRoot = (instance, id) => isNonEmptyString(id) ? instance.selectChildElement(`#${id}`) : undefined;
 
 const isInvalidFieldName = name => typeof name !== "string" || !name.trim().length || name.startsWith("data") || isHTMLAttribute(name);
@@ -46,7 +46,7 @@ const makeUserOptions = () => ({
   styleMedia: DEFAULT_STYLE_MEDIA,
   styleType: DEFAULT_STYLE_TYPE,
   rawContent: false, // when on, allows the inclusion of raw html content
-  attributeKeys: false, // when on, sets the received node attributes as element keys
+  attributeKeys: true, // when on, sets the received node attributes as element keys
   elementKeys: true, // when on, add the main element and it's children as element keys using their ids
   autokeyChildren: true, // when on, automatically add store key to children elements
   automaticallyRestore: true, // when on, it ignores any on_reconstruct event handler set and simply does call to the restoreFromElementsStore method directly
@@ -67,67 +67,6 @@ const makeWasteAnalyzers = () => ({
   style: new EqualityAnalyzer(window.Wuse.hashRoutine)
 });
 
-class RulesHolder extends PartsHolder {
-  getIndexOf = value => super.getIndexOf("selector", value);
-  on_version_change = () => {
-    if (this.last !== null) {
-      this.last.version = this.version;
-      this.last.replacements = extractReplacementsFromRule(this.last);
-    }
-    window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `rules list version change: ${this.version}`);
-  }
-  on_forbidden_change = () => {
-    window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `rules list is locked and can not be changed`);
-    RuntimeErrors.onLockedDefinition(this.owner.getMainAttribute("id"));
-  }
-}
-
-class FieldsHolder extends PartsHolder {
-  establish = (name, value) => {
-    if (this.prepare()) {
-      const idx = super.getIndexOf("name", name);
-      idx > -1 ? this[idx].value = value : this.append({ name, value });
-      return true;
-    }
-    return false;
-  }
-  snapshot = () => buildArray(instance => this.persist().forEach(
-    item => instance.push({ name: item.name, value: item.value })
-  ));
-  getIndexOf = value => super.getIndexOf("name", value);
-  on_version_change = () => {
-    window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `fields list version change: ${this.version}`);
-  }
-  on_forbidden_change = () => {
-    window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `fields list is locked and can not be changed`);
-    RuntimeErrors.onLockedDefinition(this.owner.getMainAttribute("id"));
-  }
-  on_snapshot_part = part => part.value = this.owner[part.name];
-  on_recall_part = part => this.owner[part.name] = part.value;
-}
-
-class ChildrenHolder extends PartsHolder {
-  #updater = holder => {};
-  constructor(owner, recaller, updater) {
-    super(owner);
-    this.on_recall_part = recaller;
-    this.#updater = updater;
-  }
-  getIndexOf = value => super.getIndexOf("id", value);
-  on_version_change = () => {
-    if (this.last !== null) {
-      this.last.version = this.version;
-      this.last.replacements = extractReplacementsFromChild(this.last);
-    }
-    this.#updater(this);
-    window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `children list version change: ${this.version}`);
-  }
-  on_forbidden_change = () => {
-    window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `children list is locked and can not be changed`);
-    RuntimeErrors.onLockedDefinition(this.owner.getMainAttribute("id"));
-  }
-}
-
 export default class BaseElement extends window.HTMLElement {
 
   // INSTANCE
@@ -136,11 +75,20 @@ export default class BaseElement extends window.HTMLElement {
 
   // CONTENT HOLDERS
   #html = new window.String(); // RAW HTML
-  #rules = new RulesHolder(this); // CSS RULES
-  #children = new ChildrenHolder(this, part => this.#filiatedKeys.tryToRemember(part), holder => {
-    if (!this.#slotted) this.#slotted |= holder.some(child => child.kind === SLOTS_KIND)
-  }); // HTML ELEMENTS
-  #fields = new FieldsHolder(this); // INSTANCE FIELDS
+  #rules = new RulesHolder(this,
+    WuseTextReplacements.extractReplacementsFromRule,
+    RuntimeErrors.onLockedDefinition,
+  debug); // CSS RULES
+  #children = new ChildrenHolder(this,
+    WuseTextReplacements.extractReplacementsFromChild,
+    part => this.#filiatedKeys.tryToRemember(part), holder => {
+      if (!this.#slotted) this.#slotted |= holder.some(child => child.kind === SLOTS_KIND)
+    },
+    RuntimeErrors.onLockedDefinition,
+  debug); // HTML ELEMENTS
+  #fields = new FieldsHolder(this,
+    RuntimeErrors.onLockedDefinition,
+  debug); // INSTANCE FIELDS
   #reactives = new window.Set();
 
   // USER CUSTOMIZATION
@@ -270,7 +218,7 @@ export default class BaseElement extends window.HTMLElement {
         normal: child => {
           const cts = this.#contents;
           cts.main.append(child.cache ? child.cache : child.cache = renderChild(cts.renderizers.replacer, child));
-          if (!!child.rules.length) child.rules.forEach(cts.renderizers.rule);
+          //if (!!child.rules.length) child.rules.forEach(cts.renderizers.rule);
         }
       }
     }
@@ -731,7 +679,7 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   setMainElement(shorthandNotation) {
-    const tmp = parseElement(shorthandNotation);
+    const tmp = performValidations(newChild(shorthandNotation));
     if (tmp !== null) {
       if (isNonEmptyString(tmp.content)) return RuntimeErrors.onInvalidDefinition(shorthandNotation);
       const def = this.#options.mainDefinition;
@@ -880,14 +828,14 @@ export default class BaseElement extends window.HTMLElement {
     return this.#children.length;
   }
 
-  appendChildElement(shorthandNotation, rules) {
-    const tmp = this.#filiateChild(parseElement(shorthandNotation, rules));
+  appendChildElement(shorthandNotation) {
+    const tmp = this.#filiateChild(performValidations(newChild(shorthandNotation)));
     if (tmp !== null) this.#children.append(tmp);
     return this;
   }
 
-  prependChildElement(shorthandNotation, rules) {
-    const tmp = this.#filiateChild(parseElement(shorthandNotation, rules));
+  prependChildElement(shorthandNotation) {
+    const tmp = this.#filiateChild(performValidations(newChild(shorthandNotation)));
     if (tmp !== null) this.#children.prepend(tmp);
     return this;
   }
@@ -906,8 +854,8 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
-  replaceChildElementById(id, shorthandNotation, rules) {
-    const tmp = parseElement(shorthandNotation, rules);
+  replaceChildElementById(id, shorthandNotation) {
+    const tmp = performValidations(newChild(shorthandNotation));
     const chn = this.#children;
     const idx = chn.getIndexOf(id);
     if (idx > -1 && tmp !== null) chn.replace(idx, tmp);

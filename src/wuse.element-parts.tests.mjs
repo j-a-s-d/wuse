@@ -107,11 +107,11 @@ export default new class {
   }
 
   newChild = (tester, module, name) => {
-    var r = module.newChild(undefined, undefined);
+    var r = module.newChild(undefined);
     tester.testResult(r === null, `<u>${name}</u> called with invalid values: <i>${r}</i>`);
-    r = module.newChild("p#test.class1", []);
+    r = module.newChild("p#test.class1");
     tester.testResult(typeof r === "object" && r.id === "test" && r.classes.length === 1, `<u>${name}</u> called with valid values (tag and class): <i>${r}</i>`);
-    r = module.newChild("p#test.class1[attribute1=test1|attribute2]", []);
+    r = module.newChild("p#test.class1[attribute1=test1|attribute2]");
     tester.testResult(typeof r === "object" && r.id === "test" && r.classes.length === 1 && Object.keys(r.attributes).length == 2, `<u>${name}</u> called with valid values (tag, class and attributes): <i>${r}</i>`);
   }
 

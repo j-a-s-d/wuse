@@ -161,14 +161,14 @@ const makeState = () => ({ generation: 0, persisted: false });
 
 const makeEvent = (kind, capture) => typeof kind === "string" && typeof capture === "boolean" ? { kind, capture } : null;
 
-const makeChild = (shorthandNotation, rules) => {
+const makeChild = shorthandNotation => {
   let result = ShorthandNotationParser.parse(shorthandNotation);
   if (!result) {
     return RuntimeErrors.onInvalidDefinition(shorthandNotation);
   }
   result.custom = result.kind === DEFAULT_KIND && isCustomTag(result.tag); /*&& result.tag !== TEXTNODE_TAG*/
   result.hash = hash(shorthandNotation);
-  result.rules = isAssignedArray(rules) ? rules : new window.Array();
+  //result.rules = new window.Array();
   result.included = true;
   result.cache = null;
   return result;

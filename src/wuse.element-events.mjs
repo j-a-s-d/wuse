@@ -20,6 +20,8 @@ const EVENT_NAMES =
     "on_disconnect" // on disconnectedCallback
   ];
 
+const EVENTS_COUNT = EVENT_NAMES.length;
+
 export default class ElementEvents {
 
   #owner = null;
@@ -27,10 +29,14 @@ export default class ElementEvents {
 
   constructor(owner) {
     this.#owner = owner;
+    for (let idx = 0; idx < EVENTS_COUNT; idx++) this.#events[EVENT_NAMES[idx]] = false;
   }
 
   detect() {
-    EVENT_NAMES.forEach(event => this.#events[event] = typeof this.#owner[event] === "function");
+    for (let idx = 0; idx < EVENTS_COUNT; idx++) {
+      const event = EVENT_NAMES[idx];
+      this.#events[event] = typeof this.#owner[event] === "function";
+    }
   }
 
   immediateTrigger(event, argument) {
