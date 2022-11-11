@@ -21,7 +21,6 @@
 
           on_create() {
             this
-              .setAttributesAsKeys(true)
               .setMainElement("div.tile-content")
               .appendChildElement("p.tile-subtitle=~{_subtitle}~")
               .appendChildElement("p.tile-title=~{_title}~")
@@ -37,7 +36,6 @@
 
           on_create() {
             this
-              .setAttributesAsKeys(true)
               .setMainElement("div.tile-action")
               .appendChildElement("button.btn=~{_caption}~")
               .makeReactiveField("_caption", "")
@@ -47,7 +45,6 @@
 
           on_create() {
             this
-              .setAttributesAsKeys(true)
               .setMainElement("div.tile")
               .appendChildElement("spectre-timeline-tilecontent[_index=~{_index}~|_title='~{_title}~'|_subtitle='~{_subtitle}~'|_items=~{_items}~]")
               .makeReactiveField("_title", "")
@@ -62,7 +59,6 @@
 
           on_create() {
             this
-              .setAttributesAsKeys(true)
               .setMainElement("div.timeline-content")
               .appendChildElement("spectre-timeline-tile[_index=~{_index}~|_title='~{_title}~'|_subtitle='~{_subtitle}~'|_caption='~{_caption}~'|_items=~{_items}~]")
               .makeReactiveField("_title", "")
@@ -74,7 +70,6 @@
 
           on_create() {
             this
-              .setAttributesAsKeys(true)
               .setMainElement("div.timeline-left")
               .appendChildElement("a.timeline-icon.tooltip[href='~{_href}~'|data-tooltip='~{_tooltip}~']")
               .makeReactiveField("_href", "")
@@ -85,7 +80,6 @@
 
           on_create() {
             this
-              .setAttributesAsKeys(true)
               .setMainElement("div.timeline-left")
               .appendChildElement("a.timeline-icon.icon-lg.tooltip[href='~{_href}~'|data-tooltip='~{_tooltip}~']=<i class='icon icon-~{_icon}~'/>")
               .makeReactiveField("_href", "")
@@ -97,7 +91,6 @@
 
           on_create() {
             this
-              .setAttributesAsKeys(true)
               .setMainElement("div.timeline-item")
               .appendChildElement("spectre-timeline-leftwithicon[_icon=~{_icon}~|_href=~{_href}~|_tooltip='~{_tooltip}~']")
               .appendChildElement("spectre-timeline-content[_index=~{_index}~|_title='~{_title}~'|_subtitle='~{_subtitle}~'|_caption='~{_caption}~'|_items=~{_items}~]")
@@ -113,7 +106,6 @@
 
           on_create() {
             this
-              .setAttributesAsKeys(true)
               .setMainElement("div.timeline-item")
               .appendChildElement("spectre-timeline-leftwithouticon[_href=~{_href}~|_tooltip='~{_tooltip}~']")
               .appendChildElement("spectre-timeline-content[_index=~{_index}~|_title='~{_title}~'|_subtitle='~{_subtitle}~'|_caption='~{_caption}~'|_items=~{_items}~]")

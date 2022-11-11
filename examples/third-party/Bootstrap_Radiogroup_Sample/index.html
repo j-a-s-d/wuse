@@ -19,7 +19,6 @@
         Wuse.register([class Bootstrap_RadioItem extends Wuse.NonShadowElement {
           on_create() {
             this
-              .setAttributesAsKeys(true)
               .setMainElement("li.list-group-item")
               .appendChildElements(`
                 input.form-check-input.me-1[id=~{for}~|type=radio|name=listGroupRadio|value='']
@@ -30,8 +29,7 @@
       }
 
       on_create() {
-        this
-          .setMainElement("ul.list-group")
+        this.setMainElement("ul.list-group");
       }
 
       loadItems(items) {

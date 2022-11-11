@@ -28,7 +28,6 @@
       static { this.register(); }
       on_create() {
         this
-          .setAttributesAsKeys(true)
           .appendChildElement("h4=~{caption}~")
           .appendChildElement("uikit-sortablegroup-items")
           .makeReactiveField("caption", "")

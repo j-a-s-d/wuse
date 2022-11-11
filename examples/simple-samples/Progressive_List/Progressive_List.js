@@ -30,7 +30,6 @@ class List_Item extends Wuse.NonShadowElement {
 
   on_create() {
     this
-      .setAttributesAsKeys(true)
       .setMainElement("li")
       .appendChildElement("span=~{text}~")
       .appendChildElement(`a#btnEdit.hidden!click=&&nbsp;&#9998;`)

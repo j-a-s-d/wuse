@@ -46,21 +46,18 @@
           class PureCSS_MenuItem extends Wuse.NonShadowElement {
             on_create() {
               this
-                .setAttributesAsKeys(true)
                 .setMainElement("li.pure-menu-item")
                 .appendChildElement("a.pure-menu-link[href='#']=~{caption}~")
             }
           },
           class PureCSS_SubmenuItems extends Wuse.NonShadowElement {
             on_create() {
-              this
-                .setMainElement("ul")
+              this.setMainElement("ul");
             }
           },
           class PureCSS_SubmenuItem extends Wuse.NonShadowElement {
             on_create() {
               this
-                .setAttributesAsKeys(true)
                 .setMainElement("li.pure-menu-item.pure-menu-has-children")
                 .appendChildElement("a.pure-menu-link[href='#']=~{caption}~")
                 .appendChildElement("purecss-submenuitems#subitems.pure-menu-children")
@@ -71,9 +68,7 @@
           }, 
           class PureCSS_MenuList extends Wuse.NonShadowElement {
             on_create() {
-              this
-                .setAttributesAsKeys(true)
-                .setMainElement("ul.pure-menu-list")
+              this.setMainElement("ul.pure-menu-list");
             }
             on_load() {
               PureCSS_DropdownMenu_Sample.appendItems(this, this.items, 1);

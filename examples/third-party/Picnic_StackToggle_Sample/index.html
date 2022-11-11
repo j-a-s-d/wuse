@@ -4,10 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic"/>
   <title>Wuse | Picnic StackToggle Sample example</title>
   <script src="../../../dist/wuse.min.js"></script>
-  <script src="Picnic_StackToggle_Sample.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic"/>
 </head>
 <body>
   <p>This is a port of the <a href="https://picnicss.com/documentation" target="_blank">Picnic 7.1.0 Stack Toggle example</a>.</p>
@@ -19,7 +18,6 @@
 
       on_create() {
         this
-          .setAttributesAsKeys(true)
           .setMainElement("label.stack")
           .appendChildElement("input[name='stack'|type='radio']")
           .appendChildElement("span.button.toggle=~{caption}~")

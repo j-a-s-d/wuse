@@ -790,14 +790,20 @@
     "on_repaint",
     "on_disconnect"
   ];
+  var EVENTS_COUNT = EVENT_NAMES.length;
   var ElementEvents = class {
     constructor(owner) {
       __privateAdd(this, _owner, null);
       __privateAdd(this, _events, new window.Object());
       __privateSet(this, _owner, owner);
+      for (let idx = 0; idx < EVENTS_COUNT; idx++)
+        __privateGet(this, _events)[EVENT_NAMES[idx]] = false;
     }
     detect() {
-      EVENT_NAMES.forEach((event) => __privateGet(this, _events)[event] = typeof __privateGet(this, _owner)[event] === "function");
+      for (let idx = 0; idx < EVENTS_COUNT; idx++) {
+        const event = EVENT_NAMES[idx];
+        __privateGet(this, _events)[event] = typeof __privateGet(this, _owner)[event] === "function";
+      }
     }
     immediateTrigger(event, argument) {
       __privateGet(this, _events)[event] && __privateGet(this, _owner)[event].call(__privateGet(this, _owner), argument);
@@ -812,7 +818,7 @@
   // src/wuse.element-parts.mjs
   var _extractAttributes, extractAttributes_fn, _extractContent, extractContent_fn, _extractEvents, extractEvents_fn, _extractClasses, extractClasses_fn, _extractIdAndTag, extractIdAndTag_fn, _extractData, extractData_fn, _process, process_fn;
   var { isHTMLTag } = WebHelpers;
-  var { EMPTY_STRING, EMPTY_ARRAY, noop: noop4, buildArray, buildObject, isAssignedObject: isAssignedObject3, isAssignedArray: isAssignedArray2, ensureFunction: ensureFunction3, hasObjectKeys, isNonEmptyString: isNonEmptyString2, forcedStringSplit } = JavascriptHelpers;
+  var { EMPTY_STRING, EMPTY_ARRAY, noop: noop4, buildArray: buildArray2, buildObject, isAssignedObject: isAssignedObject3, isAssignedArray: isAssignedArray2, ensureFunction: ensureFunction3, hasObjectKeys, isNonEmptyString: isNonEmptyString2, forcedStringSplit } = JavascriptHelpers;
   var { WUSENODE_ATTRIBUTE, DEFAULT_TAG, DEFAULT_KIND, TEMPLATES_KIND, SLOTS_KIND, TEXTNODE_TAG } = StringConstants;
   var hash2 = StringHashing.defaultRoutine;
   var RuntimeErrors2 = {
@@ -952,14 +958,13 @@
   });
   var makeState = () => ({ generation: 0, persisted: false });
   var makeEvent = (kind, capture) => typeof kind === "string" && typeof capture === "boolean" ? { kind, capture } : null;
-  var makeChild = (shorthandNotation, rules) => {
+  var makeChild = (shorthandNotation) => {
     let result = ShorthandNotationParser.parse(shorthandNotation);
     if (!result) {
       return RuntimeErrors2.onInvalidDefinition(shorthandNotation);
     }
     result.custom = result.kind === DEFAULT_KIND && isCustomTag(result.tag);
     result.hash = hash2(shorthandNotation);
-    result.rules = isAssignedArray2(rules) ? rules : new window.Array();
     result.included = true;
     result.cache = null;
     return result;
@@ -1098,7 +1103,7 @@
 
   // src/wuse.text-replacements.mjs
   var _regExp, _addReplacement, _includeMatches, _includeStringMatches, _includeKeysMatches;
-  var { EMPTY_ARRAY: EMPTY_ARRAY2, buildArray: buildArray2, buildObject: buildObject2, isNonEmptyString: isNonEmptyString3, isAssignedArray: isAssignedArray3 } = JavascriptHelpers;
+  var { EMPTY_ARRAY: EMPTY_ARRAY2, buildArray: buildArray3, buildObject: buildObject2, isNonEmptyString: isNonEmptyString3, isAssignedArray: isAssignedArray3 } = JavascriptHelpers;
   var _ReplacementMarkers = class {
     static initialize(begin, end) {
       this.begin = begin;
@@ -1113,12 +1118,11 @@
   var REPLACEMENT_PLACES = ["contents", "classes", "styles", "attributes"];
   var ReplacementsScanners = class {
   };
-  __publicField(ReplacementsScanners, "rules", (rules, name) => buildArray2((hits) => rules.forEach((rule) => rule.replacements.forEach((x) => x.field === name && hits.push(rule)))));
-  __publicField(ReplacementsScanners, "children", (children, name) => buildArray2((hits) => {
+  __publicField(ReplacementsScanners, "rules", (rules, name) => buildArray3((hits) => rules.forEach((rule) => rule.replacements.forEach((x) => x.field === name && hits.push(rule)))));
+  __publicField(ReplacementsScanners, "children", (children, name) => buildArray3((hits) => {
     const processAll = (child) => {
       const process = (collection) => collection.forEach((x) => x.field === name && hits.push(child));
       REPLACEMENT_PLACES.forEach((key) => process(child.replacements[key]));
-      child.rules.forEach((rule) => rule.replacements.forEach((x) => x.field === name && hits.push(child)));
     };
     children.forEach((child) => child.included && processAll(child));
   }));
@@ -1162,14 +1166,13 @@
     __privateGet(_b2 = _ReplacementsExtractors, _includeStringMatches).call(_b2, result, "classes", child.classes.join(" "));
     __privateGet(_c2 = _ReplacementsExtractors, _includeKeysMatches).call(_c2, result, "styles", child.style);
     __privateGet(_d = _ReplacementsExtractors, _includeKeysMatches).call(_d, result, "attributes", child.attributes);
-    child.rules.forEach((r) => r.replacements = _ReplacementsExtractors.rule(r));
   }));
-  __publicField(ReplacementsExtractors, "rule", (rule) => buildArray2((result) => {
+  __publicField(ReplacementsExtractors, "rule", (rule) => buildArray3((result) => {
     var _a2;
     if (isAssignedArray3(rule.nested)) {
       return rule.nested.map((r) => _ReplacementsExtractors.rule(r));
     }
-    var c = "";
+    let c = "";
     for (const property in rule.properties) {
       c += `${property}:${rule.properties[property]};`;
     }
@@ -1485,7 +1488,7 @@
 
   // src/wuse.parts-holder.mjs
   var _roll2, roll_fn2;
-  var { isIntegerNumber, isAssignedObject: isAssignedObject6, cloneObject, forEachOwnProperty: forEachOwnProperty2, buildArray: buildArray3 } = JavascriptHelpers;
+  var { isIntegerNumber, isAssignedObject: isAssignedObject6, cloneObject, forEachOwnProperty: forEachOwnProperty2, buildArray: buildArray4 } = JavascriptHelpers;
   var partsLooper = (holder, partCallback, metaCallback) => forEachOwnProperty2(holder, (key) => {
     switch (key) {
       case "owner":
@@ -1556,7 +1559,7 @@
       return false;
     }
     persist() {
-      return buildArray3((result) => partsLooper(this, (key) => partProcessor(result, this[key], this.on_snapshot_part), (key) => result[key] = this[key]));
+      return buildArray4((result) => partsLooper(this, (key) => partProcessor(result, this[key], this.on_snapshot_part), (key) => result[key] = this[key]));
     }
     restore(owner, instance) {
       if (this.clear()) {
@@ -1587,6 +1590,111 @@
     this.on_version_change();
   };
 
+  // src/wuse.children-holder.mjs
+  var _extractor, _updater, _on_locked_definition, _debug;
+  var ChildrenHolder = class extends PartsHolder {
+    constructor(owner, extractor, recaller, updater, onLockedDefinition, debug2) {
+      super(owner);
+      __privateAdd(this, _extractor, (item) => {
+      });
+      __privateAdd(this, _updater, (holder) => {
+      });
+      __privateAdd(this, _on_locked_definition, (id) => {
+      });
+      __privateAdd(this, _debug, () => {
+      });
+      __publicField(this, "getIndexOf", (value) => super.getIndexOf("id", value));
+      __publicField(this, "on_version_change", () => {
+        if (this.last !== null) {
+          this.last.version = this.version;
+          this.last.replacements = __privateGet(this, _extractor).call(this, this.last);
+        }
+        __privateGet(this, _updater).call(this, this);
+        window.Wuse.DEBUG && this.owner.isMainIdentified() && __privateGet(this, _debug).call(this, this.owner, `children list version change: ${this.version}`);
+      });
+      __publicField(this, "on_forbidden_change", () => {
+        window.Wuse.DEBUG && this.owner.isMainIdentified() && __privateGet(this, _debug).call(this, this.owner, `children list is locked and can not be changed`);
+        __privateGet(this, _on_locked_definition).call(this, this.owner.getMainAttribute("id"));
+      });
+      __privateSet(this, _extractor, extractor);
+      this.on_recall_part = recaller;
+      __privateSet(this, _updater, updater);
+      __privateSet(this, _on_locked_definition, onLockedDefinition);
+      __privateSet(this, _debug, debug2);
+    }
+  };
+  _extractor = new WeakMap();
+  _updater = new WeakMap();
+  _on_locked_definition = new WeakMap();
+  _debug = new WeakMap();
+
+  // src/wuse.rules-holder.mjs
+  var _extractor2, _on_locked_definition2, _debug2;
+  var RulesHolder = class extends PartsHolder {
+    constructor(owner, extractor, onLockedDefinition, debug2) {
+      super(owner);
+      __privateAdd(this, _extractor2, (item) => {
+      });
+      __privateAdd(this, _on_locked_definition2, (id) => {
+      });
+      __privateAdd(this, _debug2, () => {
+      });
+      __publicField(this, "getIndexOf", (value) => super.getIndexOf("selector", value));
+      __publicField(this, "on_version_change", () => {
+        if (this.last !== null) {
+          this.last.version = this.version;
+          this.last.replacements = __privateGet(this, _extractor2).call(this, this.last);
+        }
+        window.Wuse.DEBUG && this.owner.isMainIdentified() && __privateGet(this, _debug2).call(this, this.owner, `rules list version change: ${this.version}`);
+      });
+      __publicField(this, "on_forbidden_change", () => {
+        window.Wuse.DEBUG && this.owner.isMainIdentified() && __privateGet(this, _debug2).call(this, this.owner, `rules list is locked and can not be changed`);
+        __privateGet(this, _on_locked_definition2).call(this, this.owner.getMainAttribute("id"));
+      });
+      __privateSet(this, _extractor2, extractor);
+      __privateSet(this, _on_locked_definition2, onLockedDefinition);
+      __privateSet(this, _debug2, debug2);
+    }
+  };
+  _extractor2 = new WeakMap();
+  _on_locked_definition2 = new WeakMap();
+  _debug2 = new WeakMap();
+
+  // src/wuse.fields-holder.mjs
+  var _on_locked_definition3, _debug3;
+  var FieldsHolder = class extends PartsHolder {
+    constructor(owner, onLockedDefinition, debug2) {
+      super(owner);
+      __privateAdd(this, _on_locked_definition3, (id) => {
+      });
+      __privateAdd(this, _debug3, () => {
+      });
+      __publicField(this, "establish", (name, value) => {
+        if (this.prepare()) {
+          const idx = super.getIndexOf("name", name);
+          idx > -1 ? this[idx].value = value : this.append({ name, value });
+          return true;
+        }
+        return false;
+      });
+      __publicField(this, "snapshot", () => buildArray((instance) => this.persist().forEach((item) => instance.push({ name: item.name, value: item.value }))));
+      __publicField(this, "getIndexOf", (value) => super.getIndexOf("name", value));
+      __publicField(this, "on_version_change", () => {
+        window.Wuse.DEBUG && this.owner.isMainIdentified() && __privateGet(this, _debug3).call(this, this.owner, `fields list version change: ${this.version}`);
+      });
+      __publicField(this, "on_forbidden_change", () => {
+        window.Wuse.DEBUG && this.owner.isMainIdentified() && __privateGet(this, _debug3).call(this, this.owner, `fields list is locked and can not be changed`);
+        __privateGet(this, _on_locked_definition3).call(this, this.owner.getMainAttribute("id"));
+      });
+      __publicField(this, "on_snapshot_part", (part) => part.value = this.owner[part.name]);
+      __publicField(this, "on_recall_part", (part) => this.owner[part.name] = part.value);
+      __privateSet(this, _on_locked_definition3, onLockedDefinition);
+      __privateSet(this, _debug3, debug2);
+    }
+  };
+  _on_locked_definition3 = new WeakMap();
+  _debug3 = new WeakMap();
+
   // src/wuse.equality-analyzer.mjs
   var _last, _current, _equal, _analyzer;
   var { ensureFunction: ensureFunction6 } = JavascriptHelpers;
@@ -1611,8 +1719,8 @@
   _analyzer = new WeakMap();
 
   // src/wuse.base-element.mjs
-  var _updater, _html, _rules, _children, _fields, _reactives, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binder, _unbinder, _makeBindingPerformers, _makeBindingHandlers, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _revise, revise_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
-  var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3, buildArray: buildArray4, defineReadOnlyMembers } = JavascriptHelpers;
+  var _html, _rules, _children, _fields, _reactives, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binder, _unbinder, _makeBindingPerformers, _makeBindingHandlers, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _revise, revise_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
+  var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3, buildArray: buildArray5, defineReadOnlyMembers } = JavascriptHelpers;
   var { removeChildren, isHTMLAttribute } = WebHelpers;
   var { WUSEKEY_ATTRIBUTE, DEFAULT_STYLE_TYPE, DEFAULT_STYLE_MEDIA, DEFAULT_REPLACEMENT_OPEN, DEFAULT_REPLACEMENT_CLOSE, SLOTS_KIND: SLOTS_KIND3 } = StringConstants;
   var { createReactiveField } = ReactiveField;
@@ -1630,7 +1738,6 @@
     onAllowHTML: noop6
   };
   var debug = (wel, msg) => window.Wuse.debug(`#${wel.id} (${wel.info.instanceNumber}) | ${typeof msg === "string" ? msg : JSON.stringify(msg)}`);
-  var parseElement = (shorthandNotation, rules) => performValidations(newChild(shorthandNotation, rules));
   var getElementByIdFromRoot = (instance, id) => isNonEmptyString6(id) ? instance.selectChildElement(`#${id}`) : void 0;
   var isInvalidFieldName = (name) => typeof name !== "string" || !name.trim().length || name.startsWith("data") || isHTMLAttribute(name);
   var makeUserOptions = () => ({
@@ -1638,7 +1745,7 @@
     styleMedia: DEFAULT_STYLE_MEDIA,
     styleType: DEFAULT_STYLE_TYPE,
     rawContent: false,
-    attributeKeys: false,
+    attributeKeys: true,
     elementKeys: true,
     autokeyChildren: true,
     automaticallyRestore: true,
@@ -1656,70 +1763,6 @@
     main: new EqualityAnalyzer(window.Wuse.hashRoutine),
     style: new EqualityAnalyzer(window.Wuse.hashRoutine)
   });
-  var RulesHolder = class extends PartsHolder {
-    constructor() {
-      super(...arguments);
-      __publicField(this, "getIndexOf", (value) => super.getIndexOf("selector", value));
-      __publicField(this, "on_version_change", () => {
-        if (this.last !== null) {
-          this.last.version = this.version;
-          this.last.replacements = extractReplacementsFromRule(this.last);
-        }
-        window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `rules list version change: ${this.version}`);
-      });
-      __publicField(this, "on_forbidden_change", () => {
-        window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `rules list is locked and can not be changed`);
-        RuntimeErrors3.onLockedDefinition(this.owner.getMainAttribute("id"));
-      });
-    }
-  };
-  var FieldsHolder = class extends PartsHolder {
-    constructor() {
-      super(...arguments);
-      __publicField(this, "establish", (name, value) => {
-        if (this.prepare()) {
-          const idx = super.getIndexOf("name", name);
-          idx > -1 ? this[idx].value = value : this.append({ name, value });
-          return true;
-        }
-        return false;
-      });
-      __publicField(this, "snapshot", () => buildArray4((instance) => this.persist().forEach((item) => instance.push({ name: item.name, value: item.value }))));
-      __publicField(this, "getIndexOf", (value) => super.getIndexOf("name", value));
-      __publicField(this, "on_version_change", () => {
-        window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `fields list version change: ${this.version}`);
-      });
-      __publicField(this, "on_forbidden_change", () => {
-        window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `fields list is locked and can not be changed`);
-        RuntimeErrors3.onLockedDefinition(this.owner.getMainAttribute("id"));
-      });
-      __publicField(this, "on_snapshot_part", (part) => part.value = this.owner[part.name]);
-      __publicField(this, "on_recall_part", (part) => this.owner[part.name] = part.value);
-    }
-  };
-  var ChildrenHolder = class extends PartsHolder {
-    constructor(owner, recaller, updater) {
-      super(owner);
-      __privateAdd(this, _updater, (holder) => {
-      });
-      __publicField(this, "getIndexOf", (value) => super.getIndexOf("id", value));
-      __publicField(this, "on_version_change", () => {
-        if (this.last !== null) {
-          this.last.version = this.version;
-          this.last.replacements = extractReplacementsFromChild(this.last);
-        }
-        __privateGet(this, _updater).call(this, this);
-        window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `children list version change: ${this.version}`);
-      });
-      __publicField(this, "on_forbidden_change", () => {
-        window.Wuse.DEBUG && this.owner.isMainIdentified() && debug(this.owner, `children list is locked and can not be changed`);
-        RuntimeErrors3.onLockedDefinition(this.owner.getMainAttribute("id"));
-      });
-      this.on_recall_part = recaller;
-      __privateSet(this, _updater, updater);
-    }
-  };
-  _updater = new WeakMap();
   var _BaseElement = class extends window.HTMLElement {
     constructor(mode) {
       super();
@@ -1739,12 +1782,12 @@
       __privateAdd(this, _validateField);
       __privateAdd(this, _filiateChild);
       __privateAdd(this, _html, new window.String());
-      __privateAdd(this, _rules, new RulesHolder(this));
-      __privateAdd(this, _children, new ChildrenHolder(this, (part) => __privateGet(this, _filiatedKeys).tryToRemember(part), (holder) => {
+      __privateAdd(this, _rules, new RulesHolder(this, TextReplacements.extractReplacementsFromRule, RuntimeErrors3.onLockedDefinition, debug));
+      __privateAdd(this, _children, new ChildrenHolder(this, TextReplacements.extractReplacementsFromChild, (part) => __privateGet(this, _filiatedKeys).tryToRemember(part), (holder) => {
         if (!__privateGet(this, _slotted))
           __privateSet(this, _slotted, __privateGet(this, _slotted) | holder.some((child) => child.kind === SLOTS_KIND3));
-      }));
-      __privateAdd(this, _fields, new FieldsHolder(this));
+      }, RuntimeErrors3.onLockedDefinition, debug));
+      __privateAdd(this, _fields, new FieldsHolder(this, RuntimeErrors3.onLockedDefinition, debug));
       __privateAdd(this, _reactives, new window.Set());
       __privateAdd(this, _options, makeUserOptions());
       __privateAdd(this, _parameters, void 0);
@@ -1852,8 +1895,6 @@
             normal: (child) => {
               const cts = __privateGet(this, _contents);
               cts.main.append(child.cache ? child.cache : child.cache = renderChild(cts.renderizers.replacer, child));
-              if (!!child.rules.length)
-                child.rules.forEach(cts.renderizers.rule);
             }
           }
         }
@@ -2072,7 +2113,7 @@
     dropMainEventHandler(kind, capture = false) {
       if (__privateGet(this, _identified) && isNonEmptyString6(kind)) {
         const def = __privateGet(this, _options).mainDefinition;
-        def.events = buildArray4((instance) => def.events.forEach((ev) => {
+        def.events = buildArray5((instance) => def.events.forEach((ev) => {
           if (ev.kind !== kind || ev.kind === kind && ev.capture !== capture)
             instance.push(ev);
         }));
@@ -2085,7 +2126,7 @@
       return false;
     }
     setMainElement(shorthandNotation) {
-      const tmp = parseElement(shorthandNotation);
+      const tmp = performValidations(newChild(shorthandNotation));
       if (tmp !== null) {
         if (isNonEmptyString6(tmp.content))
           return RuntimeErrors3.onInvalidDefinition(shorthandNotation);
@@ -2214,14 +2255,14 @@
     getChildElementsCount() {
       return __privateGet(this, _children).length;
     }
-    appendChildElement(shorthandNotation, rules) {
-      const tmp = __privateMethod(this, _filiateChild, filiateChild_fn).call(this, parseElement(shorthandNotation, rules));
+    appendChildElement(shorthandNotation) {
+      const tmp = __privateMethod(this, _filiateChild, filiateChild_fn).call(this, performValidations(newChild(shorthandNotation)));
       if (tmp !== null)
         __privateGet(this, _children).append(tmp);
       return this;
     }
-    prependChildElement(shorthandNotation, rules) {
-      const tmp = __privateMethod(this, _filiateChild, filiateChild_fn).call(this, parseElement(shorthandNotation, rules));
+    prependChildElement(shorthandNotation) {
+      const tmp = __privateMethod(this, _filiateChild, filiateChild_fn).call(this, performValidations(newChild(shorthandNotation)));
       if (tmp !== null)
         __privateGet(this, _children).prepend(tmp);
       return this;
@@ -2234,8 +2275,8 @@
       (isAssignedArray5(window.Array) ? items : forcedStringSplit2(items, "\n")).forEach((item) => typeof item === "string" && !!item.trim().length && this.prependChildElement(item));
       return this;
     }
-    replaceChildElementById(id, shorthandNotation, rules) {
-      const tmp = parseElement(shorthandNotation, rules);
+    replaceChildElementById(id, shorthandNotation) {
+      const tmp = performValidations(newChild(shorthandNotation));
       const chn = __privateGet(this, _children);
       const idx = chn.getIndexOf(id);
       if (idx > -1 && tmp !== null)
@@ -2618,7 +2659,7 @@
   __publicField(BaseElement, "instancesCount", 0);
 
   // src/wuse.initialization-routines.mjs
-  var { defineReadOnlyMembers: defineReadOnlyMembers2, isOf: isOf5, buildArray: buildArray5 } = JavascriptHelpers;
+  var { defineReadOnlyMembers: defineReadOnlyMembers2, isOf: isOf5, buildArray: buildArray6 } = JavascriptHelpers;
   var InitializationRoutines = class {
     static detectFeatures(instance) {
       const detectFeature = (flag, msg) => !flag && RuntimeErrors.UNSUPPORTED_FEATURE.emit(msg);
@@ -2631,7 +2672,7 @@
       }
     }
     static initializeModules(instance) {
-      instance.PerformanceMeasurement.initialize((stopWatch, event) => instance.debug(JSON.stringify(buildArray5((data) => {
+      instance.PerformanceMeasurement.initialize((stopWatch, event) => instance.debug(JSON.stringify(buildArray6((data) => {
         data.push({ instances: instance.elementCount });
         data.push(stopWatch.getDebugInfo());
         switch (event) {
@@ -2875,7 +2916,7 @@
   ;
 
   // package.json
-  var version = "0.8.9";
+  var version = "0.9.0";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

@@ -5,7 +5,6 @@ Wuse.register(class Text_Box extends Wuse.NonShadowElement {
   on_create() {
     this
       .setMainElement("div[style=border:0px]")
-      .setAttributesAsKeys(true)
       .appendCSSRule("#txtEdit", `
         border: 0px;
         border-radius: 0.5em;
@@ -26,7 +25,6 @@ class Command_Line extends Wuse.ClosedShadowElement {
   on_create() {
     this
       .setMainElement("div")
-      .setAttributesAsKeys(true)
       .appendCSSRule("div", `
         border: 1px solid silver;
         border-radius: 0.5em;

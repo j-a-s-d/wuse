@@ -5,7 +5,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Wuse | Tachyons Basic Banner Sample example</title>
-  <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"/>
   <script src="../../../dist/wuse.min.js"></script>
 </head>
 <body>
@@ -18,7 +17,6 @@
 
       on_create() {
         this
-          .setAttributesAsKeys(true)
           .appendChildElement("a[href=#].f6.br-pill.bg-dark-green.no-underline.washed-green.ba.b--dark-green.grow.pv2.ph3.dib.mr3=~{primary}~")
           .appendChildElement("a[href=#].f6.br-pill.dark-green.no-underline.ba.grow.pv2.ph3.dib=~{secondary}~")
           .makeReactiveField("primary", "")
@@ -27,13 +25,14 @@
 
     }
 
-    class Tachyons_BasicBanner_Sample extends Wuse.NonShadowElement {
+    class Tachyons_BasicBanner_Sample extends Wuse.ClosedShadowElement {
 
       static { Wuse.register(this); }
 
       on_create() {
         this
           .setMainElement("article.mw7.center.ph3.ph5-ns.tc.br2.pv5.bg-washed-green.dark-green.mb5")
+          .appendChildElement("link[rel='stylesheet'|href='https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css']")
           .appendChildElement("h1.fw6.f3.f2-ns.lh-title.mt0.mb3=~{tagline}~")
           .appendChildElement("h2.fw2.f4.lh-copy.mt0.mb3=~{description}~")
           .appendChildElement("p.fw1.f5.mt0.mb3=~{note}~")

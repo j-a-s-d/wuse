@@ -19,7 +19,6 @@
 
       on_create() {
         this
-          .setAttributesAsKeys(true)
           .setMainAttribute("style", "padding-bottom: 1em")
           .appendChildElement("label[for='~{forid}~']=~{caption}~")
           .appendChildElement("input[id='~{forid}~'|type='~{input:type}~']")
@@ -33,7 +32,7 @@
           .makeReactiveField("textarea:cols", undefined)
           .makeReactiveField("textarea:rows", undefined)
           .makeReactiveField("new:tag", undefined)
-          .makeReactiveField("disabled", undefined)
+          .makeReactiveField("disabled:flag", undefined)
           .fireSpecificRedrawEvents(true, false)
       }
 
@@ -47,7 +46,7 @@
         this.#define(el, "input:max", "max");
         this.#define(el, "input:value", "value");
         this.#define(el, "input:placeholder", "placeholder");
-        this.#define(el, "disabled", "disabled");
+        if (this["disabled:flag"] !== undefined) el.setAttribute("disabled", this["disabled:flag"]);
         if (this["new:tag"] !== undefined) Wuse.WebHelpers.changeDOMElementTag(el, this["new:tag"]);
       }
 
@@ -61,7 +60,7 @@
           .setMainAttribute("style", "margin: 4em")
           .appendChildElements(`
             turret-forminput[input:type='text'|forid='input-text'|input:placeholder='Text'|caption='Text Input']
-            turret-forminput[input:type='text'|forid='input-disabled'|input:placeholder='Disabled'|caption='Disabled Input'|disabled='']
+            turret-forminput[input:type='text'|forid='input-disabled'|input:placeholder='Disabled'|caption='Disabled Input'|disabled:flag='disabled']
             turret-forminput[input:type='email'|forid='input-email'|input:placeholder='Email'|caption='Email Input']
             turret-forminput[input:type='search'|forid='input-search'|input:placeholder='Search'|caption='Search Input']
             turret-forminput[input:type='tel'|forid='input-tel'|input:placeholder='Telephone'|caption='Telephone Input']

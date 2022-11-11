@@ -36,7 +36,6 @@ class Sample_Card extends Wuse.ClosedShadowElement {
       .makeReactiveField("symbol", "*")
       .makeReactiveField("caption", "Caption")
       .makeReactiveField("description", "Description")
-      .setAttributesAsKeys(true)
   }
 
 }

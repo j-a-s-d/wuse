@@ -17,7 +17,6 @@
 
       on_create() {
         this
-          .setAttributesAsKeys(true)
           .appendChildElement("a.btn-floating.btn-large.~{extra}~=<i class='material-icons'>~{face}~</i>")
           .makeReactiveField("face", "")
           .makeReactiveField("extra", "white")
@@ -29,7 +28,6 @@
 
       on_create() {
         this
-          .setAttributesAsKeys(true)
           .setMainElement("li")
           .appendChildElement("a.btn-floating.~{extra}~=<i class='material-icons'>~{face}~</i>")
           .makeReactiveField("face", "")

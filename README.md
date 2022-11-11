@@ -39,6 +39,12 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.9.0] 2022-nov-11
+  - extracted `ChildrenHolder` class to an external file
+  - extracted `RulesHolder` class to an external file
+  - extracted `FieldsHolder` class to an external file
+  - now `setAttributesAsKeys` flag is set on by default
+  - removed incorporated rules in children
 * [0.8.9] 2022-nov-09
   - added `isMainIdentified` and `removeFromParent` to the `BaseElement` class
   - added `MDL_ContactChip_Sample` demo
@@ -46,7 +52,7 @@ Wuse does not require any build step to be performed.
   - added `setMainEventHandler` and `dropMainEventHandler` to the `BaseElement` class
   - added `Materialize_FloatingButton_Sample` demo
 * [0.8.7] 2022-nov-07
-  - added main element events support
+  - added main element events support in the `BaseElement` class
   - added `Wing_Grid960_Sample` demo
 * [0.8.6] 2022-nov-03
   - added `defineReadOnlyMembers` to the `JavascriptHelpers` class

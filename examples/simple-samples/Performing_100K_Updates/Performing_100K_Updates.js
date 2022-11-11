@@ -21,7 +21,6 @@ class Counter_Button extends Wuse.ClosedShadowElement {
       `)
       .appendChildElement("span=~{counter}~")
       .makeReactiveField("counter", 0)
-      .setAttributesAsKeys(true)
   }
 
 }
