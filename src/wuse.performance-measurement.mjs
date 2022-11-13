@@ -9,7 +9,7 @@ class MeasureRound {
   renderTime = window.Number.MAX_SAFE_INTEGER;
 
   getDebugInfo() {
-    var result = new window.Object();
+    let result = new window.Object();
     result.round = this.round;
     result.domTime = formatTime(this.domTime);
     if (this.renderTime !== window.Number.MAX_SAFE_INTEGER) {

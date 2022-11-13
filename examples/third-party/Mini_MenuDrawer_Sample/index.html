@@ -1,0 +1,51 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wuse | Mini MenuDrawer Sample example</title>
+  <script src="../../../dist/wuse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css">
+</head>
+<body>
+  <p>This is a port of the <a href="https://minicss.us/docs.htm#drawer" target="_blank">Mini.CSS 3.0.1 Menu Drawer example</a>.</p>
+  <hr/>
+  <script>
+  (class Mini_MenuDrawer_Sample extends Wuse.NonShadowElement {
+    on_create() {
+      this
+        .setMainElement("[style=height:8rem;position:relative;text-align:center]")
+        .appendCSSRule(":root", "overflow-x: hidden")
+        .appendCSSRule(".drawer + .demo", `
+          position: absolute;
+          height: 8rem;
+          z-index: 0;
+          top: 0;
+          right: calc(0rem - 320px - 0.5rem);
+          padding: 0.5rem;
+          text-align: left;
+        `)
+        .appendCSSRule("[type='checkbox']:checked.drawer + .demo", `
+          z-index: 1001;
+          margin-right: 0.5rem;
+        `)
+        .appendChildElement("label[for='demo-toggle'].button.drawer-toggle.persistent.doc")
+        .appendChildElement("input#demo-toggle[type='checkbox'].drawer.persistent")
+        .appendChildElement(Wuse.htmlToShorthand(`<div class='demo doc'>
+          <label for='demo-toggle' class='drawer-close doc'></label>
+          <a href='#' class='doc'>Home</a>
+          </br>
+          <a href='#' class='doc'>News</a>
+          </br>
+          <a href='#' class='doc'>About</a>
+          </br>
+          <a href='#' class='doc'>Contact</a>
+          </br>
+        </div>`))
+    }
+  }).register().create();
+  </script>
+</body>
+</html>
+

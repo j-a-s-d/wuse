@@ -142,9 +142,9 @@
       return !!(instance !== void 0 && instance !== null && (instance.constructor === c || c !== void 0 && c !== null && instance.constructor.name === c.name));
     }
     static areOf(instances, c) {
-      var result = !!(instances && instances.constructor === window.Array && !!instances.length);
+      let result = !!(instances && instances.constructor === window.Array && !!instances.length);
       if (result)
-        for (var x in instances) {
+        for (let x in instances) {
           const instance = instances[x];
           if (!(instance !== void 0 && instance !== null && (instance.constructor === c || c !== void 0 && c !== null && instance.constructor.name === c.name))) {
             result = false;
@@ -321,7 +321,7 @@
   // src/wuse.string-hashing.mjs
   var StringHashing = class {
     static defaultRoutine(str = "") {
-      var h = 0;
+      let h = 0;
       for (let idx = 0; idx < str.length; idx++) {
         h = (h = (h << 5) - h + str.charCodeAt(idx)) & h;
       }
@@ -848,6 +848,36 @@
       }
       return null;
     }
+    static fromHTMLElement(element) {
+      if (element instanceof HTMLElement) {
+        let tag = "";
+        if (!!element.tagName.length)
+          tag = element.tagName.toLowerCase();
+        let id = "";
+        if (!!element.id.length)
+          id = "#" + element.id;
+        let cls = "";
+        if (!!element.classList.length)
+          element.classList.forEach((it) => cls += "." + it);
+        let value = "";
+        if (!!element.innerHTML.length)
+          value = "=" + element.innerHTML;
+        let attr = "";
+        if (!!element.attributes.length) {
+          for (let i = 0; i < element.attributes.length; i++) {
+            const at = element.attributes[i];
+            const an = at.name.toLowerCase();
+            if (an !== "id" && an !== "class") {
+              attr += "|" + an + "=" + (typeof at.value === "string" ? `'${at.value}'` : at.value);
+            }
+          }
+          if (!!attr.length)
+            attr = attr.replace("|", "[") + "]";
+        }
+        return `${tag}${id}${cls}${attr}${value}`;
+      }
+      return null;
+    }
   };
   _extractAttributes = new WeakSet();
   extractAttributes_fn = function(result, input) {
@@ -862,9 +892,8 @@
           x[1].split(";").forEach((r) => {
             const s = r.split(":");
             const k = s[0].trim();
-            if (!!k.length) {
-              result.style[k] = s[1].trim();
-            }
+            if (!!k.length)
+              result.style[k] = (s[1] || "").trim();
           });
         } else {
           result.attributes[x[0]] = x[1] || "";
@@ -945,6 +974,13 @@
     }
   };
   __privateAdd(CSSPropertiesParser, _process);
+  var getHTMLTagToShorthandNotation = (html) => {
+    const chn = new DOMParser().parseFromString(html, "text/html").body.children;
+    return !!chn.length ? buildArray2((lines) => {
+      for (let x = 0; x < chn.length; x++)
+        lines.push(ShorthandNotationParser.fromHTMLElement(chn[x]));
+    }).join("\n") : null;
+  };
   var makeDefinition = () => ({
     kind: DEFAULT_KIND,
     tag: DEFAULT_TAG,
@@ -1100,6 +1136,7 @@
   __publicField(ElementParts, "newDefinition", makeDefinition);
   __publicField(ElementParts, "newEvent", makeEvent);
   __publicField(ElementParts, "newState", makeState);
+  __publicField(ElementParts, "convertHTMLTagToShorthandNotation", getHTMLTagToShorthandNotation);
 
   // src/wuse.text-replacements.mjs
   var _regExp, _addReplacement, _includeMatches, _includeStringMatches, _includeKeysMatches;
@@ -1233,7 +1270,7 @@
       child.replacements["contents"].forEach((r) => c = replacer(c, r));
       return child.encode ? htmlEncode(c) : c;
     }
-    var result = isNonEmptyString4(child.id) ? `<${child.tag} id='${child.id}'` : `<${child.tag}`;
+    let result = isNonEmptyString4(child.id) ? `<${child.tag} id='${child.id}'` : `<${child.tag}`;
     if (!!child.classes.length) {
       let c = child.classes.join(" ");
       child.replacements["classes"].forEach((r) => c = replacer(c, r));
@@ -1286,7 +1323,7 @@
       __privateAdd(this, _filiated, new class extends window.Set {
         name(parentKey, id) {
           let key = `${parentKey}_${id}`;
-          var x = 0;
+          let x = 0;
           while (this.has(key))
             key = `${parentKey}_${id}_${++x}`;
           this.add(key);
@@ -2438,7 +2475,8 @@
       }
     }
     static register() {
-      return window.Wuse.register(this);
+      window.Wuse.register(this);
+      return this;
     }
     static create(parameters, at = "body") {
       return window.Wuse.create({
@@ -2728,7 +2766,7 @@
       __publicField(this, "renderTime", window.Number.MAX_SAFE_INTEGER);
     }
     getDebugInfo() {
-      var result = new window.Object();
+      let result = new window.Object();
       result.round = this.round;
       result.domTime = formatTime(this.domTime);
       if (this.renderTime !== window.Number.MAX_SAFE_INTEGER) {
@@ -2862,7 +2900,43 @@
 
   // src/wuse.core-class.mjs
   var { noop: noop7, isOf: isOf6 } = JavascriptHelpers;
+  var { convertHTMLTagToShorthandNotation } = ElementParts;
   var { specializeClass, REGULAR: REGULAR2, OPEN, CLOSED } = ElementModes;
+  var fields = {
+    tmp: new window.Object(),
+    WebHelpers,
+    JsHelpers: JavascriptHelpers,
+    PerformanceMeasurement,
+    NonShadowElement: specializeClass(BaseElement, REGULAR2),
+    OpenShadowElement: specializeClass(BaseElement, OPEN),
+    ClosedShadowElement: specializeClass(BaseElement, CLOSED)
+  };
+  var methods = {
+    debug: (msg) => window.console.log("[WUSE:DEBUG]", msg),
+    blockUpdate: (task, arg) => {
+      if (isOf6(task, Function)) {
+        if (window.Wuse.DEBUG)
+          window.Wuse.debug("blocking");
+        window.Wuse.RENDERING = false;
+        try {
+          task(arg);
+        } catch (e) {
+          throw e;
+        } finally {
+          window.Wuse.RENDERING = true;
+          if (window.Wuse.DEBUG)
+            window.Wuse.debug("unblocking");
+        }
+      }
+    },
+    isShadowElement: (instance) => {
+      const p = window.Object.getPrototypeOf(instance.constructor);
+      return p === window.Wuse.OpenShadowElement || p === window.Wuse.ClosedShadowElement;
+    },
+    htmlToShorthand: (html) => convertHTMLTagToShorthandNotation(html),
+    register: (classes) => ElementClasses.registerClasses(isOf6(classes, window.Array) ? classes : new window.Array(classes)),
+    create: (configuration) => isOf6(configuration, window.Object) ? ElementClasses.createInstance(configuration.element, configuration.target, configuration.instance) : void 0
+  };
   function makeCoreClass(version2) {
     var _a2;
     return _a2 = class {
@@ -2873,42 +2947,7 @@
         return BaseElement.instancesCount;
       }
     }, __publicField(_a2, "DEBUG", false), __publicField(_a2, "FATALS", false), __publicField(_a2, "MEASURE", false), __publicField(_a2, "RENDERING", true), __publicField(_a2, "hashRoutine", StringHashing.defaultRoutine), __publicField(_a2, "elementsStorage", new SimpleStorage()), __publicField(_a2, "tmp", null), __publicField(_a2, "WebHelpers", null), __publicField(_a2, "JsHelpers", null), __publicField(_a2, "PerformanceMeasurement", null), __publicField(_a2, "NonShadowElement", null), __publicField(_a2, "OpenShadowElement", null), __publicField(_a2, "ClosedShadowElement", null), __publicField(_a2, "debug", noop7), __publicField(_a2, "blockUpdate", noop7), __publicField(_a2, "register", noop7), __publicField(_a2, "instantiate", noop7), __publicField(_a2, "create", noop7), __publicField(_a2, "isShadowElement", noop7), (() => {
-      InitializationRoutines.declareUnwritableMembers(_a2, {
-        fields: {
-          tmp: new window.Object(),
-          WebHelpers,
-          JsHelpers: JavascriptHelpers,
-          PerformanceMeasurement,
-          NonShadowElement: specializeClass(BaseElement, REGULAR2),
-          OpenShadowElement: specializeClass(BaseElement, OPEN),
-          ClosedShadowElement: specializeClass(BaseElement, CLOSED)
-        },
-        methods: {
-          debug: (msg) => window.console.log("[WUSE:DEBUG]", msg),
-          blockUpdate: (task, arg) => {
-            if (isOf6(task, Function)) {
-              if (window.Wuse.DEBUG)
-                window.Wuse.debug("blocking");
-              window.Wuse.RENDERING = false;
-              try {
-                task(arg);
-              } catch (e) {
-                throw e;
-              } finally {
-                window.Wuse.RENDERING = true;
-                if (window.Wuse.DEBUG)
-                  window.Wuse.debug("unblocking");
-              }
-            }
-          },
-          isShadowElement: (instance) => {
-            const p = window.Object.getPrototypeOf(instance.constructor);
-            return p === window.Wuse.OpenShadowElement || p === window.Wuse.ClosedShadowElement;
-          },
-          register: (classes) => ElementClasses.registerClasses(isOf6(classes, window.Array) ? classes : new window.Array(classes)),
-          create: (configuration, option) => isOf6(configuration, window.Object) ? ElementClasses.createInstance(configuration.element, configuration.target, configuration.instance) : void 0
-        }
-      });
+      InitializationRoutines.declareUnwritableMembers(_a2, { fields, methods });
       InitializationRoutines.detectFeatures(_a2);
       InitializationRoutines.initializeModules(_a2);
     })(), _a2;
@@ -2916,7 +2955,7 @@
   ;
 
   // package.json
-  var version = "0.9.0";
+  var version = "0.9.1";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

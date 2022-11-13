@@ -35,9 +35,7 @@ class ShorthandNotationParser {
           x[1].split(";").forEach(r => {
             const s = r.split(":");
             const k = s[0].trim();
-            if (!!k.length) {
-              result.style[k] = s[1].trim();
-            }
+            if (!!k.length) result.style[k] = (s[1] || "").trim();
           });
         } else {
           result.attributes[x[0]] = x[1] || "";
@@ -123,6 +121,32 @@ class ShorthandNotationParser {
     return null;
   }
 
+  static fromHTMLElement(element) {
+    if (element instanceof HTMLElement) {
+      let tag = "";
+      if (!!element.tagName.length) tag = element.tagName.toLowerCase();
+      let id = "";
+      if (!!element.id.length) id = "#" + element.id;
+      let cls = "";
+      if (!!element.classList.length) element.classList.forEach(it => cls += "." + it);
+      let value = "";
+      if (!!element.innerHTML.length) value = "=" + element.innerHTML;
+      let attr = "";
+      if (!!element.attributes.length) {
+        for (let i = 0; i < element.attributes.length; i++) {
+          const at = element.attributes[i];
+          const an = at.name.toLowerCase();
+          if (an !== "id" && an !== "class") {
+            attr += "|" + an + "=" + (typeof at.value === "string" ? `'${at.value}'` : at.value);
+          }
+        }
+        if (!!attr.length) attr = attr.replace("|", "[") + "]";
+      }
+      return `${tag}${id}${cls}${attr}${value}`;
+    }
+    return null;
+  }
+
 }
 
 class CSSPropertiesParser {
@@ -147,6 +171,13 @@ class CSSPropertiesParser {
 }
 
 // ROUTINES
+
+const getHTMLTagToShorthandNotation = html => {
+  const chn = new DOMParser().parseFromString(html, "text/html").body.children;
+  return !!chn.length ? buildArray(lines => {
+    for (let x = 0; x < chn.length; x++) lines.push(ShorthandNotationParser.fromHTMLElement(chn[x]));
+  }).join("\n") : null;
+}
 
 const makeDefinition = () => ({
   kind: DEFAULT_KIND,
@@ -312,6 +343,8 @@ export default class ElementParts {
   static newEvent = makeEvent;
   
   static newState = makeState;
+
+  static convertHTMLTagToShorthandNotation = getHTMLTagToShorthandNotation;
 
   static initialize(options) {
     if (isAssignedObject(options)) {

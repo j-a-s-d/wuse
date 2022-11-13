@@ -30,6 +30,7 @@ export default new class {
     tester.testModuleProperty(k, "instantiate", ["existence", "type:function"]);
     tester.testModuleProperty(k, "create", ["existence", "type:function"]);
     tester.testModuleProperty(k, "isShadowElement", ["existence", "type:function"]);
+    tester.testModuleProperty(k, "htmlToShorthand", ["existence", "type:function"]);
   }
 
 }

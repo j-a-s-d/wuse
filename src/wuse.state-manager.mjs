@@ -17,7 +17,7 @@ export default class StateManager {
   #filiated = new class extends window.Set {
     name(parentKey, id) {
       let key = `${parentKey}_${id}`;
-      var x = 0;
+      let x = 0;
       while (this.has(key)) key = `${parentKey}_${id}_${++x}`;
       this.add(key);
       return key;

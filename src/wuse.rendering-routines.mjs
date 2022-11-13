@@ -44,7 +44,7 @@ export default class RenderingRoutines {
         child.replacements["contents"].forEach(r => c = replacer(c, r));
         return child.encode ? htmlEncode(c) : c;
       }
-      var result = isNonEmptyString(child.id) ? `<${child.tag} id='${child.id}'` : `<${child.tag}`;
+      let result = isNonEmptyString(child.id) ? `<${child.tag} id='${child.id}'` : `<${child.tag}`;
       if (!!child.classes.length) {
         let c = child.classes.join(" ");
         child.replacements["classes"].forEach(r => c = replacer(c, r));

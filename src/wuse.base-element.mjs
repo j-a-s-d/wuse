@@ -1035,7 +1035,8 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   static register() {
-    return window.Wuse.register(this);
+    window.Wuse.register(this);
+    return this;
   }
 
   static create(parameters, at = "body") {

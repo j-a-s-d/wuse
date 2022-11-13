@@ -20,6 +20,7 @@ export default new class {
     tester.testModuleFunction(module, "newDefinition", ["existence", "type:object"], this.newDefinition);
     tester.testModuleFunction(module, "newEvent", ["existence", "type:object"], this.newEvent);
     tester.testModuleFunction(module, "newState", ["existence", "type:object"], this.newState);
+    tester.testModuleFunction(module, "convertHTMLTagToShorthandNotation", ["existence", "type:object"], this.convertHTMLTagToShorthandNotation);
   }
 
   ElementParts = (tester, module, name) => {
@@ -130,6 +131,29 @@ export default new class {
   newState = (tester, module, name) => {
     var r = module.newState();
     tester.testResult(typeof r === "object" && r.generation === 0 && typeof r.persisted === "boolean", `<u>${name}</u> called: <i>${r}</i>`);
+  }
+
+  convertHTMLTagToShorthandNotation = (tester, module, name) => {
+    var r = module.convertHTMLTagToShorthandNotation();
+    tester.testResult(r === null, `<u>${name}</u> called with no value: <i>${r}</i>`);
+    r = module.convertHTMLTagToShorthandNotation(null);
+    tester.testResult(r === null, `<u>${name}</u> called with null value: <i>${r}</i>`);
+    r = module.convertHTMLTagToShorthandNotation("");
+    tester.testResult(r === null, `<u>${name}</u> called with an empty string: <i>${r}</i>`);
+    r = module.convertHTMLTagToShorthandNotation("<br/>");
+    tester.testResult(r === "br", `<u>${name}</u> called with a BR tag html string: <i>${r}</i>`);
+    r = module.convertHTMLTagToShorthandNotation("<b>123</b>");
+    tester.testResult(r === "b=123", `<u>${name}</u> called with a B tag with value html string: <i>${r}</i>`);
+    r = module.convertHTMLTagToShorthandNotation("<a href='#'>blah</a>");
+    tester.testResult(r === "a[href='#']=blah", `<u>${name}</u> called with an A tag with attribute and value html string: <i>${r}</i>`);
+    r = module.convertHTMLTagToShorthandNotation("<div id='test'>blah</a>");
+    tester.testResult(r === "div#test=blah", `<u>${name}</u> called with an DIV tag with id and value html string: <i>${r}</i>`);
+    r = module.convertHTMLTagToShorthandNotation("<pre class='class-a class-b'></pre>");
+    tester.testResult(r === "pre.class-a.class-b", `<u>${name}</u> called with an empty PRE tag with classes html string: <i>${r}</i>`);
+    r = module.convertHTMLTagToShorthandNotation("<ul><li>1</li><li>2</li></ul>");
+    tester.testResult(r === "ul=<li>1</li><li>2</li>", `<u>${name}</u> called with an UL tag with twp LI elements inside html string: <i>${r}</i>`);
+    r = module.convertHTMLTagToShorthandNotation("<li>1</li><li>2</li>");
+    tester.testResult(r === "li=1\nli=2", `<u>${name}</u> called with two LI tags with content html string: <i>${r}</i>`);
   }
 
 }

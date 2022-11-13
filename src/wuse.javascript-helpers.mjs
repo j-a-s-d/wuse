@@ -45,8 +45,8 @@ export default class JavascriptHelpers {
   }
 
   static areOf(instances, c) {
-    var result = !!(instances && instances.constructor === window.Array && !!instances.length);
-    if (result) for (var x in instances) {
+    let result = !!(instances && instances.constructor === window.Array && !!instances.length);
+    if (result) for (let x in instances) {
       const instance = instances[x];
       if (!(instance !== undefined && instance !== null && (
         instance.constructor === c || (
