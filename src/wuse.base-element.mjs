@@ -542,8 +542,8 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   setStyleOptions(media, type) {
-    this.#options.styleMedia = isNonEmptyString(media) ? media : EMPTY_STRING;
-    this.#options.styleType = isNonEmptyString(type) ? type : EMPTY_STRING;
+    if (isNonEmptyString(media)) this.#options.styleMedia = media;
+    if (isNonEmptyString(type)) this.#options.styleType = type;
     return this;
   }
 
@@ -694,6 +694,10 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   // RAW CONTENT
+
+  allowsRawContent() {
+    return this.#options.rawContent;
+  }
 
   allowRawContent(value) {
     this.#options.rawContent = !!value;
@@ -848,7 +852,7 @@ export default class BaseElement extends window.HTMLElement {
   }
 
   prependChildElements(items) {
-    (isAssignedArray(window.Array) ? items : forcedStringSplit(items, "\n")).forEach(
+    (isAssignedArray(items) ? items : forcedStringSplit(items, "\n")).forEach(
       item => typeof item === "string" && !!item.trim().length && this.prependChildElement(item)
     );
     return this;

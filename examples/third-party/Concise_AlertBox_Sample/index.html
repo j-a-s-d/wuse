@@ -1,0 +1,75 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wuse | Concise AlertBox Sample example</title>
+  <script src="../../../dist/wuse.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.concisecss.com/concise.min.css">
+  <link rel="stylesheet" href="https://cdn.concisecss.com/concise-ui/concise-ui.min.css">
+</head>
+<body>
+  <p>This is a port of the <a href="https://concisecss.com/documentation/ui#alert-box" target="_blank">Concise 4.1.2 Alert Box example</a>.</p>
+  <hr/>
+  <script>
+  (class Concise_AlertBox_Test extends Wuse.NonShadowElement {
+
+    static SupportedAttributes = [{
+      name: "lorem",
+      validator: JSON.parse,
+      executor: "appendChildElement",
+      payload: value => "p=Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam non lacus sapien."
+    }, {
+      name: "donec",
+      validator: JSON.parse,
+      executor: "appendChildElement",
+      payload: value => "p=Donec dapibus felis erat, et tincidunt arcu interdum id. Sed commodo quam id lectus porttitor, at gravida justo convallis. Interdum et malesuada fames ac ante ipsum primis in faucibus."
+    }, {
+      name: "closable",
+      validator: JSON.parse,
+      executor: "appendChildElement",
+      payload: value => "a#btnClose[href='#'].close!click=×"
+    }, {
+      name: "extra",
+      validator: Wuse.JsHelpers.isNonEmptyString,
+      executor: "addMainClass",
+      payload: value => value
+    }];
+
+    #processAttribute = x => (
+        this[x.name] !== undefined &&
+        x.validator(this[x.name]) === true &&
+        typeof this[x.executor] === "function"
+      ) && this[x.executor](x.payload(this[x.name])).render();
+
+    on_create() {
+      this.setMainElement("section.alert-box[style=margin:2em]");
+    }
+
+    on_load() {
+      Concise_AlertBox_Test.SupportedAttributes.forEach(this.#processAttribute);
+    }
+
+    on_btnClose_click = () => this.removeFromParent();
+
+  }).register();
+  (class Concise_AlertBox_Sample extends Wuse.NonShadowElement {
+
+    on_create() {
+      this
+        .setMainAttribute("style", "margin: 2em")
+        .appendChildElements(`
+          concise-alertbox-test[lorem=true]
+          concise-alertbox-test[lorem=true|donec=true|closable=true]
+          concise-alertbox-test[lorem=true|extra='-warning'|closable=true]
+          concise-alertbox-test[lorem=true|extra='-success'|closable=true]
+          concise-alertbox-test[lorem=true|extra='-error'|closable=true]
+        `)
+    }
+
+  }).register().create();
+  </script>
+</body>
+</html>
+

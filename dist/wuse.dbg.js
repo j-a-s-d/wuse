@@ -2041,8 +2041,10 @@
       return this;
     }
     setStyleOptions(media, type) {
-      __privateGet(this, _options).styleMedia = isNonEmptyString6(media) ? media : EMPTY_STRING2;
-      __privateGet(this, _options).styleType = isNonEmptyString6(type) ? type : EMPTY_STRING2;
+      if (isNonEmptyString6(media))
+        __privateGet(this, _options).styleMedia = media;
+      if (isNonEmptyString6(type))
+        __privateGet(this, _options).styleType = type;
       return this;
     }
     getElementsStore() {
@@ -2183,6 +2185,9 @@
       }
       return this;
     }
+    allowsRawContent() {
+      return __privateGet(this, _options).rawContent;
+    }
     allowRawContent(value) {
       __privateGet(this, _options).rawContent = !!value;
       return this;
@@ -2309,7 +2314,7 @@
       return this;
     }
     prependChildElements(items) {
-      (isAssignedArray5(window.Array) ? items : forcedStringSplit2(items, "\n")).forEach((item) => typeof item === "string" && !!item.trim().length && this.prependChildElement(item));
+      (isAssignedArray5(items) ? items : forcedStringSplit2(items, "\n")).forEach((item) => typeof item === "string" && !!item.trim().length && this.prependChildElement(item));
       return this;
     }
     replaceChildElementById(id, shorthandNotation) {
@@ -2955,7 +2960,7 @@
   ;
 
   // package.json
-  var version = "0.9.1";
+  var version = "0.9.2";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

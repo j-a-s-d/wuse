@@ -39,6 +39,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.9.2] 2022-nov-15
+  - added `allowsRawContent` to the `BaseElement` class
+  - added `Concise_AlertBox_Sample` demo
 * [0.9.1] 2022-nov-13
   - added `htmlToShorthand` to the `CoreClass` class
   - now static `register` of the `BaseElement` class is fluent
