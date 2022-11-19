@@ -14,6 +14,7 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 * self-documenting api (descriptive "long" function names)
 * full unit testing (620+ tests cases)
 * markdown documentation [TODO]
+* [`extensive example library`](examaples/README.md) (35 demos: 13 simple samples and 22 with third party libraries)
 
 ## FEATURES
 
@@ -39,6 +40,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.9.3] 2022-nov-19
+  - added `next` getter to the `NodeManager` class
+  - added `MetroUI_ShortcutButton_Sample` demo
 * [0.9.2] 2022-nov-15
   - added `allowsRawContent` to the `BaseElement` class
   - added `Concise_AlertBox_Sample` demo

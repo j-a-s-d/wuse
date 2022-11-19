@@ -24,6 +24,8 @@ export default new class {
     tester.testResult(r, `<u>${name}</u> got instantiated with valid nodes: <i>${r}</i>`);
     r = instance.element === element;
     tester.testResult(r, `<u>${name}</u> got the element property called and retrieves the element supplied in the constructor: <i>${r}</i>`);
+    r = instance.next !== element && instance.next.outerHTML === instance.element.outerHTML;
+    tester.testResult(r, `<u>${name}</u> got the next property called and retrieves a clone of the element supplied in the constructor: <i>${r}</i>`);
     instance.affiliate();
     r = !!fragment.children.length;
     tester.testResult(r, `<u>${name}</u> got affiliate() called and the element was appended to the fragment: <i>${r}</i>`);

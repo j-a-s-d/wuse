@@ -1,0 +1,60 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Wuse | MetroUI ShortcutButton Sample example</title>
+  <script src="../../../dist/wuse.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.korzh.com/metroui/v4.5.1/css/metro-all.min.css">
+</head>
+<body>
+  <p>This is a port of the <a href="https://metroui.org.ua/buttons.html#_shortcuts" target="_blank">MetroUI 4.5.1 Shortcut Button example</a>.</p>
+  <hr/>
+  <script>
+  (class MetroUI_ShortcutButton extends Wuse.NonShadowElement {
+
+    on_create() {
+      this
+        .setMainElement("button.shortcut[style=margin:0.25rem]")
+        .appendChildElement("span.badge=~{badge}~")
+        .appendChildElement("span.caption=~{caption}~")
+        .appendChildElement("span.icon.~{mificon}~")
+        .makeReactiveField("badge", "")
+        .makeReactiveField("caption", "")
+        .makeReactiveField("mificon", "")
+        .makeReactiveField("nocaption", false)
+        .makeReactiveField("outline", false)
+        .makeReactiveField("rounded", false)
+        .makeReactiveField("extra", "")
+    }
+
+    on_load() {
+      if (Wuse.JsHelpers.isNonEmptyString(this.extra)) this.addMainClass(this.extra);
+      if (this.rounded !== false) this.addMainClass("rounded");
+      if (this.outline !== false) this.addMainClass("outline");
+      if (this.nocaption !== false) this.addMainClass("no-caption");
+    }
+
+  }).register();
+  (class MetroUI_ShortcutButton_Sample extends Wuse.NonShadowElement {
+
+    on_create() {
+      this
+        .setMainAttribute("style", "margin: 2em")
+        .appendChildElements(`
+          metroui-shortcutbutton[caption='Rocket'|mificon='mif-rocket']
+          metroui-shortcutbutton[badge='10'|caption='Rocket'|mificon='mif-rocket'|extra='primary']
+          metroui-shortcutbutton[badge='10'|caption='Rocket'|mificon='mif-rocket'|outline=true]
+          metroui-shortcutbutton[badge='10'|caption='Rocket'|mificon='mif-rocket'|extra='alert'|rounded=true]
+          metroui-shortcutbutton[badge='empty']
+          metroui-shortcutbutton[mificon='mif-rocket'|extra='warning'|nocaption=true]
+          metroui-shortcutbutton[badge='10'|mificon='mif-rocket'|extra='info'|nocaption=true|outline=true]
+        `)
+    }
+
+  }).register().create();
+  </script>
+</body>
+</html>
+

@@ -610,13 +610,19 @@ export default class BaseElement extends window.HTMLElement {
 
   setMainAttribute(key, value) {
     this.#options.mainDefinition.attributes[key] = value;
-    if (this.#inserted) this.#main.element.setAttribute(key, value);
+    if (this.#inserted) {
+      this.#main.element.setAttribute(key, value);    
+      this.#main.next.setAttribute(key, value);    
+    }
     return this;
   }
 
   removeMainAttribute(key) {
     delete this.#options.mainDefinition.attributes[key];
-    if (this.#inserted) this.#main.element.removeAttribute(key);
+    if (this.#inserted) {
+      this.#main.element.removeAttribute(key);
+      this.#main.next.removeAttribute(key);
+    }
     return this;
   }
 
@@ -624,7 +630,10 @@ export default class BaseElement extends window.HTMLElement {
     const cls = this.#options.mainDefinition.classes;
     if (cls.indexOf(klass) === -1) {
       cls.push(klass);
-      if (this.#inserted) this.#main.element.classList.add(klass);
+      if (this.#inserted) {
+        this.#main.element.classList.add(klass);
+        this.#main.next.classList.add(klass);
+      }
     }
     return this;
   }
@@ -634,7 +643,10 @@ export default class BaseElement extends window.HTMLElement {
     const idx = cls.indexOf(klass);
     if (idx > -1) {
       cls.splice(idx, 1);
-      if (this.#inserted) this.#main.element.classList.remove(klass);
+      if (this.#inserted) {
+        this.#main.element.classList.remove(klass);
+        this.#main.next.classList.remove(klass);
+      }
     }
     return this;
   }
@@ -643,7 +655,10 @@ export default class BaseElement extends window.HTMLElement {
     const cls = this.#options.mainDefinition.classes;
     const idx = cls.indexOf(klass);
     idx > -1 ? cls.splice(idx, 1) : cls.push(klass);
-    if (this.#inserted) this.#main.element.classList.toggle(klass);
+    if (this.#inserted) {
+      this.#main.element.classList.toggle(klass);
+      this.#main.next.classList.toggle(klass);
+    }
     return this;
   }
 
@@ -655,8 +670,13 @@ export default class BaseElement extends window.HTMLElement {
       const name = `on_${def.id}_${kind}`;
       if (this.#inserted) {
         const el = this.#main.element;
-        if (present) el.removeEventListener(kind, this[name], capture);
+        const nx = this.#main.next;
+        if (present) {
+          el.removeEventListener(kind, this[name], capture);
+          nx.removeEventListener(kind, this[name], capture);
+        }
         el.addEventListener(kind, handler, capture);
+        nx.addEventListener(kind, handler, capture);
       }
       this[name] = handler;
       return true;
@@ -671,7 +691,10 @@ export default class BaseElement extends window.HTMLElement {
         if (ev.kind !== kind || (ev.kind === kind && ev.capture !== capture)) instance.push(ev);
       }));
       const name = `on_${def.id}_${kind}`;
-      if (this.#inserted) this.#main.element.removeEventListener(kind, this[name], capture);
+      if (this.#inserted) {
+        this.#main.element.removeEventListener(kind, this[name], capture);
+        this.#main.next.removeEventListener(kind, this[name], capture);
+      }
       delete this[name];
       return true;
     }

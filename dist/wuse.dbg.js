@@ -1458,6 +1458,9 @@
     get element() {
       return __privateGet(this, _actual);
     }
+    get next() {
+      return __privateGet(this, _clone);
+    }
     affiliate() {
       __privateGet(this, _parent).appendChild(__privateGet(this, _actual));
     }
@@ -2094,22 +2097,28 @@
     }
     setMainAttribute(key, value) {
       __privateGet(this, _options).mainDefinition.attributes[key] = value;
-      if (__privateGet(this, _inserted))
+      if (__privateGet(this, _inserted)) {
         __privateGet(this, _main).element.setAttribute(key, value);
+        __privateGet(this, _main).next.setAttribute(key, value);
+      }
       return this;
     }
     removeMainAttribute(key) {
       delete __privateGet(this, _options).mainDefinition.attributes[key];
-      if (__privateGet(this, _inserted))
+      if (__privateGet(this, _inserted)) {
         __privateGet(this, _main).element.removeAttribute(key);
+        __privateGet(this, _main).next.removeAttribute(key);
+      }
       return this;
     }
     addMainClass(klass) {
       const cls = __privateGet(this, _options).mainDefinition.classes;
       if (cls.indexOf(klass) === -1) {
         cls.push(klass);
-        if (__privateGet(this, _inserted))
+        if (__privateGet(this, _inserted)) {
           __privateGet(this, _main).element.classList.add(klass);
+          __privateGet(this, _main).next.classList.add(klass);
+        }
       }
       return this;
     }
@@ -2118,8 +2127,10 @@
       const idx = cls.indexOf(klass);
       if (idx > -1) {
         cls.splice(idx, 1);
-        if (__privateGet(this, _inserted))
+        if (__privateGet(this, _inserted)) {
           __privateGet(this, _main).element.classList.remove(klass);
+          __privateGet(this, _main).next.classList.remove(klass);
+        }
       }
       return this;
     }
@@ -2127,8 +2138,10 @@
       const cls = __privateGet(this, _options).mainDefinition.classes;
       const idx = cls.indexOf(klass);
       idx > -1 ? cls.splice(idx, 1) : cls.push(klass);
-      if (__privateGet(this, _inserted))
+      if (__privateGet(this, _inserted)) {
         __privateGet(this, _main).element.classList.toggle(klass);
+        __privateGet(this, _main).next.classList.toggle(klass);
+      }
       return this;
     }
     setMainEventHandler(kind, handler, capture = false) {
@@ -2140,9 +2153,13 @@
         const name = `on_${def.id}_${kind}`;
         if (__privateGet(this, _inserted)) {
           const el = __privateGet(this, _main).element;
-          if (present)
+          const nx = __privateGet(this, _main).next;
+          if (present) {
             el.removeEventListener(kind, this[name], capture);
+            nx.removeEventListener(kind, this[name], capture);
+          }
           el.addEventListener(kind, handler, capture);
+          nx.addEventListener(kind, handler, capture);
         }
         this[name] = handler;
         return true;
@@ -2157,8 +2174,10 @@
             instance.push(ev);
         }));
         const name = `on_${def.id}_${kind}`;
-        if (__privateGet(this, _inserted))
+        if (__privateGet(this, _inserted)) {
           __privateGet(this, _main).element.removeEventListener(kind, this[name], capture);
+          __privateGet(this, _main).next.removeEventListener(kind, this[name], capture);
+        }
         delete this[name];
         return true;
       }
@@ -2960,7 +2979,7 @@
   ;
 
   // package.json
-  var version = "0.9.2";
+  var version = "0.9.3";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

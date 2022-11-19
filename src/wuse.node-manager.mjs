@@ -37,6 +37,10 @@ export default class NodeManager {
     return this.#actual;
   }
 
+  get next() {
+    return this.#clone;
+  }
+
   affiliate() {
     this.#parent.appendChild(this.#actual);
   }
