@@ -33,6 +33,8 @@ export default new class {
     tester.testResult(r === "Hel&amp;lo", `<u>${name}</u> got renderChild called with a valid value (encoded text node): <i>${r}</i>`);
     r = module.renderChild(simpleReplacer, {tag:"p",id:"test",classes:["class1", "class2"],attributes:{"data-attr":"'123'"},style:{"border-style":"solid"},content:"foo",replacements:{contents:[],classes:[],styles:[],attributes:[]}});
     tester.testResult(r === "<p id='test' class='class1 class2' style='border-style: solid; ' data-attr='123'>foo</p>", `<u>${name}</u> got renderChild called with a valid value (sample node): <i>${r.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</i>`);
+    r = module.renderChild(simpleReplacer, {tag:"div",classes:[],content:{tag:"span",classes:[],content:"123", replacements: { contents: [] }, recursive: false}, replacements: { contents: [] }, recursive: true});
+    tester.testResult(r === "<div><span>123</span></div>", `<u>${name}</u> got renderChild called with a valid recursive value: <i>${r.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</i>`);
     r = module.renderRule(simpleReplacer, { selector: null, properties: null, replacements: null });
     tester.testResult(r === null, `<u>${name}</u> got renderRule called with an invalid value (all null fields): <i>${r}</i>`);
     r = module.renderRule(simpleReplacer, { selector: "", properties: {}, replacements: [] });

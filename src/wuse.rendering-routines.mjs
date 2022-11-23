@@ -67,12 +67,14 @@ export default class RenderingRoutines {
         child.replacements["attributes"].forEach(r => c = replacer(c, r));
         result += c;
       }
-      if (typeof child.content === "string") {
+      if (child.recursive) {
+        result += `>${this.renderChild(replacer, child.content)}</${child.tag}>`;
+      } else if (typeof child.content === "string") {
         let c = child.content;
         child.replacements["contents"].forEach(r => c = replacer(c, r));
         result += `>${child.encode ? htmlEncode(c) : c}</${child.tag}>`;
       } else {
-        result += "/>"
+        result += "/>";
       }
       return result;
     }

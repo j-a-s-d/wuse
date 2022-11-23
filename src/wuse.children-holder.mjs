@@ -24,6 +24,11 @@ export default class ChildrenHolder extends PartsHolder {
     if (this.last !== null) {
       this.last.version = this.version;
       this.last.replacements = this.#extractor(this.last);
+      let x = this.last;
+      while (x.recursive) {
+        x.content.replacements = this.#extractor(x.content);
+        x = x.content;
+      }
     }
     this.#updater(this);
     window.Wuse.DEBUG && this.owner.isMainIdentified() && this.#debug(this.owner, `children list version change: ${this.version}`);

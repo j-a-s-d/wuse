@@ -905,7 +905,12 @@
   };
   _extractContent = new WeakSet();
   extractContent_fn = function(result, input) {
-    const index = input.indexOf("=");
+    let index = input.indexOf(":=");
+    if (result.recursive = index > -1) {
+      result.content = makeChild(input.slice(index + 2));
+      return input.slice(0, index);
+    }
+    index = input.indexOf("=");
     if (index > -1) {
       result.content = input.slice(index + 1);
       if (!!result.content.length && result.content.charAt(0) === "&") {
@@ -990,6 +995,7 @@
     style: new window.Object(),
     events: new window.Array(),
     content: EMPTY_STRING,
+    recursive: false,
     encode: false
   });
   var makeState = () => ({ generation: 0, persisted: false });
@@ -1293,7 +1299,9 @@
       child.replacements["attributes"].forEach((r) => c = replacer(c, r));
       result += c;
     }
-    if (typeof child.content === "string") {
+    if (child.recursive) {
+      result += `>${_RenderingRoutines.renderChild(replacer, child.content)}</${child.tag}>`;
+    } else if (typeof child.content === "string") {
       let c = child.content;
       child.replacements["contents"].forEach((r) => c = replacer(c, r));
       result += `>${child.encode ? htmlEncode(c) : c}</${child.tag}>`;
@@ -1648,6 +1656,11 @@
         if (this.last !== null) {
           this.last.version = this.version;
           this.last.replacements = __privateGet(this, _extractor).call(this, this.last);
+          let x = this.last;
+          while (x.recursive) {
+            x.content.replacements = __privateGet(this, _extractor).call(this, x.content);
+            x = x.content;
+          }
         }
         __privateGet(this, _updater).call(this, this);
         window.Wuse.DEBUG && this.owner.isMainIdentified() && __privateGet(this, _debug).call(this, this.owner, `children list version change: ${this.version}`);
@@ -2979,7 +2992,7 @@
   ;
 
   // package.json
-  var version = "0.9.3";
+  var version = "0.9.4";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

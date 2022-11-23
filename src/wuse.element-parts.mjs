@@ -47,7 +47,12 @@ class ShorthandNotationParser {
   }
 
   static #extractContent(result, input) {
-    const index = input.indexOf("=");
+    let index = input.indexOf(":=");
+    if (result.recursive = index > -1) {
+      result.content = makeChild(input.slice(index + 2));
+      return input.slice(0, index);
+    }
+    index = input.indexOf("=");
     if (index > -1) {
       result.content = input.slice(index + 1);
       if (!!result.content.length && result.content.charAt(0) === '&') {
@@ -64,7 +69,7 @@ class ShorthandNotationParser {
     tmp.slice(1).map(item => {
       const [event, ...rest] = item.toLowerCase().split("+");
       const capture = (rest || EMPTY_ARRAY).indexOf("capture") > -1;
-      result.events.push(makeEvent(event, capture))
+      result.events.push(makeEvent(event, capture));
     });
     return tmp[0];
   }
@@ -185,7 +190,7 @@ const makeDefinition = () => ({
   tag: DEFAULT_TAG, id: EMPTY_STRING, classes: new window.Array(),
   attributes: new window.Object(), style: new window.Object(), events: new window.Array(),
   // =
-  content: EMPTY_STRING, encode: false
+  content: EMPTY_STRING, recursive: false, encode: false
 });
 
 const makeState = () => ({ generation: 0, persisted: false });

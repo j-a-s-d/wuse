@@ -110,10 +110,24 @@ export default new class {
   newChild = (tester, module, name) => {
     var r = module.newChild(undefined);
     tester.testResult(r === null, `<u>${name}</u> called with invalid values: <i>${r}</i>`);
+    r = module.newChild("");
+    tester.testResult(typeof r === "object" && r === null, `<u>${name}</u> called with an empty value: <i>${r}</i>`);
+    r = module.newChild("#test");
+    tester.testResult(typeof r === "object" && r.id === "test" && r.tag === "div", `<u>${name}</u> called with an only id value: <i>${r}</i>`);
     r = module.newChild("p#test.class1");
     tester.testResult(typeof r === "object" && r.id === "test" && r.classes.length === 1, `<u>${name}</u> called with valid values (tag and class): <i>${r}</i>`);
     r = module.newChild("p#test.class1[attribute1=test1|attribute2]");
     tester.testResult(typeof r === "object" && r.id === "test" && r.classes.length === 1 && Object.keys(r.attributes).length == 2, `<u>${name}</u> called with valid values (tag, class and attributes): <i>${r}</i>`);
+    r = module.newChild("span=123");
+    tester.testResult(typeof r === "object" && r.tag === "span" && !r.recursive && r.content === "123", `<u>${name}</u> called with valid values (tag and content): <i>${r}</i>`);
+    r = module.newChild("div:=span=123");
+    tester.testResult(typeof r === "object" && r.tag === "div" && r.recursive && typeof r.content === "object", `<u>${name}</u> called with a valid recursive value: <i>${r}</i>`);
+    r = module.newChild("div:=p:=span=123");
+    tester.testResult(typeof r === "object" && r.tag === "div" && r.recursive &&
+      typeof r.content === "object" && r.content.tag === "p" && r.content.recursive &&
+      typeof r.content.content === "object" && r.content.content.tag === "span" && r.content.content.content === "123",
+      `<u>${name}</u> called with a valid recursive value: <i>${r}</i>`
+    );
   }
 
   newDefinition = (tester, module, name) => {
