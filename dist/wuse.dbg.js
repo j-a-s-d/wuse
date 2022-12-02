@@ -2236,6 +2236,9 @@
       __privateGet(this, _options).rawContent ? __privateSet(this, _html, html + __privateGet(this, _html)) : RuntimeErrors3.onAllowHTML();
       return this;
     }
+    hasRawContent() {
+      return isNonEmptyString6(__privateGet(this, _html));
+    }
     lockCSSRules() {
       __privateGet(this, _rules).locked = true;
       return this;
@@ -2950,19 +2953,21 @@
   };
   var methods = {
     debug: (msg) => window.console.log("[WUSE:DEBUG]", msg),
-    blockUpdate: (task, arg) => {
+    blockUpdate: (task, onDone) => {
       if (isOf6(task, Function)) {
         if (window.Wuse.DEBUG)
-          window.Wuse.debug("blocking");
+          window.Wuse.debug("blocking rendering");
         window.Wuse.RENDERING = false;
         try {
-          task(arg);
-        } catch (e) {
-          throw e;
+          task();
+        } catch (err) {
+          throw err;
         } finally {
           window.Wuse.RENDERING = true;
           if (window.Wuse.DEBUG)
-            window.Wuse.debug("unblocking");
+            window.Wuse.debug("unblocking rendering");
+          if (isOf6(onDone, Function))
+            onDone();
         }
       }
     },
@@ -2983,7 +2988,7 @@
       static get elementCount() {
         return BaseElement.instancesCount;
       }
-    }, __publicField(_a2, "DEBUG", false), __publicField(_a2, "FATALS", false), __publicField(_a2, "MEASURE", false), __publicField(_a2, "RENDERING", true), __publicField(_a2, "hashRoutine", StringHashing.defaultRoutine), __publicField(_a2, "elementsStorage", new SimpleStorage()), __publicField(_a2, "tmp", null), __publicField(_a2, "WebHelpers", null), __publicField(_a2, "JsHelpers", null), __publicField(_a2, "PerformanceMeasurement", null), __publicField(_a2, "NonShadowElement", null), __publicField(_a2, "OpenShadowElement", null), __publicField(_a2, "ClosedShadowElement", null), __publicField(_a2, "debug", noop7), __publicField(_a2, "blockUpdate", noop7), __publicField(_a2, "register", noop7), __publicField(_a2, "instantiate", noop7), __publicField(_a2, "create", noop7), __publicField(_a2, "isShadowElement", noop7), (() => {
+    }, __publicField(_a2, "DEBUG", false), __publicField(_a2, "FATALS", false), __publicField(_a2, "MEASURE", false), __publicField(_a2, "RENDERING", true), __publicField(_a2, "hashRoutine", StringHashing.defaultRoutine), __publicField(_a2, "elementsStorage", new SimpleStorage()), __publicField(_a2, "tmp", null), __publicField(_a2, "WebHelpers", null), __publicField(_a2, "JsHelpers", null), __publicField(_a2, "PerformanceMeasurement", null), __publicField(_a2, "NonShadowElement", null), __publicField(_a2, "OpenShadowElement", null), __publicField(_a2, "ClosedShadowElement", null), __publicField(_a2, "debug", noop7), __publicField(_a2, "blockUpdate", noop7), __publicField(_a2, "htmlToShorthand", noop7), __publicField(_a2, "isShadowElement", noop7), __publicField(_a2, "register", noop7), __publicField(_a2, "create", noop7), (() => {
       InitializationRoutines.declareUnwritableMembers(_a2, { fields, methods });
       InitializationRoutines.detectFeatures(_a2);
       InitializationRoutines.initializeModules(_a2);
@@ -2992,7 +2997,7 @@
   ;
 
   // package.json
-  var version = "0.9.4";
+  var version = "0.9.5";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

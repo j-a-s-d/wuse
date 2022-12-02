@@ -24,8 +24,9 @@ Here is the list of 13 simple examples on how to use Wuse included in the distri
 
 ### Third Party
 
-Here is the list of 21 examples on how to use Wuse along third party libraries included in the distribution under the folder `examples/third-party`:
+Here is the list of 23 examples on how to use Wuse along third party libraries included in the distribution under the folder `examples/third-party`:
 
+* [`Animate_JsFunction_Sample`](third-party/Animate_JsFunction_Sample/index.html)
 * [`Bootstrap_Radiogroup_Sample`](third-party/Bootstrap_Radiogroup_Sample/index.html)
 * [`Bulma_Breadcrumb_Sample`](third-party/Bulma_Breadcrumb_Sample/index.html)
 * [`ChartJS_VerticalBars_Sample`](third-party/ChartJS_VerticalBars_Sample/index.html)
@@ -34,6 +35,7 @@ Here is the list of 21 examples on how to use Wuse along third party libraries i
 * [`Foundation_Accordion_Sample`](third-party/Foundation_Accordion_Sample/index.html)
 * [`jQueryUI_Datepicker_Sample`](third-party/jQueryUI_Datepicker_Sample/index.html)
 * [`Materialize_FloatingButton_Sample`](third-party/Materialize_FloatingButton_Sample/index.html)
+* [`MetroUI_ShortcutButton_Sample`](third-party/MetroUI_ShortcutButton_Sample/index.html)
 * [`MDL_ContactChip_Sample`](third-party/MDL_ContactChip_Sample/index.html)
 * [`Milligram_Form_Sample`](third-party/Milligram_Form_Sample/index.html)
 * [`Mini_MenuDrawer_Sample`](third-party/Mini_MenuDrawer_Sample/index.html)

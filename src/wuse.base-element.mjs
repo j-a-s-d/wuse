@@ -742,6 +742,10 @@ export default class BaseElement extends window.HTMLElement {
     return this;
   }
 
+  hasRawContent() {
+    return isNonEmptyString(this.#html);
+  }
+
   // CSS RULES
 
   lockCSSRules() {

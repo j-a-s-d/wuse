@@ -26,17 +26,18 @@ const fields = {
 
 const methods = {
   debug: msg => window.console.log("[WUSE:DEBUG]", msg),
-  blockUpdate: (task, arg) => {
+  blockUpdate: (task, onDone) => {
     if (isOf(task, Function)) {
-      if (window.Wuse.DEBUG) window.Wuse.debug("blocking");
+      if (window.Wuse.DEBUG) window.Wuse.debug("blocking rendering");
       window.Wuse.RENDERING = false;
       try {
-        task(arg);
-      } catch (e) {
-        throw e;
+        task();
+      } catch (err) {
+        throw err;
       } finally {
         window.Wuse.RENDERING = true;
-        if (window.Wuse.DEBUG) window.Wuse.debug("unblocking");
+        if (window.Wuse.DEBUG) window.Wuse.debug("unblocking rendering");
+        if (isOf(onDone, Function)) onDone();
       }
     }
   },
@@ -82,9 +83,9 @@ export default function makeCoreClass(version) { return class CoreClass {
 
   static tmp = null; // convenience temporary object
 
-  static WebHelpers = null; // utility web helpers
+  static WebHelpers = null; // utility web helpers module
 
-  static JsHelpers = null; // utility javascript helpers
+  static JsHelpers = null; // utility javascript helpers module
 
   static PerformanceMeasurement = null; // performance measurement module
 
@@ -98,13 +99,13 @@ export default function makeCoreClass(version) { return class CoreClass {
 
   static blockUpdate = noop; // wuse block update
 
+  static htmlToShorthand = noop; // element definition helper
+
+  static isShadowElement = noop; // shadow presence checker
+
   static register = noop; // element registration
 
-  static instantiate = noop; // element instantiation
-
   static create = noop; // element creation
-
-  static isShadowElement = noop; // shadow presence
 
   // WUSE INITILIZATION
 

@@ -13,8 +13,8 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 * no external dependencies (none in runtime and only esbuild if you want to build from source)
 * self-documenting api (descriptive "long" function names)
 * full unit testing (630+ tests cases)
-* markdown documentation [TODO]
-* [`extensive example library`](examaples/README.md) (36 demos: 13 simple samples and 23 with third party libraries)
+* [`markdown documentation`](docs/README.md) (public api) [IN-PROGRESS]
+* [`extensive example library`](examples/README.md) (36 demos: 13 simple samples and 23 with third party libraries)
 
 ## FEATURES
 
@@ -30,7 +30,7 @@ Wuse exposes a more natural way of working with the browser instead of hiding th
 
 Wuse gives you the power to control everything in your web development:
 
-	- allows all-in-one markup, styles and scripting definitions: you can define your custom element in a single es6 class file
+	- allows all-in-one markup, styles and scripting definitions: you can define your custom element in a single ES6 class file
 	- allows to retain control on the Element lifecycle: you can hook up to 14 different events
 	- allows optional field reactivity with free control on the behaviour: you can structure the code the way you want
 
@@ -40,6 +40,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.9.5] 2022-dec-02
+  - added `hasRawContent` to the `BaseElement`
+  - added `docs` directory with some initial documentation
 * [0.9.4] 2022-nov-23
   - added recursive element definition support via the walrus operator `:=`
   - added `Animate_JsFunction_Sample` demo

@@ -27,10 +27,14 @@ export default new class {
     tester.testModuleProperty(k, "debug", ["existence", "type:function"]);
     tester.testModuleProperty(k, "blockUpdate", ["existence", "type:function"]);
     tester.testModuleProperty(k, "register", ["existence", "type:function"]);
-    tester.testModuleProperty(k, "instantiate", ["existence", "type:function"]);
     tester.testModuleProperty(k, "create", ["existence", "type:function"]);
     tester.testModuleProperty(k, "isShadowElement", ["existence", "type:function"]);
-    tester.testModuleProperty(k, "htmlToShorthand", ["existence", "type:function"]);
+    tester.testModuleProperty(k, "htmlToShorthand", ["existence", "type:function"], this.htmlToShorthand);
+  }
+
+  htmlToShorthand = (tester, module, name) => {
+    let r = module.htmlToShorthand("<p>123</p>") === "p=123";
+    tester.testResult(r, `<u>${name}</u> got html translated to shorthand notation: <i>${r}</i>`);
   }
 
 }
