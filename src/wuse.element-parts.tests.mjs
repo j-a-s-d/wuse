@@ -128,6 +128,8 @@ export default new class {
       typeof r.content.content === "object" && r.content.content.tag === "span" && r.content.content.content === "123",
       `<u>${name}</u> called with a valid recursive value: <i>${r}</i>`
     );
+    r = module.newChild("svg");
+    tester.testResult(typeof r === "object" && r.svg === true && r.tag === "svg", `<u>${name}</u> called with an svg value: <i>${r}</i>`);
   }
 
   newDefinition = (tester, module, name) => {

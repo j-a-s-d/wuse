@@ -1,0 +1,36 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wuse | SVG_ForeignObject example</title>
+  <script src="../../../dist/wuse.min.js"></script>
+</head>
+<body>
+  <p>This is an adaptation of the <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Element/foreignObject" target="_blank">Mozilla's SVG foreignObject example</a>.</p>
+  <hr/>
+  <script>
+    class SVG_ForeignObject extends Wuse.ClosedShadowElement {
+
+      static { this.register() }
+
+      on_create() {
+        this
+          .setMainElement("svg[x=0|y=0|width=200|height=200|xmlns='http://www.w3.org/2000/svg']")
+          .appendChildElement("style=div { color: white; font: 18px serif; height: 100%; overflow: auto; }")
+          .appendChildElement("polygon[points='5,5 195,10 185,185 10,195']")
+          .appendChildElement("foreignObject[x=20|y=20|width=160|height=160]=~{foreignObjectContent}~")
+          .makeReactiveField("foreignObjectContent", "")
+      }
+
+    }
+
+    const svg = SVG_ForeignObject.create();
+    svg.foreignObjectContent = `<div xmlns='http://www.w3.org/1999/xhtml'>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mollis mollis mi ut ultricies. Nullam magna ipsum, porta vel dui convallis, rutrum imperdiet eros. Aliquam erat volutpat.
+    </div>`;
+  </script>
+</body>
+</html>
+

@@ -712,6 +712,7 @@ export default class BaseElement extends window.HTMLElement {
       if (isAssignedObject(tmp.style)) def.style = tmp.style;
       if (isAssignedObject(tmp.attributes)) def.attributes = tmp.attributes;
       if (isNonEmptyArray(tmp.events)) def.events = tmp.events;
+      def.svg = tmp.svg;
     }
     return this;
   }

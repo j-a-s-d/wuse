@@ -14,7 +14,7 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 * self-documenting api (descriptive "long" function names)
 * full unit testing (630+ tests cases)
 * [`markdown documentation`](docs/README.md) (public api) [IN-PROGRESS]
-* [`extensive example library`](examples/README.md) (36 demos: 13 simple samples and 23 with third party libraries)
+* [`extensive example library`](examples/README.md) (37 demos: 14 simple samples and 23 with third party libraries)
 
 ## FEATURES
 
@@ -40,6 +40,10 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.9.6] 2022-dec-30
+  - improved SVG support
+  - added `SVG_ForeignObject` demo
+  - added `test.unim` ubernim file to serve testing with enhanced capabilities (that means support for the `SHUTDOWN` button in the `tests.html` file)
 * [0.9.5] 2022-dec-02
   - added `hasRawContent` to the `BaseElement`
   - added `docs` directory with some initial documentation

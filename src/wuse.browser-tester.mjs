@@ -18,6 +18,7 @@ const present = (element =>
     .error { background-color: red }
     .total { background-color: navy }
     .top { float: right }
+    .hidden { display: none }
   </style>
 `))();
 
@@ -43,11 +44,30 @@ export let pendingTests = 0;
 export let publishedTests = 0;
 export let totals = { ok: 0, error: 0 };
 
+const makeShuwdownResourceRequest = method => {
+  let xhr = new XMLHttpRequest();
+  xhr.open(method, window.location.origin + "/shutdown");
+  return xhr;
+}
+
+window.shutdown = () => {
+  window.document.body.innerHTML = "<h1>SHUTTING DOWN...</h1>";
+  let xhr = makeShuwdownResourceRequest("GET");
+  xhr.onreadystatechange = () => window.document.body.innerHTML = "<h1><u>DONE</u></h1><h2>You can close this browser window.<h2>";
+  xhr.send();
+}
+
+let shutdownButton = "";
+
+let xhr = makeShuwdownResourceRequest("HEAD");
+xhr.onreadystatechange = () => { if (xhr.readyState === XMLHttpRequest.DONE && xhr.status !== 404) shutdownButton = "<a href='javascript:shutdown()' class='top'>SHUTDOWN</a>"; };
+xhr.send();
+
 const presentResults = () => {
   var links = "";
   window.fileList.forEach(file => links += ` ${!!links.length ? "|" : ""} <a href="#${file}">${file.replace("./wuse.", "").replace(".mjs", "")}</a>`);
   present(`
-    <h1><b class='total'>[WUSE:TESTS] Total: ${totals.ok + totals.error} (ok: ${totals.ok}, error: ${totals.error})</b></h1>
+    <h1><b class='total'>[WUSE:TESTS] Total: ${totals.ok + totals.error} (ok: ${totals.ok}, error: ${totals.error})</b>${shutdownButton}</h1>
     ${links}
   `, true);
 };

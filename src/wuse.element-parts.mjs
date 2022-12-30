@@ -190,7 +190,7 @@ const makeDefinition = () => ({
   tag: DEFAULT_TAG, id: EMPTY_STRING, classes: new window.Array(),
   attributes: new window.Object(), style: new window.Object(), events: new window.Array(),
   // =
-  content: EMPTY_STRING, recursive: false, encode: false
+  content: EMPTY_STRING, recursive: false, encode: false, svg: false
 });
 
 const makeState = () => ({ generation: 0, persisted: false });
@@ -205,6 +205,7 @@ const makeChild = shorthandNotation => {
   result.custom = result.kind === DEFAULT_KIND && isCustomTag(result.tag); /*&& result.tag !== TEXTNODE_TAG*/
   result.hash = hash(shorthandNotation);
   //result.rules = new window.Array();
+  result.svg = result.tag === "svg";
   result.included = true;
   result.cache = null;
   return result;
@@ -233,7 +234,7 @@ const createMainNode = definition => {
   if (!isAssignedObject(definition)) {
     return null;
   }
-  let result = window.document.createElement(definition.tag);
+  let result = definition.svg ? window.document.createElementNS("http://www.w3.org/2000/svg", definition.tag) : window.document.createElement(definition.tag);
   if (!!definition.id.length) {
     result.setAttribute("id", definition.id);
   }

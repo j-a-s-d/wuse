@@ -11,13 +11,9 @@ export default class InitializationRoutines {
 
   static detectFeatures(instance) {
     const detectFeature = (flag, msg) => !flag && RuntimeErrors.UNSUPPORTED_FEATURE.emit(msg);
-    try {
-      detectFeature(isOf(window.document, window.HTMLDocument), "HTML Document");
-      detectFeature(isOf(window.customElements, window.CustomElementRegistry), "Custom Elements");
-      instance.WebHelpers.onDOMContentLoaded(() => detectFeature(isOf(window.document.body.attachShadow, window.Function), "Shadow DOM"));
-    } catch (e) {
-      RuntimeErrors.UNKNOWN_ERROR.emit();
-    }
+    detectFeature(isOf(window.document, window.HTMLDocument), "HTML Document"); // for example, won't work with a root SVG and foreingObject
+    detectFeature(isOf(window.customElements, window.CustomElementRegistry), "Custom Elements");
+    instance.WebHelpers.onDOMContentLoaded(() => detectFeature(isOf(window.document.body.attachShadow, window.Function), "Shadow DOM"));
   }
 
   static initializeModules(instance) {

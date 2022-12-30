@@ -996,7 +996,8 @@
     events: new window.Array(),
     content: EMPTY_STRING,
     recursive: false,
-    encode: false
+    encode: false,
+    svg: false
   });
   var makeState = () => ({ generation: 0, persisted: false });
   var makeEvent = (kind, capture) => typeof kind === "string" && typeof capture === "boolean" ? { kind, capture } : null;
@@ -1007,6 +1008,7 @@
     }
     result.custom = result.kind === DEFAULT_KIND && isCustomTag(result.tag);
     result.hash = hash2(shorthandNotation);
+    result.svg = result.tag === "svg";
     result.included = true;
     result.cache = null;
     return result;
@@ -1033,7 +1035,7 @@
     if (!isAssignedObject3(definition)) {
       return null;
     }
-    let result = window.document.createElement(definition.tag);
+    let result = definition.svg ? window.document.createElementNS("http://www.w3.org/2000/svg", definition.tag) : window.document.createElement(definition.tag);
     if (!!definition.id.length) {
       result.setAttribute("id", definition.id);
     }
@@ -2214,6 +2216,7 @@
           def.attributes = tmp.attributes;
         if (isNonEmptyArray3(tmp.events))
           def.events = tmp.events;
+        def.svg = tmp.svg;
       }
       return this;
     }
@@ -2741,13 +2744,9 @@
   var InitializationRoutines = class {
     static detectFeatures(instance) {
       const detectFeature = (flag, msg) => !flag && RuntimeErrors.UNSUPPORTED_FEATURE.emit(msg);
-      try {
-        detectFeature(isOf5(window.document, window.HTMLDocument), "HTML Document");
-        detectFeature(isOf5(window.customElements, window.CustomElementRegistry), "Custom Elements");
-        instance.WebHelpers.onDOMContentLoaded(() => detectFeature(isOf5(window.document.body.attachShadow, window.Function), "Shadow DOM"));
-      } catch (e) {
-        RuntimeErrors.UNKNOWN_ERROR.emit();
-      }
+      detectFeature(isOf5(window.document, window.HTMLDocument), "HTML Document");
+      detectFeature(isOf5(window.customElements, window.CustomElementRegistry), "Custom Elements");
+      instance.WebHelpers.onDOMContentLoaded(() => detectFeature(isOf5(window.document.body.attachShadow, window.Function), "Shadow DOM"));
     }
     static initializeModules(instance) {
       instance.PerformanceMeasurement.initialize((stopWatch, event) => instance.debug(JSON.stringify(buildArray6((data) => {
@@ -2997,7 +2996,7 @@
   ;
 
   // package.json
-  var version = "0.9.5";
+  var version = "0.9.6";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

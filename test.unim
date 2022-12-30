@@ -1,0 +1,34 @@
+# run wuse tests using ubernim (https://github.com/j-a-s-d/ubernim)
+
+.unim:destination tmp
+.nimc:project test.nim
+.nimc:switch -r
+
+.imports
+  asyncdispatch
+  xam
+  webrod
+.end
+
+.routine shutdownHandler(req: HttpRequest)
+.pragmas async, gcsafe
+.code
+  discard req.replyOkAsText("")
+  discard req.getStand().close()
+.end
+
+.routine listen(port: int)
+.code
+  let host: HttpHost = newHttpHost()
+  host.setPort(port)
+  host.registerMimeType(".mjs", "application/javascript")
+  host.enableStaticFileServing("/", "src")
+  host.registerHandler("/shutdown", shutdownHandler)
+  host.start()
+.end
+
+listen 5555
+.exec sleep 3s && xdg-open http://127.0.0.1:5555/tests.html &
+
+.unim:cleanup performed
+
