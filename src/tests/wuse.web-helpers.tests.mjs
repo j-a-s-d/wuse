@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.web-helpers.mjs"
+  file = "../wuse.web-helpers.mjs"
 
   suite = (tester, module) => {
     tester.testModuleFunction(module, "onDOMContentLoaded", ["existence", "type:undefined"], this.onDOMContentLoaded);

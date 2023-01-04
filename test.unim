@@ -1,4 +1,7 @@
-# run wuse tests using ubernim (https://github.com/j-a-s-d/ubernim)
+# serve wuse tests using:
+# + ubernim 0.8.0 or superior (https://github.com/j-a-s-d/ubernim)
+# + xam 1.9.4 or superior (https://github.com/j-a-s-d/xam)
+# + webrod 0.5.1 or superior (https://github.com/j-a-s-d/webrod)
 
 .unim:destination tmp
 .nimc:project test.nim
@@ -17,18 +20,19 @@
   discard req.getStand().close()
 .end
 
-.routine listen(port: int)
+.routine serveTests(port: int, folder: string)
 .code
   let host: HttpHost = newHttpHost()
   host.setPort(port)
   host.registerMimeType(".mjs", "application/javascript")
-  host.enableStaticFileServing("/", "src")
+  host.setIndexFile("index.html")
+  host.enableStaticFileServing("/", folder)
   host.registerHandler("/shutdown", shutdownHandler)
   host.start()
 .end
 
-listen 5555
-.exec sleep 3s && xdg-open http://127.0.0.1:5555/tests.html &
+serveTests(5555, "src")
+.exec sleep 3s && xdg-open http://127.0.0.1:5555/tests/ &
 
 .unim:cleanup performed
 

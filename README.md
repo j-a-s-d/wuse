@@ -40,6 +40,9 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.9.7] 2023-jan-04
+  - added `getRawContent` to the `BaseElement`
+  - moved testing related files into `tests` subdirectory inside `src` directory
 * [0.9.6] 2022-dec-30
   - improved SVG support
   - added `SVG_ForeignObject` demo

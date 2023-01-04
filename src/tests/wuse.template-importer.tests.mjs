@@ -4,7 +4,7 @@ const childRemover = id => (el => el.parentElement.removeChild(el))(window.docum
 
 export default new class {
 
-  file = "./wuse.template-importer.mjs"
+  file = "../wuse.template-importer.mjs"
 
   suite = (tester, module) => {
     tester.testClassModule(module, "TemplateImporter", ["existence", "type:function"], this.TemplateImporter);

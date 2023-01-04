@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.state-manager.mjs"
+  file = "../wuse.state-manager.mjs"
 
   suite = (tester, module) => {
     tester.testClassModule(module, "StateManager", ["existence", "type:function"], this.StateManager);

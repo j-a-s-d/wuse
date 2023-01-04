@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.performance-measurement.mjs"
+  file = "../wuse.performance-measurement.mjs"
 
   suite = (tester, module) => {
     tester.testClassModule(module, "PerformanceMeasurement", ["existence", "type:function"], this.PerformanceMeasurement);

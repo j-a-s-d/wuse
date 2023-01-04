@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.core-class.mjs"
+  file = "../wuse.core-class.mjs"
 
   suite = (tester, module) => {
     const name = "CoreClass";

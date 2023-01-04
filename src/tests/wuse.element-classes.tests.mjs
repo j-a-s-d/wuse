@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.element-classes.mjs"
+  file = "../wuse.element-classes.mjs"
 
   suite = (tester, module) => {
     tester.testClassModule(module, "ElementClasses", ["existence", "type:function"], this.ElementClasses);

@@ -5,40 +5,40 @@
   <title>Wuse | BrowserTester tests</title>
   <link rel="icon" href="data:;base64,=">
   <script type="module">
-    import * as tester from "/wuse.browser-tester.mjs";
+    import * as tester from "./wuse.browser-tester.mjs";
     let modules = new Array();
 
-    import RuntimeErrorsTests from "/wuse.runtime-errors.tests.mjs";
+    import RuntimeErrorsTests from "./wuse.runtime-errors.tests.mjs";
     modules.push(RuntimeErrorsTests);
 
-    import WebHelpersTests from "/wuse.web-helpers.tests.mjs";
+    import WebHelpersTests from "./wuse.web-helpers.tests.mjs";
     modules.push(WebHelpersTests);
 
-    import JsHelpersTests from "/wuse.javascript-helpers.tests.mjs";
+    import JsHelpersTests from "./wuse.javascript-helpers.tests.mjs";
     modules.push(JsHelpersTests);
 
-    import EqualityAnalyzerTests from "/wuse.equality-analyzer.tests.mjs";
+    import EqualityAnalyzerTests from "./wuse.equality-analyzer.tests.mjs";
     modules.push(EqualityAnalyzerTests);
 
-    import SimpleStorageTests from "/wuse.simple-storage.tests.mjs";
+    import SimpleStorageTests from "./wuse.simple-storage.tests.mjs";
     modules.push(SimpleStorageTests);
 
-    import NodeManagerTests from "/wuse.node-manager.tests.mjs";
+    import NodeManagerTests from "./wuse.node-manager.tests.mjs";
     modules.push(NodeManagerTests);
 
-    import ContentManagerTests from "/wuse.content-manager.tests.mjs";
+    import ContentManagerTests from "./wuse.content-manager.tests.mjs";
     modules.push(ContentManagerTests);
 
-    import PerformanceMeasurementTests from "/wuse.performance-measurement.tests.mjs";
+    import PerformanceMeasurementTests from "./wuse.performance-measurement.tests.mjs";
     modules.push(PerformanceMeasurementTests);
 
-    import ElementClassesTests from "/wuse.element-classes.tests.mjs";
+    import ElementClassesTests from "./wuse.element-classes.tests.mjs";
     modules.push(ElementClassesTests);
 
-    import TemplateImporterTests from "/wuse.template-importer.tests.mjs";
+    import TemplateImporterTests from "./wuse.template-importer.tests.mjs";
     modules.push(TemplateImporterTests);
 
-    import RenderingRoutinesTests from "/wuse.rendering-routines.tests.mjs";
+    import RenderingRoutinesTests from "./wuse.rendering-routines.tests.mjs";
     modules.push(RenderingRoutinesTests);
 
     import TextReplacementsTests from "./wuse.text-replacements.tests.mjs";
@@ -59,13 +59,13 @@
     import ElementEventsTests from "./wuse.element-events.tests.mjs";
     modules.push(ElementEventsTests);
 
-    import StateManagerTests from "/wuse.state-manager.tests.mjs";
+    import StateManagerTests from "./wuse.state-manager.tests.mjs";
     modules.push(StateManagerTests);
 
-    import ReactiveFieldTests from "/wuse.reactive-field.tests.mjs";
+    import ReactiveFieldTests from "./wuse.reactive-field.tests.mjs";
     modules.push(ReactiveFieldTests);
 
-    import CoreClassTests from "/wuse.core-class.tests.mjs";
+    import CoreClassTests from "./wuse.core-class.tests.mjs";
     modules.push(CoreClassTests);
 
     tester.testModules(modules);

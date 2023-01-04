@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.runtime-errors.mjs"
+  file = "../wuse.runtime-errors.mjs"
 
   suite = (tester, module) => {
     [

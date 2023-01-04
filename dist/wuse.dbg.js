@@ -1956,21 +1956,22 @@
       });
       __privateAdd(this, _waste, makeWasteAnalyzers());
       __privateAdd(this, _measurement, makePerformanceWatches());
+      const gww = window.Wuse;
       defineReadOnlyMembers(this, {
         info: {
           instanceNumber: ++_BaseElement.instancesCount,
           unmodifiedRounds: 0,
           updatedRounds: 0
         },
-        render: () => window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _revise, revise_fn).call(this, true),
-        redraw: () => window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _revise, revise_fn).call(this, false),
+        render: () => gww.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _revise, revise_fn).call(this, true),
+        redraw: () => gww.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _revise, revise_fn).call(this, false),
         suspendRender: () => {
           __privateSet(this, _rendering, false);
           return this;
         },
         resumeRender: (autorender = true) => {
           __privateSet(this, _rendering, true);
-          autorender && window.Wuse.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _revise, revise_fn).call(this, true);
+          autorender && gww.RENDERING && __privateGet(this, _rendering) && __privateGet(this, _binded) && __privateMethod(this, _revise, revise_fn).call(this, true);
           return this;
         },
         isRenderSuspended: () => !__privateGet(this, _rendering)
@@ -2019,19 +2020,21 @@
       return false;
     }
     connectedCallback() {
-      window.Wuse.MEASURE && __privateGet(this, _measurement).attachment.start();
+      const gww = window.Wuse;
+      gww.MEASURE && __privateGet(this, _measurement).attachment.start();
       const evs = __privateGet(this, _elementEvents);
       evs.detect();
       evs.immediateTrigger("on_connect");
       __privateMethod(this, _inject, inject_fn).call(this, evs, "on_load");
-      window.Wuse.MEASURE && __privateGet(this, _measurement).attachment.stop(window.Wuse.DEBUG);
+      gww.MEASURE && __privateGet(this, _measurement).attachment.stop(gww.DEBUG);
     }
     disconnectedCallback() {
-      window.Wuse.MEASURE && __privateGet(this, _measurement).dettachment.start();
+      const gww = window.Wuse;
+      gww.MEASURE && __privateGet(this, _measurement).dettachment.start();
       __privateMethod(this, _bind, bind_fn).call(this, false);
       __privateGet(this, _elementEvents).immediateTrigger("on_disconnect");
       __privateGet(this, _stateManager).writeState();
-      window.Wuse.MEASURE && __privateGet(this, _measurement).dettachment.stop(window.Wuse.DEBUG);
+      gww.MEASURE && __privateGet(this, _measurement).dettachment.stop(gww.DEBUG);
     }
     deriveChildrenStoreKey(value) {
       __privateGet(this, _options).autokeyChildren = value;
@@ -2241,6 +2244,9 @@
     }
     hasRawContent() {
       return isNonEmptyString6(__privateGet(this, _html));
+    }
+    getRawContent() {
+      return __privateGet(this, _html);
     }
     lockCSSRules() {
       __privateGet(this, _rules).locked = true;
@@ -2954,17 +2960,18 @@
     debug: (msg) => window.console.log("[WUSE:DEBUG]", msg),
     blockUpdate: (task, onDone) => {
       if (isOf6(task, Function)) {
-        if (window.Wuse.DEBUG)
-          window.Wuse.debug("blocking rendering");
-        window.Wuse.RENDERING = false;
+        const gww = window.Wuse;
+        if (gww.DEBUG)
+          gww.debug("blocking rendering");
+        gww.RENDERING = false;
         try {
           task();
         } catch (err) {
           throw err;
         } finally {
-          window.Wuse.RENDERING = true;
-          if (window.Wuse.DEBUG)
-            window.Wuse.debug("unblocking rendering");
+          gww.RENDERING = true;
+          if (gww.DEBUG)
+            gww.debug("unblocking rendering");
           if (isOf6(onDone, Function))
             onDone();
         }
@@ -2996,7 +3003,7 @@
   ;
 
   // package.json
-  var version = "0.9.6";
+  var version = "0.9.7";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

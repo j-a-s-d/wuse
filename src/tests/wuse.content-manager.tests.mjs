@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.content-manager.mjs"
+  file = "../wuse.content-manager.mjs"
 
   suite = (tester, module) => {
     tester.testClassModule(module, "ContentManager", ["existence", "type:function"], this.ContentManager);

@@ -28,15 +28,16 @@ const methods = {
   debug: msg => window.console.log("[WUSE:DEBUG]", msg),
   blockUpdate: (task, onDone) => {
     if (isOf(task, Function)) {
-      if (window.Wuse.DEBUG) window.Wuse.debug("blocking rendering");
-      window.Wuse.RENDERING = false;
+      const gww = window.Wuse;
+      if (gww.DEBUG) gww.debug("blocking rendering");
+      gww.RENDERING = false;
       try {
         task();
       } catch (err) {
         throw err;
       } finally {
-        window.Wuse.RENDERING = true;
-        if (window.Wuse.DEBUG) window.Wuse.debug("unblocking rendering");
+        gww.RENDERING = true;
+        if (gww.DEBUG) gww.debug("unblocking rendering");
         if (isOf(onDone, Function)) onDone();
       }
     }

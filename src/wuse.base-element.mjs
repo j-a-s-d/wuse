@@ -416,21 +416,22 @@ export default class BaseElement extends window.HTMLElement {
 
   constructor(mode) {
     super();
+    const gww = window.Wuse;
     defineReadOnlyMembers(this, {
       info: {
         instanceNumber: ++BaseElement.instancesCount,
         unmodifiedRounds: 0,
         updatedRounds: 0
       },
-      render: () => window.Wuse.RENDERING && this.#rendering && this.#binded && this.#revise(true),
-      redraw: () => window.Wuse.RENDERING && this.#rendering && this.#binded && this.#revise(false),
+      render: () => gww.RENDERING && this.#rendering && this.#binded && this.#revise(true),
+      redraw: () => gww.RENDERING && this.#rendering && this.#binded && this.#revise(false),
       suspendRender: () => {
         this.#rendering = false;
         return this;
       },
       resumeRender: (autorender = true) => {
         this.#rendering = true;
-        autorender && window.Wuse.RENDERING && this.#rendering && this.#binded && this.#revise(true);
+        autorender && gww.RENDERING && this.#rendering && this.#binded && this.#revise(true);
         return this;
       },
       isRenderSuspended: () => !this.#rendering
@@ -492,20 +493,22 @@ export default class BaseElement extends window.HTMLElement {
   // NODE EVENTS
 
   connectedCallback() {
-    window.Wuse.MEASURE && this.#measurement.attachment.start();
+    const gww = window.Wuse;
+    gww.MEASURE && this.#measurement.attachment.start();
     const evs = this.#elementEvents;
     evs.detect();
     evs.immediateTrigger("on_connect");
     this.#inject(evs, "on_load");
-    window.Wuse.MEASURE && this.#measurement.attachment.stop(window.Wuse.DEBUG);
+    gww.MEASURE && this.#measurement.attachment.stop(gww.DEBUG);
   }
 
   disconnectedCallback() {
-    window.Wuse.MEASURE && this.#measurement.dettachment.start();
+    const gww = window.Wuse;
+    gww.MEASURE && this.#measurement.dettachment.start();
     this.#bind(false);
     this.#elementEvents.immediateTrigger("on_disconnect");
     this.#stateManager.writeState();
-    window.Wuse.MEASURE && this.#measurement.dettachment.stop(window.Wuse.DEBUG);
+    gww.MEASURE && this.#measurement.dettachment.stop(gww.DEBUG);
   }
 
   // ELEMENT OPTIONS
@@ -745,6 +748,10 @@ export default class BaseElement extends window.HTMLElement {
 
   hasRawContent() {
     return isNonEmptyString(this.#html);
+  }
+
+  getRawContent() {
+    return this.#html;
   }
 
   // CSS RULES

@@ -2,7 +2,7 @@
 
 export default new class {
 
-  file = "./wuse.rendering-routines.mjs"
+  file = "../wuse.rendering-routines.mjs"
 
   suite = (tester, module) => {
     tester.testClassModule(module, "RenderingRoutines", ["existence", "type:function"], this.RenderingRoutines);
