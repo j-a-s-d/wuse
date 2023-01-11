@@ -6,7 +6,7 @@ Following, the examples on how to use Wuse included in the distribution under th
 
 ### Simple Samples
 
-Here is the list of 14 simple examples on how to use Wuse included in the distribution under the folder `examples/simple-samples`:
+Here is the list of 15 simple examples on how to use Wuse included in the distribution under the folder `examples/simple-samples`:
 
 * [`Canvas Text Wrapper`](simple-samples/Canvas_Text_Wrapper/index.html)
 * [`Command Line`](simple-samples/Command_Line/index.html)
@@ -18,6 +18,7 @@ Here is the list of 14 simple examples on how to use Wuse included in the distri
 * [`Progressive List`](simple-samples/Progressive_List/index.html)
 * [`Regular vs Reactive`](simple-samples/Regular_vs_Reactive/index.html)
 * [`Simple Button`](simple-samples/Simple_Button/index.html)
+* [`Spinner Panel`](simple-samples/Spinner_Panel/index.html)
 * [`SVG_ForeignObject`](simple-samples/SVG_ForeignObject/index.html)
 * [`Templates And Slots`](simple-samples/Templates_And_Slots/index.html)
 * [`Transfer Child`](simple-samples/Transfer_Child/index.html)

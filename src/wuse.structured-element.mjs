@@ -67,7 +67,7 @@ const makeWasteAnalyzers = () => ({
   style: new EqualityAnalyzer(window.Wuse.hashRoutine)
 });
 
-export default class BaseElement extends window.HTMLElement {
+export default class StructuredElement extends window.HTMLElement {
 
   // INSTANCE
 
@@ -419,7 +419,7 @@ export default class BaseElement extends window.HTMLElement {
     const gww = window.Wuse;
     defineReadOnlyMembers(this, {
       info: {
-        instanceNumber: ++BaseElement.instancesCount,
+        instanceNumber: ++StructuredElement.instancesCount,
         unmodifiedRounds: 0,
         updatedRounds: 0
       },

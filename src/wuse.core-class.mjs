@@ -12,16 +12,16 @@ import WuseElementClasses from './wuse.element-classes.mjs';
 import WusePerformanceMeasurement from './wuse.performance-measurement.mjs';
 import WuseSimpleStorage from './wuse.simple-storage.mjs';
 import WuseStringHashing from './wuse.string-hashing.mjs';
-import WuseBaseElement from './wuse.base-element.mjs';
+import WuseStructuredElement from './wuse.structured-element.mjs';
 
 const fields = {
   tmp: new window.Object(),
   WebHelpers: WuseWebHelpers,
   JsHelpers: WuseJsHelpers,
   PerformanceMeasurement: WusePerformanceMeasurement,
-  NonShadowElement: specializeClass(WuseBaseElement, REGULAR),
-  OpenShadowElement: specializeClass(WuseBaseElement, OPEN),
-  ClosedShadowElement: specializeClass(WuseBaseElement, CLOSED)
+  NonShadowElement: specializeClass(WuseStructuredElement, REGULAR),
+  OpenShadowElement: specializeClass(WuseStructuredElement, OPEN),
+  ClosedShadowElement: specializeClass(WuseStructuredElement, CLOSED)
 };
 
 const methods = {
@@ -62,7 +62,7 @@ export default function makeCoreClass(version) { return class CoreClass {
 
   static get VERSION() { return version; } // version number
 
-  static get elementCount() { return WuseBaseElement.instancesCount; } // element count
+  static get elementCount() { return WuseStructuredElement.instancesCount; } // element count
 
   // GLOBAL FLAGS
 

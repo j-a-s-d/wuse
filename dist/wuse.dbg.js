@@ -1773,7 +1773,7 @@
   _equal = new WeakMap();
   _analyzer = new WeakMap();
 
-  // src/wuse.base-element.mjs
+  // src/wuse.structured-element.mjs
   var _html, _rules, _children, _fields, _reactives, _options, _parameters, _elementEvents, _initialized, _identified, _slotted, _styled, _shadowed, _main, _style, _root, _inserted, _binded, _rendering, _filiatedKeys, _stateReader, _stateWriter, _stateManager, _binder, _unbinder, _makeBindingPerformers, _makeBindingHandlers, _contents, _waste, _measurement, _insertStyle, insertStyle_fn, _insertMain, insertMain_fn, _extirpateElements, extirpateElements_fn, _bind, bind_fn, _clearContents, clearContents_fn, _prepareContents, prepareContents_fn, _commitContents, commitContents_fn, _render, render_fn, _inject, inject_fn, _redraw, redraw_fn, _revise, revise_fn, _fieldRender, fieldRender_fn, _createField, createField_fn, _validateField, validateField_fn, _filiateChild, filiateChild_fn;
   var { EMPTY_STRING: EMPTY_STRING2, noop: noop6, ensureFunction: ensureFunction7, isOf: isOf4, isAssignedObject: isAssignedObject7, isAssignedArray: isAssignedArray5, isNonEmptyArray: isNonEmptyArray3, isNonEmptyString: isNonEmptyString6, forcedStringSplit: forcedStringSplit2, forEachOwnProperty: forEachOwnProperty3, buildArray: buildArray5, defineReadOnlyMembers } = JavascriptHelpers;
   var { removeChildren, isHTMLAttribute } = WebHelpers;
@@ -1818,7 +1818,7 @@
     main: new EqualityAnalyzer(window.Wuse.hashRoutine),
     style: new EqualityAnalyzer(window.Wuse.hashRoutine)
   });
-  var _BaseElement = class extends window.HTMLElement {
+  var _StructuredElement = class extends window.HTMLElement {
     constructor(mode) {
       super();
       __privateAdd(this, _insertStyle);
@@ -1959,7 +1959,7 @@
       const gww = window.Wuse;
       defineReadOnlyMembers(this, {
         info: {
-          instanceNumber: ++_BaseElement.instancesCount,
+          instanceNumber: ++_StructuredElement.instancesCount,
           unmodifiedRounds: 0,
           updatedRounds: 0
         },
@@ -2535,7 +2535,7 @@
       });
     }
   };
-  var BaseElement = _BaseElement;
+  var StructuredElement = _StructuredElement;
   _html = new WeakMap();
   _rules = new WeakMap();
   _children = new WeakMap();
@@ -2743,7 +2743,7 @@
     }
     return tmp;
   };
-  __publicField(BaseElement, "instancesCount", 0);
+  __publicField(StructuredElement, "instancesCount", 0);
 
   // src/wuse.initialization-routines.mjs
   var { defineReadOnlyMembers: defineReadOnlyMembers2, isOf: isOf5, buildArray: buildArray6 } = JavascriptHelpers;
@@ -2780,7 +2780,7 @@
         onInvalidClass: RuntimeErrors.INVALID_CLASS.emit,
         onDeferredInstantiation: instance.WebHelpers.onDOMContentLoaded
       });
-      BaseElement.initialize({
+      StructuredElement.initialize({
         onAllowHTML: RuntimeErrors.ALLOW_HTML.emit,
         onInvalidKey: RuntimeErrors.INVALID_KEY.emit,
         onInvalidDefinition: RuntimeErrors.INVALID_DEFINITION.emit,
@@ -2952,9 +2952,9 @@
     WebHelpers,
     JsHelpers: JavascriptHelpers,
     PerformanceMeasurement,
-    NonShadowElement: specializeClass(BaseElement, REGULAR2),
-    OpenShadowElement: specializeClass(BaseElement, OPEN),
-    ClosedShadowElement: specializeClass(BaseElement, CLOSED)
+    NonShadowElement: specializeClass(StructuredElement, REGULAR2),
+    OpenShadowElement: specializeClass(StructuredElement, OPEN),
+    ClosedShadowElement: specializeClass(StructuredElement, CLOSED)
   };
   var methods = {
     debug: (msg) => window.console.log("[WUSE:DEBUG]", msg),
@@ -2992,7 +2992,7 @@
         return version2;
       }
       static get elementCount() {
-        return BaseElement.instancesCount;
+        return StructuredElement.instancesCount;
       }
     }, __publicField(_a2, "DEBUG", false), __publicField(_a2, "FATALS", false), __publicField(_a2, "MEASURE", false), __publicField(_a2, "RENDERING", true), __publicField(_a2, "hashRoutine", StringHashing.defaultRoutine), __publicField(_a2, "elementsStorage", new SimpleStorage()), __publicField(_a2, "tmp", null), __publicField(_a2, "WebHelpers", null), __publicField(_a2, "JsHelpers", null), __publicField(_a2, "PerformanceMeasurement", null), __publicField(_a2, "NonShadowElement", null), __publicField(_a2, "OpenShadowElement", null), __publicField(_a2, "ClosedShadowElement", null), __publicField(_a2, "debug", noop7), __publicField(_a2, "blockUpdate", noop7), __publicField(_a2, "htmlToShorthand", noop7), __publicField(_a2, "isShadowElement", noop7), __publicField(_a2, "register", noop7), __publicField(_a2, "create", noop7), (() => {
       InitializationRoutines.declareUnwritableMembers(_a2, { fields, methods });
@@ -3003,7 +3003,7 @@
   ;
 
   // package.json
-  var version = "0.9.7";
+  var version = "0.9.8";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

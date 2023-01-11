@@ -6,5 +6,6 @@ Following, the documents on how to use Wuse included in the distribution under t
 
 ### Public API
 
-* [`Wuse Core`](CORE.md)
+* [`Core Class`](CORE.md)
+* [`Structured Element`](STRUCTURED.md)
 

@@ -3,7 +3,7 @@
 import RuntimeErrors from './wuse.runtime-errors.mjs';
 import TemplateImporter from './wuse.template-importer.mjs';
 import ElementClasses from './wuse.element-classes.mjs';
-import BaseElement from './wuse.base-element.mjs';
+import StructuredElement from './wuse.structured-element.mjs';
 import JsHelpers from './wuse.javascript-helpers.mjs';
 const { defineReadOnlyMembers, isOf, buildArray } = JsHelpers;
 
@@ -42,7 +42,7 @@ export default class InitializationRoutines {
       onInvalidClass: RuntimeErrors.INVALID_CLASS.emit,
       onDeferredInstantiation: instance.WebHelpers.onDOMContentLoaded
     });
-    BaseElement.initialize({
+    StructuredElement.initialize({
       onAllowHTML: RuntimeErrors.ALLOW_HTML.emit,
       onInvalidKey: RuntimeErrors.INVALID_KEY.emit,
       onInvalidDefinition: RuntimeErrors.INVALID_DEFINITION.emit,
