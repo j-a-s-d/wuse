@@ -9,7 +9,7 @@
 <body style="margin: 4em">
   <input id="btnShowBW3s" type="button" value="Show in for 3 secs"/>
   <br/><br/>
-  <input id="btnShowRY5s" type="button" value="Show in for 5 secs with Text"/>
+  <input id="btnShowRY5s" type="button" value="Show in for 5 secs with Text and reversed rotation"/>
   <br/><br/>
   <input id="btnShowMT10s" type="button" value="Show in for 10 secs with Text"/>
   <script>
@@ -18,12 +18,14 @@
     document.getElementById("btnShowBW3s").onclick = () => {
       pnlWait.backgroundColor = "black";
       pnlWait.spinnerColor = "white";
+      pnlWait.setClockwiseRotation(true);
       pnlWait.showFor(3000);
     };
     document.getElementById("btnShowRY5s").onclick = () => {
       pnlWait.backgroundColor = "rgb(255, 12, 12, 0.5)";
       pnlWait.spinnerColor = "yellow";
       pnlWait.contentColor = "white";
+      pnlWait.setClockwiseRotation(false);
       pnlWait.showFor(5000, "<h3><i>Espere, por favor...");
     };
     document.getElementById("btnShowMT10s").onclick = () => {
@@ -32,6 +34,7 @@
       pnlWait.backgroundColor = colours[times];
       pnlWait.spinnerColor = "pink";
       pnlWait.contentColor = "pink";
+      pnlWait.setClockwiseRotation(true);
       pnlWait.show("<h1>Wait, please...");
       const interval = setInterval(() => {
         if (--times === -1) {

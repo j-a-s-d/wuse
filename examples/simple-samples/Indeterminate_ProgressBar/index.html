@@ -1,0 +1,50 @@
+<!-- Wuse (Web Using Shadow Elements) by j-a-s-d -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wuse | Indeterminate_ProgressBar example</title>
+  <script src="../../../dist/wuse.min.js"></script>
+  <script src="Indeterminate_ProgressBar.js"></script>
+</head>
+<body style="margin: 4em">
+  <input id="btnShowBW3s" type="button" value="Show in for 3 secs on top"/>
+  <br/><br/>
+  <input id="btnShowRY5s" type="button" value="Show in for 5 secs"/>
+  <br/><br/>
+  <input id="btnShowMT10s" type="button" value="Show in for 10 secs changing colours"/>
+  <br/><br/>
+  <script>
+    const pnlWait = Indeterminate_ProgressBar.register().create();
+    window.onload = () => pnlWait.showFor(1000);
+    document.getElementById("btnShowBW3s").onclick = () => {
+      pnlWait.backgroundColor = "black";
+      pnlWait.foregroundColor = "orange";
+      pnlWait.stickToTop();
+      pnlWait.showFor(3000);
+    };
+    document.getElementById("btnShowRY5s").onclick = () => {
+      pnlWait.backgroundColor = "red";
+      pnlWait.foregroundColor = "yellow";
+      pnlWait.unstickFromTop();
+      pnlWait.showFor(5000);
+    };
+    document.getElementById("btnShowMT10s").onclick = () => {
+      const colours = ["white","silver","gray","black","navy","purple","red","orange","yellow","green"];
+      let times = 9;
+      pnlWait.backgroundColor = "pink";
+      pnlWait.foregroundColor = colours[times];
+      pnlWait.unstickFromTop();
+      pnlWait.show();
+      const interval = setInterval(() => {
+        if (--times === -1) {
+          clearInterval(interval);
+          pnlWait.hide();
+        } else {
+          pnlWait.foregroundColor = colours[times];
+        }
+      }, 1000);
+    };
+  </script>
+</body>
+</html>
+

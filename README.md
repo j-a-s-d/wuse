@@ -14,7 +14,7 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 * self-documenting api (descriptive "long" function names)
 * full unit testing (630+ tests cases)
 * [`markdown documentation`](docs/README.md) (public api)
-* [`extensive example library`](examples/README.md) (38 demos: 15 simple samples and 23 with third party libraries)
+* [`extensive example library`](examples/README.md) (39 demos: 16 simple samples and 23 with third party libraries)
 
 ## FEATURES
 
@@ -40,6 +40,10 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [0.9.9] 2023-jan-16
+  - added `hasCSSNestedRuleBySelectors` and `replaceCSSNestedRuleBySelectors` to the `BaseElement`
+  - added Javascript & Web Helpers API initial documentation
+  - added `Indeterminate_ProgressBar` demo
 * [0.9.8] 2023-jan-11
   - renamed `BaseElement` to `StructuredElement`
   - added Structured Element API initial documentation

@@ -812,8 +812,33 @@ export default class StructuredElement extends window.HTMLElement {
     return this.#rules.getIndexOf(selector) > -1;
   }
 
+  hasCSSNestedRuleBySelectors(selector, subselector) {
+    const idx = this.#rules.getIndexOf(selector);
+    if (idx > -1) {
+      const rnr = this.#rules[idx].nested;
+      if (!!rnr.length) for (var x in rnr) {
+        if (rnr[x].selector === subselector) return true;
+      }
+    }
+    return false;
+  }
+
   replaceCSSRuleBySelector(selector, properties) {
     this.#rules.replace(this.#rules.getIndexOf(selector), newRule(selector, properties));
+    return this;
+  }
+
+  replaceCSSNestedRuleBySelectors(selector, subselector, properties) {
+    const idx = this.#rules.getIndexOf(selector);
+    if (idx > -1) {
+      const rnr = this.#rules[idx].nested;
+      if (!!rnr.length) for (var x in rnr) {
+        if (rnr[x].selector === subselector) {
+          rnr[x].properties = newNestedRule(selector, subselector, properties).nested[0].properties;
+          break;
+        }
+      }
+    }
     return this;
   }
 

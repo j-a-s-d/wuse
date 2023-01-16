@@ -6,12 +6,13 @@ Following, the examples on how to use Wuse included in the distribution under th
 
 ### Simple Samples
 
-Here is the list of 15 simple examples on how to use Wuse included in the distribution under the folder `examples/simple-samples`:
+Here is the list of 16 simple examples on how to use Wuse included in the distribution under the folder `examples/simple-samples`:
 
 * [`Canvas Text Wrapper`](simple-samples/Canvas_Text_Wrapper/index.html)
 * [`Command Line`](simple-samples/Command_Line/index.html)
 * [`Development Console`](simple-samples/Development_Console/index.html)
 * [`Element Events`](simple-samples/Element_Events/index.html)
+* [`Indeterminate_ProgressBar`](simple-samples/Indeterminate_ProgressBar/index.html)
 * [`Marquee Clone`](simple-samples/Marquee_Clone/index.html)
 * [`Performing 100K Updates`](simple-samples/Performing_100K_Updates/index.html)
 * [`Plain Progress Bar`](simple-samples/Plain_Progress_Bar/index.html)

@@ -62,5 +62,11 @@ class Spinner_Panel extends Wuse.ClosedShadowElement {
     setTimeout(() => this.hide(), ms);
   }
 
+  setClockwiseRotation(value) {
+    this
+      .replaceCSSNestedRuleBySelectors("@keyframes rotate", "to", `transform: rotate(${value ? "" : "-"}360deg)`)
+      .redraw()
+  }
+
 }
 

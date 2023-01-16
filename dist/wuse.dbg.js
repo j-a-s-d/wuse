@@ -2298,8 +2298,34 @@
     hasCSSRuleBySelector(selector) {
       return __privateGet(this, _rules).getIndexOf(selector) > -1;
     }
+    hasCSSNestedRuleBySelectors(selector, subselector) {
+      const idx = __privateGet(this, _rules).getIndexOf(selector);
+      if (idx > -1) {
+        const rnr = __privateGet(this, _rules)[idx].nested;
+        if (!!rnr.length)
+          for (var x in rnr) {
+            if (rnr[x].selector === subselector)
+              return true;
+          }
+      }
+      return false;
+    }
     replaceCSSRuleBySelector(selector, properties) {
       __privateGet(this, _rules).replace(__privateGet(this, _rules).getIndexOf(selector), newRule(selector, properties));
+      return this;
+    }
+    replaceCSSNestedRuleBySelectors(selector, subselector, properties) {
+      const idx = __privateGet(this, _rules).getIndexOf(selector);
+      if (idx > -1) {
+        const rnr = __privateGet(this, _rules)[idx].nested;
+        if (!!rnr.length)
+          for (var x in rnr) {
+            if (rnr[x].selector === subselector) {
+              rnr[x].properties = newNestedRule(selector, subselector, properties).nested[0].properties;
+              break;
+            }
+          }
+      }
       return this;
     }
     transferCSSRuleBySelector(selector, element) {
@@ -3003,7 +3029,7 @@
   ;
 
   // package.json
-  var version = "0.9.8";
+  var version = "0.9.9";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);

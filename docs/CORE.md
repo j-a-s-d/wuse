@@ -26,15 +26,15 @@ Following, the documentation on the Wuse Core API.
 ### General Fields
 
 * tmp, *convenience temporary object*
-* WebHelpers, *utility web helpers module*
-* JsHelpers, *utility javascript helpers module*
+* [`WebHelpers`](WEBHELPERS.md), *utility web helpers module*
+* [`JsHelpers`](JSHELPERS.md), *utility javascript helpers module*
 * PerformanceMeasurement, *performance measurement module*
 
 ### Element Classes
 
-* NonShadowElement, *non-shadow element class*
-* OpenShadowElement, *open-shadow element class*
-* ClosedShadowElement, *closed-shadow element class*
+* [`NonShadowElement`](STRUCTURED.md), *non-shadow element class*
+* [`OpenShadowElement`](STRUCTURED.md), *open-shadow element class*
+* [`ClosedShadowElement`](STRUCTURED.md), *closed-shadow element class*
 
 ### Element Methods
 
