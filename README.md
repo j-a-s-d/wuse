@@ -13,7 +13,7 @@ Wuse (Web Using Shadow Elements) is a Web Components library that encapsulates t
 * no external dependencies (none in runtime and only esbuild if you want to build from source)
 * self-documenting api (descriptive "long" function names)
 * full unit testing (630+ tests cases)
-* [`markdown documentation`](docs/README.md) (public api)
+* [`markdown documentation`](docs/README.md) (public api in minimallistic style, inspired by decades of repeating RTFM)
 * [`extensive example library`](examples/README.md) (39 demos: 16 simple samples and 23 with third party libraries)
 
 ## FEATURES
@@ -40,8 +40,10 @@ Wuse does not require any build step to be performed.
 
 ## HiSTORY
 
+* [1.0.0] 2023-jan-28
+  - version bump
 * [0.9.9] 2023-jan-16
-  - added `hasCSSNestedRuleBySelectors` and `replaceCSSNestedRuleBySelectors` to the `BaseElement`
+  - added `hasCSSNestedRuleBySelectors` and `replaceCSSNestedRuleBySelectors` to the `StructuredElement` class
   - added Javascript & Web Helpers API initial documentation
   - added `Indeterminate_ProgressBar` demo
 * [0.9.8] 2023-jan-11
@@ -49,14 +51,14 @@ Wuse does not require any build step to be performed.
   - added Structured Element API initial documentation
   - added `Spinner_Panel` demo
 * [0.9.7] 2023-jan-04
-  - added `getRawContent` to the `BaseElement`
+  - added `getRawContent` to the `BaseElement` class
   - moved testing related files into `tests` subdirectory inside `src` directory
 * [0.9.6] 2022-dec-30
   - improved SVG support
   - added `SVG_ForeignObject` demo
   - added `test.unim` ubernim file to serve testing with enhanced capabilities (that means support for the `SHUTDOWN` button in the `tests.html` file)
 * [0.9.5] 2022-dec-02
-  - added `hasRawContent` to the `BaseElement`
+  - added `hasRawContent` to the `BaseElement` class
   - added `docs` directory with some initial documentation
 * [0.9.4] 2022-nov-23
   - added recursive element definition support via the walrus operator `:=`

@@ -3029,7 +3029,7 @@
   ;
 
   // package.json
-  var version = "0.9.9";
+  var version = "1.0.0";
 
   // src/wuse.js
   window.Wuse = window.Wuse || makeCoreClass(version);
